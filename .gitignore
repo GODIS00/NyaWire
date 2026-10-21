@@ -1,0 +1,17 @@
+.gradle/
+.kotlin/
+.idea/
+**/build/
+local.properties
+*.iml
+*.hprof
+.tools/
+artifacts/
+native/.downloads/
+*.keystore
+*.jks
+keystore.properties
+.env
+.env.*
+try.md
+# Native AARs, executables and their provenance are part of the source release.

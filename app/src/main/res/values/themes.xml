@@ -1,0 +1,16 @@
+<resources>
+    <style name="Theme.NyaWire" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#0D0E30</item>
+        <item name="android:navigationBarColor">#0D0E30</item>
+        <item name="android:windowBackground">#0D0E30</item>
+        <item name="android:colorAccent">#3888FF</item>
+    </style>
+    <style name="Theme.NyaWire.QuickConnect" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+</resources>

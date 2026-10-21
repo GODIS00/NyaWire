@@ -1,0 +1,37 @@
+package com.gdhapp.client.ui.main
+
+import com.gdhapp.client.domain.model.ClientSettings
+
+data class MainActions(
+    val connect: () -> Unit = {},
+    val paste: () -> Unit = {},
+    val scanQr: () -> Unit = {},
+    val importFile: () -> Unit = {},
+    val importText: (String) -> Unit = {},
+    val selectNode: (String) -> Unit = {},
+    val toggleGroup: (String) -> Unit = {},
+    val collapseAll: () -> Unit = {},
+    val refresh: (String) -> Unit = {},
+    val cancelStartupRefresh: () -> Unit = {},
+    val togglePin: (String) -> Unit = {},
+    val deleteGroup: (String) -> Unit = {},
+    val deleteNode: (String) -> Unit = {},
+    val renameGroup: (String, String) -> Unit = { _, _ -> },
+    val support: (String) -> Unit = {},
+    val probeGroup: (String) -> Unit = {},
+    val probeNode: (String) -> Unit = {},
+    val probeAll: () -> Unit = {},
+    val stopProbes: () -> Unit = {},
+    val favorite: (String) -> Unit = {},
+    val editNode: (String, String, String) -> Unit = { _, _, _ -> },
+    val chooseFastest: () -> Unit = {},
+    val updateSettings: (ClientSettings) -> Unit = {},
+    val resetAppearance: () -> Unit = {},
+    val favoritesOnly: (Boolean) -> Unit = {},
+    val protocolFilter: (String?) -> Unit = {},
+    val loadApps: () -> Unit = {},
+    val openSystemVpnSettings: () -> Unit = {},
+    val copyText: (String) -> Unit = {},
+    val checkCoreVersions: () -> Unit = {},
+    val checkAppUpdate: () -> Unit = {},
+)

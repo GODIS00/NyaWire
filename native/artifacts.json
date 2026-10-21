@@ -1,0 +1,103 @@
+{
+  "xrayCoreCommit": "92ccc939aaf4f8965f369cf0b142e005aeaa11d5",
+  "sourceArchives": [
+    {
+      "sha256": "fc4b8f8007d1b81f0a166891707566dca7fc4a215d19115a1bcd04d14037461d",
+      "file": "AndroidLibXrayLite-v26.10.17.tar.gz"
+    },
+    {
+      "sha256": "8bfdc02ce90b5007e30d7f538114c89cf5a9c00e776b624d5d7483d066879d47",
+      "file": "hev-socks5-tunnel-2.19.1.tar.xz"
+    },
+    {
+      "sha256": "c6d5eda3d69739c7cdfa177f607b5549b6764062ed2ee9a65c600c2fc26e8ccf",
+      "file": "libv2ray-v26.10.17-sources.jar"
+    },
+    {
+      "sha256": "9a8e3712a5f611ad95f1d16874bbdcdffbd3b8eed16dae2d71ce7042a33c3386",
+      "file": "sing-box-v1.14.3.tar.gz"
+    },
+    {
+      "sha256": "c67de97229d0a1c7a357715d630667b27c35b13cd539d7d709c84ae7e5b9600c",
+      "file": "Xray-core-92ccc939aaf4.tar.gz"
+    },
+    {
+      "sha256": "9d5415b68061026a466fc3586a8cc2940b66b6a1ee9648f7b98bdaa370275042",
+      "file": "flag-icons-v7.3.2.zip"
+    }
+  ],
+  "artifacts": [
+    {
+      "url": "https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.10.17/libv2ray.aar",
+      "output": "app/libs/libv2ray.aar",
+      "name": "AndroidLibXrayLite",
+      "kind": "file",
+      "sha256": "fd6cb61fed873e465c3064327dffbcb22dc3fd78260d162ec9e868db2582495f",
+      "version": "v26.10.17"
+    },
+    {
+      "url": "https://github.com/heiher/hev-socks5-tunnel/releases/download/2.19.1/hev-socks5-tunnel.aar",
+      "output": "app/libs/hev-socks5-tunnel.aar",
+      "name": "HEV",
+      "kind": "file",
+      "sha256": "107958f7a07051386248ba8dba778b63d8dcefdfb2c3665b0ee9a8c93de5f6ca",
+      "version": "2.19.1"
+    },
+    {
+      "archiveBinary": "sing-box-1.14.3-android-arm/sing-box",
+      "kind": "tar",
+      "version": "1.14.3",
+      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.3/sing-box-1.14.3-android-arm.tar.gz",
+      "sha256": "0c0df4fbf85656896d5b604e9eb4e556c1a3f68dd615b0ece3f9f6bd5adab5d6",
+      "embeddedSha256": "3748b66bd4e55ecfda8002fbbcc2051fa43bd20b44f0fb60e2102112a7ea4c01",
+      "name": "sing-box armeabi-v7a",
+      "output": "app/src/main/jniLibs/armeabi-v7a/libsingbox_exec.so"
+    },
+    {
+      "archiveBinary": "sing-box-1.14.3-android-386/sing-box",
+      "kind": "tar",
+      "version": "1.14.3",
+      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.3/sing-box-1.14.3-android-386.tar.gz",
+      "sha256": "5812c457335efa711116cbc0b01a4810a95f0838ef2b1693e88bf06446160161",
+      "embeddedSha256": "c6d8a43a4cae3c6ddf5c7fac0e59de8c9c43e68ff0b3729044c95eca22a1ee56",
+      "name": "sing-box x86",
+      "output": "app/src/main/jniLibs/x86/libsingbox_exec.so"
+    },
+    {
+      "archiveBinary": "sing-box-1.14.3-android-arm64/sing-box",
+      "kind": "tar",
+      "version": "1.14.3",
+      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.3/sing-box-1.14.3-android-arm64.tar.gz",
+      "sha256": "149569b5dbf01958e6598beb3a13078d6fc0e353ef06f4aff85f5f28bc23593b",
+      "embeddedSha256": "64324301d1049474f6010b5a015d3143271a8df83bae83ae8814167ac8f74f5a",
+      "name": "sing-box arm64-v8a",
+      "output": "app/src/main/jniLibs/arm64-v8a/libsingbox_exec.so"
+    },
+    {
+      "archiveBinary": "sing-box-1.14.3-android-amd64/sing-box",
+      "kind": "tar",
+      "version": "1.14.3",
+      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.3/sing-box-1.14.3-android-amd64.tar.gz",
+      "sha256": "a84a5aea86ad0588b76e23051e9e59405a7ed52358acfb9710cfaa055fe60e4a",
+      "embeddedSha256": "25f975c79ea43cafdcf91edfa423cda6ed6d412bc82ca880d458cd1e60f490c5",
+      "name": "sing-box x86_64",
+      "output": "app/src/main/jniLibs/x86_64/libsingbox_exec.so"
+    },
+    {
+      "url": "https://github.com/v2fly/geoip/releases/download/202610050438/geoip.dat",
+      "output": "app/src/main/assets/geoip.dat",
+      "name": "geoip.dat",
+      "kind": "file",
+      "sha256": "4ff4b2ec242a9e87b296ba27ddb85f8311e8d3e071eaebac5be9231c60e408dd",
+      "version": "202610050438"
+    },
+    {
+      "url": "https://github.com/v2fly/domain-list-community/releases/download/20261019074502/dlc.dat",
+      "output": "app/src/main/assets/geosite.dat",
+      "name": "geosite.dat",
+      "kind": "file",
+      "sha256": "37c030c086c57da4d0987c6be836f8ae4f8957cd904cfa0bc6bb6036bb61c816",
+      "version": "20261019074502"
+    }
+  ]
+}

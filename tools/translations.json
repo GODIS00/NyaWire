@@ -1,0 +1,2538 @@
+[
+  {
+    "id": "this_site_does_not_support_head_try",
+    "ru": "Сайт не поддерживает HEAD; выберите GET.",
+    "en": "This site does not support HEAD. Try GET.",
+    "source": "app/src/main/java/com/gdhapp/client/data/HttpProbeSession.kt",
+    "key": "text_001"
+  },
+  {
+    "id": "try_a_different_test_url",
+    "ru": "Попробуйте другой URL проверки.",
+    "en": "Try a different test URL.",
+    "source": "app/src/main/java/com/gdhapp/client/data/HttpProbeSession.kt",
+    "key": "text_002"
+  },
+  {
+    "id": "clipboard_is_empty",
+    "ru": "Буфер обмена пуст",
+    "en": "Clipboard is empty",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_003"
+  },
+  {
+    "id": "limit_reached_2_000_servers",
+    "ru": "Достигнут лимит: 2000 серверов",
+    "en": "Limit reached: 2,000 servers",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_004"
+  },
+  {
+    "id": "this_subscription_has_already_been_added",
+    "ru": "Эта подписка уже добавлена",
+    "en": "This subscription has already been added",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_005"
+  },
+  {
+    "id": "this_is_a_local_profile_add_a",
+    "ru": "Это локальный профиль. Для обновления добавьте подписку по URL.",
+    "en": "This is a local profile. Add a subscription URL to enable updates.",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_006"
+  },
+  {
+    "id": "server_not_found",
+    "ru": "Сервер не найден",
+    "en": "Server not found",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_007"
+  },
+  {
+    "id": "select_a_single_configuration_to_edit",
+    "ru": "Для редактирования нужен ровно один конфиг",
+    "en": "Select a single configuration to edit",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_008"
+  },
+  {
+    "id": "enter_a_server_name",
+    "ru": "Укажите имя сервера",
+    "en": "Enter a server name",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_009"
+  },
+  {
+    "id": "enter_a_subscription_name",
+    "ru": "Укажите название подписки",
+    "en": "Enter a subscription name",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_010"
+  },
+  {
+    "id": "enter_a_valid_https_url",
+    "ru": "Укажите корректный HTTPS URL",
+    "en": "Enter a valid HTTPS URL",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_011"
+  },
+  {
+    "id": "the_subscription_server_returned_http",
+    "ru": "Сервер подписки вернул HTTP %1$s",
+    "en": "The subscription server returned HTTP %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_012"
+  },
+  {
+    "id": "subscriptions_must_use_https",
+    "ru": "Подписка должна использовать HTTPS",
+    "en": "Subscriptions must use HTTPS",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_013"
+  },
+  {
+    "id": "the_subscription_is_empty",
+    "ru": "Подписка пуста",
+    "en": "The subscription is empty",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_014"
+  },
+  {
+    "id": "the_subscription_exceeds_2_mb",
+    "ru": "Подписка больше 2 МБ",
+    "en": "The subscription exceeds 2 MB",
+    "source": "app/src/main/java/com/gdhapp/client/data/LocalSubscriptionRepository.kt",
+    "key": "text_015"
+  },
+  {
+    "id": "no_response",
+    "ru": "Нет ответа",
+    "en": "No response",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_016"
+  },
+  {
+    "id": "server_address_is_missing_open_the_details",
+    "ru": "В конфиге не найден адрес сервера. Откройте сведения и проверьте JSON.",
+    "en": "Server address is missing. Open the details and check the JSON configuration.",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_017"
+  },
+  {
+    "id": "server_port_is_missing_from_the_configuration",
+    "ru": "В конфиге не найден порт сервера",
+    "en": "Server port is missing from the configuration",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_018"
+  },
+  {
+    "id": "server_address_not_found",
+    "ru": "Адрес сервера не найден",
+    "en": "Server address not found",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_019"
+  },
+  {
+    "id": "dns_returned_no_addresses",
+    "ru": "DNS не вернул адрес",
+    "en": "DNS returned no addresses",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_020"
+  },
+  {
+    "id": "android_does_not_allow_icmp_for_this",
+    "ru": "Система запрещает ICMP этому приложению. Используйте TCP или HTTP.",
+    "en": "Android does not allow ICMP for this app. Try TCP or HTTP.",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_021"
+  },
+  {
+    "id": "no_icmp_reply_the_server_may_block",
+    "ru": "Нет ICMP-ответа. Сервер может блокировать ping и при этом работать через VPN.",
+    "en": "No ICMP reply. The server may block ping while its VPN connection still works.",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_022"
+  },
+  {
+    "id": "could_not_read_the_icmp_response",
+    "ru": "Не удалось прочитать ICMP-ответ устройства",
+    "en": "Could not read the ICMP response",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_023"
+  },
+  {
+    "id": "no_response_within_s",
+    "ru": "Нет ответа за %1$s с",
+    "en": "No response within %1$s s",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_024"
+  },
+  {
+    "id": "dns_server_address_not_found",
+    "ru": "DNS: адрес сервера не найден",
+    "en": "DNS: server address not found",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_025"
+  },
+  {
+    "id": "connection_refused_or_port_unavailable",
+    "ru": "Соединение отклонено или порт недоступен",
+    "en": "Connection refused or port unavailable",
+    "source": "app/src/main/java/com/gdhapp/client/data/NetworkLatencyTester.kt",
+    "key": "text_026"
+  },
+  {
+    "id": "a_subscription_must_contain_between_1_and",
+    "ru": "В подписке должно быть от 1 до 500 серверов",
+    "en": "A subscription must contain between 1 and 500 servers",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_027"
+  },
+  {
+    "id": "unsupported_link_use_vless_vmess_trojan_ss",
+    "ru": "Неподдерживаемая ссылка. Используйте VLESS, VMess, Trojan, SS, Hysteria или TUIC.",
+    "en": "Unsupported link. Use VLESS, VMess, Trojan, SS, Hysteria or TUIC.",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_028"
+  },
+  {
+    "id": "invalid_server_link",
+    "ru": "Некорректная ссылка сервера",
+    "en": "Invalid server link",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_029"
+  },
+  {
+    "id": "server_address_is_missing_from_the_link",
+    "ru": "В ссылке отсутствует адрес сервера",
+    "en": "Server address is missing from the link",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_030"
+  },
+  {
+    "id": "server_port_must_be_between_1_and",
+    "ru": "Порт сервера вне диапазона 1–65535",
+    "en": "Server port must be between 1 and 65535",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_031"
+  },
+  {
+    "id": "authentication_details_are_missing_from_the_link",
+    "ru": "В ссылке отсутствуют данные авторизации",
+    "en": "Authentication details are missing from the link",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_032"
+  },
+  {
+    "id": "invalid_shadowsocks_credentials",
+    "ru": "Некорректные данные Shadowsocks",
+    "en": "Invalid Shadowsocks credentials",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_033"
+  },
+  {
+    "id": "shadowsocks_plugins_are_not_supported_yet_import",
+    "ru": "Shadowsocks с плагином пока не поддерживается. Импортируйте полный JSON.",
+    "en": "Shadowsocks plugins are not supported yet. Import the complete JSON configuration.",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_034"
+  },
+  {
+    "id": "tuic_requires_a_uuid_and_password",
+    "ru": "TUIC: нужны UUID и пароль",
+    "en": "TUIC requires a UUID and password",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_035"
+  },
+  {
+    "id": "invalid_vmess_link",
+    "ru": "Некорректная VMess-ссылка",
+    "en": "Invalid VMess link",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_036"
+  },
+  {
+    "id": "vmess_invalid_address_port_or_uuid",
+    "ru": "VMess: неверные адрес, порт или UUID",
+    "en": "VMess: invalid address, port or UUID",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_037"
+  },
+  {
+    "id": "invalid_base64_subscription_data",
+    "ru": "Некорректный Base64 в подписке",
+    "en": "Invalid Base64 subscription data",
+    "source": "app/src/main/java/com/gdhapp/client/data/ShareLinkParser.kt",
+    "key": "text_038"
+  },
+  {
+    "id": "could_not_read_the_json_subscription",
+    "ru": "Не удалось прочитать JSON-подписку",
+    "en": "Could not read the JSON subscription",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_039"
+  },
+  {
+    "id": "the_subscription_must_contain_a_json_object",
+    "ru": "Подписка должна содержать JSON-объект или массив",
+    "en": "The subscription must contain a JSON object or array",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_040"
+  },
+  {
+    "id": "new_subscription",
+    "ru": "Новая подписка",
+    "en": "New subscription",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_041"
+  },
+  {
+    "id": "server_expected_a_json_object",
+    "ru": "Сервер %1$s: ожидался JSON-объект",
+    "en": "Server %1$s: expected a JSON object",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_042"
+  },
+  {
+    "id": "server_invalid_json_configuration",
+    "ru": "Сервер %1$s: неверный JSON-конфиг",
+    "en": "Server %1$s: invalid JSON configuration",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_043"
+  },
+  {
+    "id": "the_configuration_must_be_a_json_object",
+    "ru": "Конфиг должен быть JSON-объектом",
+    "en": "The configuration must be a JSON object",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_044"
+  },
+  {
+    "id": "the_configuration_must_include_an_outbounds_array",
+    "ru": "Конфиг должен содержать массив outbounds (Xray / sing-box)",
+    "en": "The configuration must include an outbounds array (Xray / sing-box)",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_045"
+  },
+  {
+    "id": "no_proxy_server_found_in_the_configuration",
+    "ru": "В конфиге нет прокси-сервера",
+    "en": "No proxy server found in the configuration",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_046"
+  },
+  {
+    "id": "server",
+    "ru": "Сервер %1$s",
+    "en": "Server %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/data/SubscriptionParser.kt",
+    "key": "text_047"
+  },
+  {
+    "id": "system",
+    "ru": "Системная",
+    "en": "System",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_048"
+  },
+  {
+    "id": "dark",
+    "ru": "Тёмная",
+    "en": "Dark",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_049"
+  },
+  {
+    "id": "light",
+    "ru": "Светлая",
+    "en": "Light",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_050"
+  },
+  {
+    "id": "mint",
+    "ru": "Мята",
+    "en": "Mint",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_051"
+  },
+  {
+    "id": "ocean",
+    "ru": "Океан",
+    "en": "Ocean",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_052"
+  },
+  {
+    "id": "lavender",
+    "ru": "Лаванда",
+    "en": "Lavender",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_053"
+  },
+  {
+    "id": "peach",
+    "ru": "Персик",
+    "en": "Peach",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_054"
+  },
+  {
+    "id": "rose",
+    "ru": "Роза",
+    "en": "Rose",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_055"
+  },
+  {
+    "id": "lime",
+    "ru": "Лайм",
+    "en": "Lime",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_056"
+  },
+  {
+    "id": "cards",
+    "ru": "Карточки",
+    "en": "Cards",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_057"
+  },
+  {
+    "id": "compact",
+    "ru": "Компактный",
+    "en": "Compact",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_058"
+  },
+  {
+    "id": "grid",
+    "ru": "Плитка",
+    "en": "Grid",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_059"
+  },
+  {
+    "id": "subscription_order",
+    "ru": "Из подписки",
+    "en": "Subscription order",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_060"
+  },
+  {
+    "id": "name",
+    "ru": "По имени",
+    "en": "Name",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_061"
+  },
+  {
+    "id": "latency",
+    "ru": "По задержке",
+    "en": "Latency",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_062"
+  },
+  {
+    "id": "favorites_first",
+    "ru": "Избранные первыми",
+    "en": "Favorites first",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_063"
+  },
+  {
+    "id": "all_apps",
+    "ru": "Все приложения",
+    "en": "All apps",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_064"
+  },
+  {
+    "id": "exclude_selected",
+    "ru": "Исключить выбранные",
+    "en": "Exclude selected",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_065"
+  },
+  {
+    "id": "selected_only",
+    "ru": "Только выбранные",
+    "en": "Selected only",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_066"
+  },
+  {
+    "id": "follow_system",
+    "ru": "Как в системе",
+    "en": "Follow system",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_067"
+  },
+  {
+    "id": "language_russian",
+    "ru": "Русский",
+    "en": "Русский",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/ClientSettings.kt",
+    "key": "text_068"
+  },
+  {
+    "id": "auto",
+    "ru": "Авто",
+    "en": "Auto",
+    "source": "app/src/main/java/com/gdhapp/client/domain/model/Models.kt",
+    "key": "text_069"
+  },
+  {
+    "id": "vpn_permission_was_not_granted",
+    "ru": "Разрешение VPN не предоставлено",
+    "en": "VPN permission was not granted",
+    "source": "app/src/main/java/com/gdhapp/client/MainActivity.kt",
+    "key": "text_070"
+  },
+  {
+    "id": "the_file_exceeds_2_mb",
+    "ru": "Файл больше 2 МБ",
+    "en": "The file exceeds 2 MB",
+    "source": "app/src/main/java/com/gdhapp/client/MainActivity.kt",
+    "key": "text_071"
+  },
+  {
+    "id": "file_unavailable",
+    "ru": "Файл недоступен",
+    "en": "File unavailable",
+    "source": "app/src/main/java/com/gdhapp/client/MainActivity.kt",
+    "key": "text_072"
+  },
+  {
+    "id": "could_not_read_the_file_choose_a",
+    "ru": "Не удалось прочитать файл. Нужен JSON или текстовая подписка до 2 МБ.",
+    "en": "Could not read the file. Choose a JSON or text subscription up to 2 MB.",
+    "source": "app/src/main/java/com/gdhapp/client/MainActivity.kt",
+    "key": "text_073"
+  },
+  {
+    "id": "could_not_open_the_support_link",
+    "ru": "Не удалось открыть ссылку поддержки",
+    "en": "Could not open the support link",
+    "source": "app/src/main/java/com/gdhapp/client/MainActivity.kt",
+    "key": "text_074"
+  },
+  {
+    "id": "copied",
+    "ru": "Скопировано",
+    "en": "Copied",
+    "source": "app/src/main/java/com/gdhapp/client/MainActivity.kt",
+    "key": "text_075"
+  },
+  {
+    "id": "scan_a_link_subscription_or_configuration_qr",
+    "ru": "QR со ссылкой, подпиской или конфигурацией",
+    "en": "Scan a link, subscription or configuration QR code",
+    "source": "app/src/main/java/com/gdhapp/client/MainActivity.kt",
+    "key": "text_076"
+  },
+  {
+    "id": "vpn_settings_are_unavailable",
+    "ru": "Настройки VPN недоступны",
+    "en": "VPN settings are unavailable",
+    "source": "app/src/main/java/com/gdhapp/client/MainActivity.kt",
+    "key": "text_077"
+  },
+  {
+    "id": "vpn_connected",
+    "ru": "VPN подключён",
+    "en": "VPN connected",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_078"
+  },
+  {
+    "id": "connecting",
+    "ru": "Подключение…",
+    "en": "Connecting…",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_079"
+  },
+  {
+    "id": "connection_failed",
+    "ru": "Ошибка подключения",
+    "en": "Connection failed",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_080"
+  },
+  {
+    "id": "add_a_subscription",
+    "ru": "Добавьте подписку",
+    "en": "Add a subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_081"
+  },
+  {
+    "id": "vpn_is_off",
+    "ru": "VPN выключен",
+    "en": "VPN is off",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_082"
+  },
+  {
+    "id": "your_servers_will_appear_here",
+    "ru": "Ваши серверы появятся здесь",
+    "en": "Your servers will appear here",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "ru_display": "Здесь появятся ваши серверы",
+    "key": "text_083"
+  },
+  {
+    "id": "servers",
+    "ru": "Серверов: %1$s · %2$s",
+    "en": "Servers: %1$s · %2$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_084"
+  },
+  {
+    "id": "add_subscription",
+    "ru": "Добавить подписку",
+    "en": "Add subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_085"
+  },
+  {
+    "id": "disconnect_vpn",
+    "ru": "Отключить VPN",
+    "en": "Disconnect VPN",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_086"
+  },
+  {
+    "id": "connect_vpn",
+    "ru": "Подключить VPN",
+    "en": "Connect VPN",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_087"
+  },
+  {
+    "id": "view_error_details",
+    "ru": "Подробнее об ошибке",
+    "en": "View error details",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_088"
+  },
+  {
+    "id": "could_not_load_routing_data_view_details",
+    "ru": "Не удалось загрузить данные маршрутизации. Подробнее",
+    "en": "Could not load routing data. View details",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_089"
+  },
+  {
+    "id": "the_core_rejected_this_configuration_view_details",
+    "ru": "Ядро отклонило конфигурацию. Открыть подробности",
+    "en": "The core rejected this configuration. View details",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ConnectionCard.kt",
+    "key": "text_090"
+  },
+  {
+    "id": "servers_091",
+    "ru": "Серверы",
+    "en": "Servers",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_091"
+  },
+  {
+    "id": "checks",
+    "ru": "Проверки",
+    "en": "Checks",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_092"
+  },
+  {
+    "id": "settings",
+    "ru": "Настройки",
+    "en": "Settings",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_093"
+  },
+  {
+    "id": "your_connection_your_control",
+    "ru": "Сеть под вашим контролем",
+    "en": "Your connection, your control",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_094"
+  },
+  {
+    "id": "gdhapp_logo",
+    "ru": "Логотип GDHAPP",
+    "en": "GDHAPP logo",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_095"
+  },
+  {
+    "id": "client_settings",
+    "ru": "Настройки клиента",
+    "en": "Client settings",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_096"
+  },
+  {
+    "id": "vpn_connected_097",
+    "ru": "%1$s · VPN включён",
+    "en": "%1$s · VPN connected",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_097"
+  },
+  {
+    "id": "no_servers_yet",
+    "ru": "Пока здесь только ваши возможности",
+    "en": "No servers yet",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "ru_display": "Серверов пока нет",
+    "key": "text_098"
+  },
+  {
+    "id": "add_a_subscription_url_paste_a_configuration",
+    "ru": "Добавьте подписку по ссылке, вставьте конфигурацию или отсканируйте QR-код.",
+    "en": "Add a subscription URL, paste a configuration or scan a QR code.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_099"
+  },
+  {
+    "id": "all",
+    "ru": "Все · %1$s",
+    "en": "All · %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_100"
+  },
+  {
+    "id": "favorites",
+    "ru": "Избранное",
+    "en": "Favorites",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_101"
+  },
+  {
+    "id": "subscriptions",
+    "ru": "Подписки",
+    "en": "Subscriptions",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_102"
+  },
+  {
+    "id": "collapse",
+    "ru": "Свернуть",
+    "en": "Collapse",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_103"
+  },
+  {
+    "id": "check_servers",
+    "ru": "Проверить серверы",
+    "en": "Check servers",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_104"
+  },
+  {
+    "id": "no_results",
+    "ru": "Ничего не найдено",
+    "en": "No results",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_105"
+  },
+  {
+    "id": "try_a_different_search_or_filter",
+    "ru": "Измените запрос или фильтр",
+    "en": "Try a different search or filter",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_106"
+  },
+  {
+    "id": "reset_filters",
+    "ru": "Сбросить фильтры",
+    "en": "Reset filters",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_107"
+  },
+  {
+    "id": "add_servers",
+    "ru": "Ваш следующий маршрут",
+    "en": "Add servers",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "ru_display": "Добавить серверы",
+    "key": "text_108"
+  },
+  {
+    "id": "subscription_or_individual_configuration",
+    "ru": "Подписка или отдельная конфигурация",
+    "en": "Subscription or individual configuration",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_109"
+  },
+  {
+    "id": "paste_from_clipboard",
+    "ru": "Вставить из буфера",
+    "en": "Paste from clipboard",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_110"
+  },
+  {
+    "id": "link_json_or_server_list",
+    "ru": "Ссылка, JSON или список серверов",
+    "en": "Link, JSON or server list",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_111"
+  },
+  {
+    "id": "add_a_link_or_configuration",
+    "ru": "Добавить ссылку или конфиг",
+    "en": "Add a link or configuration",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_112"
+  },
+  {
+    "id": "scan_qr_code",
+    "ru": "Сканировать QR",
+    "en": "Scan QR code",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_113"
+  },
+  {
+    "id": "opens_the_camera",
+    "ru": "Откроется камера",
+    "en": "Opens the camera",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_114"
+  },
+  {
+    "id": "import_file",
+    "ru": "Импортировать файл",
+    "en": "Import file",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_115"
+  },
+  {
+    "id": "json_or_text_subscription",
+    "ru": "JSON или текстовая подписка",
+    "en": "JSON or text subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_116"
+  },
+  {
+    "id": "add_connection",
+    "ru": "Добавить подключение",
+    "en": "Add connection",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_117"
+  },
+  {
+    "id": "link_or_configuration",
+    "ru": "Ссылка или конфигурация",
+    "en": "Link or configuration",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_118"
+  },
+  {
+    "id": "add",
+    "ru": "Добавить",
+    "en": "Add",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_119"
+  },
+  {
+    "id": "cancel",
+    "ru": "Отмена",
+    "en": "Cancel",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_120"
+  },
+  {
+    "id": "delete_subscription",
+    "ru": "Удалить подписку?",
+    "en": "Delete subscription?",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_121"
+  },
+  {
+    "id": "and_its_servers_will_be_removed_from",
+    "ru": "%1$s и её серверы будут удалены с этого устройства.",
+    "en": "%1$s and its servers will be removed from this device.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_122"
+  },
+  {
+    "id": "delete",
+    "ru": "Удалить",
+    "en": "Delete",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_123"
+  },
+  {
+    "id": "subscription_name",
+    "ru": "Название подписки",
+    "en": "Subscription name",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_124"
+  },
+  {
+    "id": "save",
+    "ru": "Сохранить",
+    "en": "Save",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_125"
+  },
+  {
+    "id": "connection_diagnostics",
+    "ru": "Диагностика подключения",
+    "en": "Connection diagnostics",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_126"
+  },
+  {
+    "id": "no_errors",
+    "ru": "Ошибок нет",
+    "en": "No errors",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_127"
+  },
+  {
+    "id": "vpn_settings",
+    "ru": "Настройки VPN",
+    "en": "VPN settings",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_128"
+  },
+  {
+    "id": "close",
+    "ru": "Закрыть",
+    "en": "Close",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_129"
+  },
+  {
+    "id": "name_or_address",
+    "ru": "Название или адрес",
+    "en": "Name or address",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_130"
+  },
+  {
+    "id": "clear_search",
+    "ru": "Очистить поиск",
+    "en": "Clear search",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_131"
+  },
+  {
+    "id": "sort_servers",
+    "ru": "Сортировка серверов",
+    "en": "Sort servers",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_132"
+  },
+  {
+    "id": "collapse_subscription",
+    "ru": "Свернуть подписку",
+    "en": "Collapse subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_133"
+  },
+  {
+    "id": "expand_subscription",
+    "ru": "Раскрыть подписку",
+    "en": "Expand subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_134"
+  },
+  {
+    "id": "pinned",
+    "ru": "Закреплена",
+    "en": "Pinned",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_135"
+  },
+  {
+    "id": "update_subscription",
+    "ru": "Обновить подписку",
+    "en": "Update subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_136"
+  },
+  {
+    "id": "subscription_menu",
+    "ru": "Меню подписки",
+    "en": "Subscription menu",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_137"
+  },
+  {
+    "id": "information",
+    "ru": "Информация",
+    "en": "Information",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_138"
+  },
+  {
+    "id": "rename",
+    "ru": "Переименовать",
+    "en": "Rename",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_139"
+  },
+  {
+    "id": "unpin",
+    "ru": "Открепить",
+    "en": "Unpin",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_140"
+  },
+  {
+    "id": "pin",
+    "ru": "Закрепить",
+    "en": "Pin",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_141"
+  },
+  {
+    "id": "support",
+    "ru": "Поддержка",
+    "en": "Support",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_142"
+  },
+  {
+    "id": "until",
+    "ru": "До %1$s",
+    "en": "Until %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_143"
+  },
+  {
+    "id": "servers_updated_interval_h_traffic_expires",
+    "ru": "%1$s серверов\nОбновлено: %2$s\nИнтервал: %3$s ч.\nТрафик: %4$s/%5$s\nИстекает: %6$s",
+    "en": "Servers: %1$s\nUpdated: %2$s\nInterval: %3$s h\nTraffic: %4$s/%5$s\nExpires: %6$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "ru_display": "Серверов: %1$s\nОбновлено: %2$s\nИнтервал: %3$s ч.\nТрафик: %4$s/%5$s\nИстекает: %6$s",
+    "key": "text_144"
+  },
+  {
+    "id": "connection_checks",
+    "ru": "Проверьте маршрут целиком",
+    "en": "Connection checks",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "ru_display": "Проверка соединения",
+    "key": "text_145"
+  },
+  {
+    "id": "use_http_get_to_check_a_vpn",
+    "ru": "Для VPN-конфигураций рекомендуем HTTP GET: он проверяет соединение через выбранный профиль.",
+    "en": "Use HTTP GET to check a VPN profile. The request passes through the selected server.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_146"
+  },
+  {
+    "id": "request_through_the_vpn_core",
+    "ru": "Запрос через VPN-ядро",
+    "en": "Request through the VPN core",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_147"
+  },
+  {
+    "id": "direct_server_check",
+    "ru": "Проверка адреса сервера",
+    "en": "Direct server check",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_148"
+  },
+  {
+    "id": "timeout_s_samples_concurrent",
+    "ru": "Таймаут: %1$s с · Повторы: %2$s · Одновременно: %3$s",
+    "en": "Timeout: %1$s s · Samples: %2$s · Concurrent: %3$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_149"
+  },
+  {
+    "id": "total",
+    "ru": "Всего",
+    "en": "Total",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_150"
+  },
+  {
+    "id": "successful",
+    "ru": "Успешно",
+    "en": "Successful",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_151"
+  },
+  {
+    "id": "failed",
+    "ru": "С ошибкой",
+    "en": "Failed",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_152"
+  },
+  {
+    "id": "select_fastest",
+    "ru": "Выбрать самый быстрый",
+    "en": "Select fastest",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_153"
+  },
+  {
+    "id": "does_not_verify_vpn_authentication_icmp_and",
+    "ru": "%1$s не проверяет авторизацию VPN. ICMP и TCP могут блокироваться на рабочем UDP-сервере. Ошибка такого теста не означает, что конфигурация не работает.",
+    "en": "%1$s does not verify VPN authentication. ICMP and TCP may be blocked on a working UDP server. A failed check does not necessarily mean the VPN profile is broken.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_154"
+  },
+  {
+    "id": "add_a_subscription_on_the_servers_tab",
+    "ru": "Добавьте подписку на вкладке «Серверы», чтобы начать проверку.",
+    "en": "Add a subscription on the Servers tab to start checking.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_155"
+  },
+  {
+    "id": "of",
+    "ru": "%1$s из %2$s",
+    "en": "%1$s of %2$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_156"
+  },
+  {
+    "id": "stop",
+    "ru": "Остановить",
+    "en": "Stop",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_157"
+  },
+  {
+    "id": "address_not_found_in_configuration",
+    "ru": "Адрес в конфиге не найден",
+    "en": "Address not found in configuration",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_158"
+  },
+  {
+    "id": "connection_checks_159",
+    "ru": "Проверки соединения",
+    "en": "Connection checks",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_159"
+  },
+  {
+    "id": "check",
+    "ru": "Проверить · %1$s",
+    "en": "Check · %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_160"
+  },
+  {
+    "id": "profile_selected",
+    "ru": "Выбран",
+    "en": "Selected",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_161"
+  },
+  {
+    "id": "select",
+    "ru": "Выбрать",
+    "en": "Select",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_162"
+  },
+  {
+    "id": "edit",
+    "ru": "Редактировать",
+    "en": "Edit",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_163"
+  },
+  {
+    "id": "copy_configuration",
+    "ru": "Копировать конфигурацию",
+    "en": "Copy configuration",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_164"
+  },
+  {
+    "id": "edit_server",
+    "ru": "Редактировать сервер",
+    "en": "Edit server",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_165"
+  },
+  {
+    "id": "name_166",
+    "ru": "Название",
+    "en": "Name",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_166"
+  },
+  {
+    "id": "json_or_link",
+    "ru": "JSON или ссылка",
+    "en": "JSON or link",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_167"
+  },
+  {
+    "id": "a_single_configuration_is_required",
+    "ru": "Нужна одна конфигурация",
+    "en": "A single configuration is required",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainScreen.kt",
+    "key": "text_168"
+  },
+  {
+    "id": "wait_for_the_subscription_update_to_finish",
+    "ru": "Дождитесь обновления подписки",
+    "en": "Wait for the subscription update to finish",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_169"
+  },
+  {
+    "id": "add_a_subscription_and_select_a_server",
+    "ru": "Добавьте подписку и выберите сервер",
+    "en": "Add a subscription and select a server",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_170"
+  },
+  {
+    "id": "disconnect_the_vpn_before_switching_servers",
+    "ru": "Отключите VPN перед сменой сервера",
+    "en": "Disconnect the VPN before switching servers",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_171"
+  },
+  {
+    "id": "disconnect_the_vpn_before_editing_the_active",
+    "ru": "Отключите VPN перед редактированием активного сервера",
+    "en": "Disconnect the VPN before editing the active server",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_172"
+  },
+  {
+    "id": "configuration_saved",
+    "ru": "Конфигурация сохранена",
+    "en": "Configuration saved",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_173"
+  },
+  {
+    "id": "disconnect_the_vpn_before_deleting_the_active",
+    "ru": "Отключите VPN перед удалением активной подписки",
+    "en": "Disconnect the VPN before deleting the active subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_174"
+  },
+  {
+    "id": "subscription_added",
+    "ru": "Подписка добавлена",
+    "en": "Subscription added",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_175"
+  },
+  {
+    "id": "disconnect_the_vpn_before_updating_the_active",
+    "ru": "Отключите VPN перед обновлением активной подписки",
+    "en": "Disconnect the VPN before updating the active subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_176"
+  },
+  {
+    "id": "subscription_updated",
+    "ru": "Подписка обновлена",
+    "en": "Subscription updated",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_177"
+  },
+  {
+    "id": "a_check_is_already_running_you_can",
+    "ru": "Проверка уже идёт. Её можно остановить на вкладке «Проверки».",
+    "en": "A check is already running. You can stop it on the Checks tab.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_178"
+  },
+  {
+    "id": "no_servers_to_check",
+    "ru": "Нет серверов для проверки",
+    "en": "No servers to check",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_179"
+  },
+  {
+    "id": "of_successful",
+    "ru": "%1$s · успешно %2$s из %3$s",
+    "en": "%1$s · %2$s of %3$s successful",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_180"
+  },
+  {
+    "id": "run_a_check_with_the_selected_method",
+    "ru": "Сначала выполните проверку выбранным методом",
+    "en": "Run a check with the selected method first",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_181"
+  },
+  {
+    "id": "selected_182",
+    "ru": "Выбран %1$s",
+    "en": "Selected %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_182"
+  },
+  {
+    "id": "could_not_complete_this_action_check_the",
+    "ru": "Не удалось выполнить действие. Проверьте сеть и формат данных.",
+    "en": "Could not complete this action. Check the network and data format.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/MainViewModel.kt",
+    "key": "text_183"
+  },
+  {
+    "id": "address_not_found",
+    "ru": "Адрес не найден",
+    "en": "Address not found",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_184"
+  },
+  {
+    "id": "server_actions",
+    "ru": "Действия сервера",
+    "en": "Server actions",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_185"
+  },
+  {
+    "id": "details_and_checks",
+    "ru": "Сведения и проверки",
+    "en": "Details and checks",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_186"
+  },
+  {
+    "id": "remove_from_favorites",
+    "ru": "Убрать из избранного",
+    "en": "Remove from favorites",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_187"
+  },
+  {
+    "id": "add_to_favorites",
+    "ru": "В избранное",
+    "en": "Add to favorites",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_188"
+  },
+  {
+    "id": "checking",
+    "ru": "Проверка",
+    "en": "Checking",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_189"
+  },
+  {
+    "id": "not_checked",
+    "ru": "Не проверен",
+    "en": "Not checked",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_190"
+  },
+  {
+    "id": "ms",
+    "ru": "%1$s мс",
+    "en": "%1$s ms",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_191"
+  },
+  {
+    "id": "error",
+    "ru": "Ошибка",
+    "en": "Error",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_192"
+  },
+  {
+    "id": "core_data_error",
+    "ru": "Данные ядра",
+    "en": "Core data error",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_193"
+  },
+  {
+    "id": "config",
+    "ru": "конфиг",
+    "en": "config",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_194"
+  },
+  {
+    "id": "config_error",
+    "ru": "Ошибка конфига",
+    "en": "Config error",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_195"
+  },
+  {
+    "id": "dns_error",
+    "ru": "Ошибка DNS",
+    "en": "DNS error",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_196"
+  },
+  {
+    "id": "tls_error",
+    "ru": "Ошибка TLS",
+    "en": "TLS error",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_197"
+  },
+  {
+    "id": "no_response_within",
+    "ru": "Нет ответа за",
+    "en": "No response within",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_198"
+  },
+  {
+    "id": "timed_out",
+    "ru": "Таймаут",
+    "en": "Timed out",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_199"
+  },
+  {
+    "id": "check_failed",
+    "ru": "Ошибка проверки",
+    "en": "Check failed",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_200"
+  },
+  {
+    "id": "s",
+    "ru": "/с",
+    "en": "/s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_201"
+  },
+  {
+    "id": "b",
+    "ru": "Б",
+    "en": "B",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_202"
+  },
+  {
+    "id": "kb",
+    "ru": "КБ",
+    "en": "KB",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_203"
+  },
+  {
+    "id": "mb",
+    "ru": "МБ",
+    "en": "MB",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_204"
+  },
+  {
+    "id": "gb",
+    "ru": "ГБ",
+    "en": "GB",
+    "source": "app/src/main/java/com/gdhapp/client/ui/main/ServerComponents.kt",
+    "key": "text_205"
+  },
+  {
+    "id": "appearance",
+    "ru": "Оформление",
+    "en": "Appearance",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_206"
+  },
+  {
+    "id": "about",
+    "ru": "О приложении",
+    "en": "About",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_207"
+  },
+  {
+    "id": "vpn_configuration",
+    "ru": "Настройте своё подключение",
+    "en": "VPN configuration",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "ru_display": "Параметры VPN",
+    "key": "text_208"
+  },
+  {
+    "id": "vpn_settings_take_effect_when_you_reconnect",
+    "ru": "Изменения параметров VPN применяются при следующем подключении.",
+    "en": "VPN settings take effect when you reconnect.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_209"
+  },
+  {
+    "id": "connection_core",
+    "ru": "Ядро подключения",
+    "en": "Connection core",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_210"
+  },
+  {
+    "id": "auto_keeps_the_profile_s_format_xray",
+    "ru": "Авто сохраняет формат профиля: Xray для его JSON, включая XHTTP и Hysteria2; sing-box — для его JSON и ссылок Hysteria/TUIC.",
+    "en": "Auto keeps the profile's format: Xray for Xray JSON, including XHTTP and Hysteria2; sing-box for sing-box JSON and Hysteria/TUIC links.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_211"
+  },
+  {
+    "id": "network",
+    "ru": "Сеть",
+    "en": "Network",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_212"
+  },
+  {
+    "id": "route_ipv6_through_the_tunnel_ipv6_is",
+    "ru": "Передавать IPv6 через туннель. При выключении IPv6 в VPN блокируется.",
+    "en": "Route IPv6 through the tunnel. IPv6 is blocked inside the VPN when disabled.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_213"
+  },
+  {
+    "id": "tunnel_packet_size",
+    "ru": "Размер пакета туннеля",
+    "en": "Tunnel packet size",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_214"
+  },
+  {
+    "id": "value_1280_to_9000",
+    "ru": "От 1280 до 9000",
+    "en": "1280 to 9000",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_215"
+  },
+  {
+    "id": "enter_a_number_between_1280_and_9000",
+    "ru": "Введите число от 1280 до 9000",
+    "en": "Enter a number between 1280 and 9000",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_216"
+  },
+  {
+    "id": "primary_dns",
+    "ru": "Основной DNS",
+    "en": "Primary DNS",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_217"
+  },
+  {
+    "id": "for_apps_routed_through_the_vpn",
+    "ru": "Для приложений, использующих VPN",
+    "en": "For apps routed through the VPN",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_218"
+  },
+  {
+    "id": "ipv4_or_ipv6_address",
+    "ru": "IPv4 или IPv6 адрес",
+    "en": "IPv4 or IPv6 address",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_219"
+  },
+  {
+    "id": "enter_a_dns_server_ip_address",
+    "ru": "Нужен IP-адрес DNS-сервера",
+    "en": "Enter a DNS server IP address",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_220"
+  },
+  {
+    "id": "secondary_dns",
+    "ru": "Резервный DNS",
+    "en": "Secondary DNS",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_221"
+  },
+  {
+    "id": "optional",
+    "ru": "Можно оставить пустым",
+    "en": "Optional",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_222"
+  },
+  {
+    "id": "not_set",
+    "ru": "Не задан",
+    "en": "Not set",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_223"
+  },
+  {
+    "id": "ip_address_or_leave_blank",
+    "ru": "IP-адрес или пустое поле",
+    "en": "IP address or leave blank",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_224"
+  },
+  {
+    "id": "bypass_local_network",
+    "ru": "Обход локальной сети",
+    "en": "Bypass local network",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_225"
+  },
+  {
+    "id": "access_home_devices_and_local_addresses_directly",
+    "ru": "Домашние устройства и локальные адреса доступны напрямую",
+    "en": "Access home devices and local addresses directly",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_226"
+  },
+  {
+    "id": "per_app_vpn",
+    "ru": "VPN для приложений",
+    "en": "Per-app VPN",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_227"
+  },
+  {
+    "id": "selected_apps",
+    "ru": "Выбранные приложения",
+    "en": "Selected apps",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_228"
+  },
+  {
+    "id": "use_the_vpn_for_these_apps",
+    "ru": "Будут работать через VPN",
+    "en": "Use the VPN for these apps",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_229"
+  },
+  {
+    "id": "these_apps_bypass_the_vpn",
+    "ru": "Будут обходить VPN",
+    "en": "These apps bypass the VPN",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_230"
+  },
+  {
+    "id": "the_vpn_client_connects_directly_so_its",
+    "ru": "Сам VPN-клиент использует прямое подключение для работы ядра. Проверки HTTP всё равно идут через выбранный профиль.",
+    "en": "The VPN client connects directly so its core can operate. HTTP checks still pass through the selected profile.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_231"
+  },
+  {
+    "id": "behavior",
+    "ru": "Поведение",
+    "en": "Behavior",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_232"
+  },
+  {
+    "id": "verify_connection",
+    "ru": "Проверять при подключении",
+    "en": "Verify connection",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_233"
+  },
+  {
+    "id": "run_an_http_get_through_the_profile",
+    "ru": "HTTP GET через профиль до включения статуса подключения",
+    "en": "Run an HTTP GET through the profile before showing Connected",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_234"
+  },
+  {
+    "id": "reconnect_on_selection",
+    "ru": "Переподключаться при выборе",
+    "en": "Reconnect on selection",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_235"
+  },
+  {
+    "id": "switch_the_active_server_automatically",
+    "ru": "Автоматически переключать активный сервер",
+    "en": "Switch the active server automatically",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_236"
+  },
+  {
+    "id": "local_socks_port",
+    "ru": "Локальный SOCKS-порт",
+    "en": "Local SOCKS port",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_237"
+  },
+  {
+    "id": "value_0_selects_an_available_port_automatically",
+    "ru": "0 — свободный порт автоматически",
+    "en": "0 selects an available port automatically",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_238"
+  },
+  {
+    "id": "value_0_or_1024_65535",
+    "ru": "0 или 1024–65535",
+    "en": "0 or 1024–65535",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_239"
+  },
+  {
+    "id": "enter_0_or_a_port_between_1024",
+    "ru": "Введите 0 или порт от 1024 до 65535",
+    "en": "Enter 0 or a port between 1024 and 65535",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_240"
+  },
+  {
+    "id": "log_level",
+    "ru": "Уровень журнала",
+    "en": "Log level",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_241"
+  },
+  {
+    "id": "errors",
+    "ru": "Ошибки",
+    "en": "Errors",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_242"
+  },
+  {
+    "id": "normal",
+    "ru": "Обычный",
+    "en": "Normal",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_243"
+  },
+  {
+    "id": "info",
+    "ru": "Инфо",
+    "en": "Info",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_244"
+  },
+  {
+    "id": "debug",
+    "ru": "Отладка",
+    "en": "Debug",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_245"
+  },
+  {
+    "id": "android_vpn_settings",
+    "ru": "Системные настройки VPN",
+    "en": "Android VPN settings",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_246"
+  },
+  {
+    "id": "appearance_and_language",
+    "ru": "Оформление и язык",
+    "en": "Appearance and language",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_247"
+  },
+  {
+    "id": "customize_the_interface_and_choose_your_language",
+    "ru": "Настройте внешний вид и язык интерфейса.",
+    "en": "Customize the interface and choose your language.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_248"
+  },
+  {
+    "id": "app_language",
+    "ru": "Язык приложения",
+    "en": "App language",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_249"
+  },
+  {
+    "id": "color_and_theme",
+    "ru": "Цвет и тема",
+    "en": "Color and theme",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_250"
+  },
+  {
+    "id": "accent",
+    "ru": "Акцент",
+    "en": "Accent",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_251"
+  },
+  {
+    "id": "android_wallpaper_colors",
+    "ru": "Цвета обоев Android",
+    "en": "Android wallpaper colors",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_252"
+  },
+  {
+    "id": "dynamic_colors_on_android_12_and_later",
+    "ru": "Динамическая палитра на Android 12 и выше",
+    "en": "Dynamic colors on Android 12 and later",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_253"
+  },
+  {
+    "id": "true_black",
+    "ru": "Настоящий чёрный",
+    "en": "True black",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_254"
+  },
+  {
+    "id": "amoled_background_in_dark_mode",
+    "ru": "AMOLED-фон в тёмной теме",
+    "en": "AMOLED background in dark mode",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_255"
+  },
+  {
+    "id": "server_list",
+    "ru": "Список серверов",
+    "en": "Server list",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_256"
+  },
+  {
+    "id": "sort_order",
+    "ru": "Сортировка",
+    "en": "Sort order",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_257"
+  },
+  {
+    "id": "country_flags",
+    "ru": "Флаги стран",
+    "en": "Country flags",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_258"
+  },
+  {
+    "id": "detected_from_the_profile_name",
+    "ru": "Автоматически определяются из имени профиля",
+    "en": "Detected from the profile name",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_259"
+  },
+  {
+    "id": "protocol_and_transport",
+    "ru": "Протокол и транспорт",
+    "en": "Protocol and transport",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_260"
+  },
+  {
+    "id": "for_example_vless_xhttp_reality",
+    "ru": "Например, VLESS · XHTTP · REALITY",
+    "en": "For example, VLESS · XHTTP · REALITY",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_261"
+  },
+  {
+    "id": "server_addresses",
+    "ru": "Адреса серверов",
+    "en": "Server addresses",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_262"
+  },
+  {
+    "id": "show_host_and_port_on_server_cards",
+    "ru": "Показывать хост и порт на карточках",
+    "en": "Show host and port on server cards",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_263"
+  },
+  {
+    "id": "shape_and_motion",
+    "ru": "Форма и движение",
+    "en": "Shape and motion",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_264"
+  },
+  {
+    "id": "corner_radius_dp",
+    "ru": "Скругление · %1$s dp",
+    "en": "Corner radius · %1$s dp",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_265"
+  },
+  {
+    "id": "text_size",
+    "ru": "Масштаб текста · %1$s%%",
+    "en": "Text size · %1$s%%",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_266"
+  },
+  {
+    "id": "subtle_animations",
+    "ru": "Маленькие анимации",
+    "en": "Subtle animations",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "ru_display": "Плавные анимации",
+    "key": "text_267"
+  },
+  {
+    "id": "smooth_selection_expansion_and_transitions",
+    "ru": "Плавное выделение, раскрытие и переходы",
+    "en": "Smooth selection, expansion and transitions",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_268"
+  },
+  {
+    "id": "soft_blur",
+    "ru": "Мягкое размытие",
+    "en": "Soft blur",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_269"
+  },
+  {
+    "id": "subtle_panel_lighting_blur_is_available_on",
+    "ru": "Лёгкая подсветка панелей. Размытие доступно на Android 12 и выше.",
+    "en": "Subtle panel lighting. Blur is available on Android 12 and later.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_270"
+  },
+  {
+    "id": "haptic_feedback",
+    "ru": "Тактильный отклик",
+    "en": "Haptic feedback",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_271"
+  },
+  {
+    "id": "light_feedback_when_selecting_a_server",
+    "ru": "Лёгкий отклик при выборе сервера",
+    "en": "Light feedback when selecting a server",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_272"
+  },
+  {
+    "id": "reset_appearance",
+    "ru": "Сбросить оформление",
+    "en": "Reset appearance",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_273"
+  },
+  {
+    "id": "latency_checks",
+    "ru": "Проверяйте подходящим способом",
+    "en": "Latency checks",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "ru_display": "Проверка задержки",
+    "key": "text_274"
+  },
+  {
+    "id": "http_get_and_head_use_the_vpn",
+    "ru": "HTTP GET и HEAD проходят через VPN-профиль. Остальные методы проверяют непосредственно адрес сервера.",
+    "en": "HTTP GET and HEAD use the VPN profile. Other methods check the server address directly.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_275"
+  },
+  {
+    "id": "check_method",
+    "ru": "Способ проверки",
+    "en": "Check method",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_276"
+  },
+  {
+    "id": "read_http_headers_through_the_selected_core",
+    "ru": "Загружает HTTP-заголовки через реальное подключение выбранного ядра. Проверяет авторизацию, транспорт и доступ к сайту.",
+    "en": "Read HTTP headers through the selected core. Checks authentication, transport and access to the test site.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_277"
+  },
+  {
+    "id": "send_head_through_the_profile_some_sites",
+    "ru": "Запрос HEAD через выбранный профиль. Некоторые сайты запрещают HEAD; в этом случае попробуйте GET.",
+    "en": "Send HEAD through the profile. Some sites block HEAD; try GET instead.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_278"
+  },
+  {
+    "id": "measure_a_direct_tcp_connection_this_may",
+    "ru": "Время установления TCP-соединения. Для UDP-протоколов, например Hysteria, тест может не работать.",
+    "en": "Measure a direct TCP connection. This may fail for UDP protocols such as Hysteria.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_279"
+  },
+  {
+    "id": "ping_the_address_android_or_the_server",
+    "ru": "Обычный ping до адреса. Сервер или Android могут запрещать ICMP независимо от работоспособности VPN.",
+    "en": "Ping the address. Android or the server may block ICMP even when the VPN works.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_280"
+  },
+  {
+    "id": "check_the_tls_handshake_with_the_profile",
+    "ru": "Проверяет TLS-рукопожатие с SNI из профиля. REALITY и другие особые транспорты могут не поддерживать такой тест.",
+    "en": "Check the TLS handshake with the profile's SNI. REALITY and other specialized transports may not support this check.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_281"
+  },
+  {
+    "id": "measure_system_dns_resolution_cached_results_may",
+    "ru": "Время системного определения IP-адреса узла. Кэш DNS может давать очень маленькие значения.",
+    "en": "Measure system DNS resolution. Cached results may have very low latency.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_282"
+  },
+  {
+    "id": "check_options",
+    "ru": "Параметры проверки",
+    "en": "Check options",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_283"
+  },
+  {
+    "id": "http_connections",
+    "ru": "HTTP-соединения",
+    "en": "HTTP connections",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_284"
+  },
+  {
+    "id": "default_uses_standard_http_behavior_disable_opens",
+    "ru": "Default — стандартное поведение HTTP. Disable — новое соединение для каждого замера. KeepAlive — повторное использование соединения между замерами, если сервер разрешает. Для проверки выберите 2 и более повторов. Применяется только к HTTP GET и HEAD.",
+    "en": "Default uses standard HTTP behavior. Disable opens a new connection for every sample. KeepAlive reuses the connection between samples when supported by the server. Choose at least 2 samples to compare. Applies only to HTTP GET and HEAD.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_285"
+  },
+  {
+    "id": "http_test_url",
+    "ru": "URL HTTP-проверки",
+    "en": "HTTP test URL",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_286"
+  },
+  {
+    "id": "also_used_to_verify_a_new_vpn",
+    "ru": "Также используется при проверке подключения",
+    "en": "Also used to verify a new VPN connection",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_287"
+  },
+  {
+    "id": "test_url",
+    "ru": "URL проверки",
+    "en": "Test URL",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_288"
+  },
+  {
+    "id": "enter_an_http_or_https_url",
+    "ru": "Введите HTTP или HTTPS URL",
+    "en": "Enter an HTTP or HTTPS URL",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_289"
+  },
+  {
+    "id": "s_290",
+    "ru": "%1$s с",
+    "en": "%1$s s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_290"
+  },
+  {
+    "id": "samples_median_result",
+    "ru": "Повторения · показывается медиана",
+    "en": "Samples · median result",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "ru_display": "Повторы · результат по медиане",
+    "key": "text_291"
+  },
+  {
+    "id": "concurrent_checks",
+    "ru": "Одновременные проверки",
+    "en": "Concurrent checks",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_292"
+  },
+  {
+    "id": "each_http_check_uses_a_separate_core",
+    "ru": "Для HTTP каждое подключение использует отдельный экземпляр ядра. На слабых устройствах выберите 1 или 2 проверки одновременно.",
+    "en": "Each HTTP check uses a separate core session. Select 1 or 2 concurrent checks on slower devices.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_293"
+  },
+  {
+    "id": "subscriptions_and_settings_stay_on_your_device",
+    "ru": "Ваши подписки и настройки хранятся на устройстве. При первом запуске список серверов пустой.",
+    "en": "Subscriptions and settings stay on your device. A new installation starts with an empty server list.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_294"
+  },
+  {
+    "id": "bundled_cores",
+    "ru": "Встроенные ядра",
+    "en": "Bundled cores",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_295"
+  },
+  {
+    "id": "checking_library",
+    "ru": "Проверяем библиотеку…",
+    "en": "Checking library…",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_296"
+  },
+  {
+    "id": "tun_bridge_hev_2_19_1_cores",
+    "ru": "TUN-мост: HEV 2.19.1. Ядра встроены в APK и не требуют отдельной установки.",
+    "en": "TUN bridge: HEV 2.19.1. Cores are bundled with the APK; no separate installation is required.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_297"
+  },
+  {
+    "id": "check_libraries",
+    "ru": "Проверить библиотеки",
+    "en": "Check libraries",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_298"
+  },
+  {
+    "id": "component_licenses",
+    "ru": "Лицензии компонентов",
+    "en": "Component licenses",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_299"
+  },
+  {
+    "id": "update_when_opened",
+    "ru": "Автообновление при открытии",
+    "en": "Update when opened",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "ru_display": "Обновлять при открытии",
+    "key": "text_300"
+  },
+  {
+    "id": "uses_the_interval_provided_by_the_subscription",
+    "ru": "По интервалу, полученному от провайдера подписки",
+    "en": "Uses the interval provided by the subscription",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_301"
+  },
+  {
+    "id": "import_xray_and_sing_box_json_base64",
+    "ru": "Импорт: JSON Xray и sing-box, Base64, VLESS, VMess, Trojan, Shadowsocks, Hysteria и TUIC. Ссылка поддержки и квота берутся только из вашей подписки.",
+    "en": "Import Xray and sing-box JSON, Base64, VLESS, VMess, Trojan, Shadowsocks, Hysteria and TUIC. Support links and quotas come from your subscription.",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_302"
+  },
+  {
+    "id": "diagnostics",
+    "ru": "Диагностика",
+    "en": "Diagnostics",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_303"
+  },
+  {
+    "id": "no_critical_connection_errors",
+    "ru": "Критических ошибок подключения нет",
+    "en": "No critical connection errors",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_304"
+  },
+  {
+    "id": "diagnostic_information",
+    "ru": "Сведения для диагностики",
+    "en": "Diagnostic information",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_305"
+  },
+  {
+    "id": "licenses",
+    "ru": "Лицензии",
+    "en": "Licenses",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_306"
+  },
+  {
+    "id": "architectures",
+    "ru": "Архитектуры: %1$s",
+    "en": "Architectures: %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_307"
+  },
+  {
+    "id": "profiles_method",
+    "ru": "Профилей: %1$s; метод: %2$s",
+    "en": "Profiles: %1$s; method: %2$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_308"
+  },
+  {
+    "id": "error_309",
+    "ru": "Ошибка: %1$s",
+    "en": "Error: %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_309"
+  },
+  {
+    "id": "copy",
+    "ru": "Копировать",
+    "en": "Copy",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_310"
+  },
+  {
+    "id": "your_style",
+    "ru": "Ваш стиль",
+    "en": "Your style",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_311"
+  },
+  {
+    "id": "apps",
+    "ru": "Приложения · %1$s",
+    "en": "Apps · %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_312"
+  },
+  {
+    "id": "done",
+    "ru": "Готово",
+    "en": "Done",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_313"
+  },
+  {
+    "id": "search_apps",
+    "ru": "Поиск приложения",
+    "en": "Search apps",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_314"
+  },
+  {
+    "id": "package_name",
+    "ru": "Имя пакета вручную",
+    "en": "Package name",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_315"
+  },
+  {
+    "id": "add_package",
+    "ru": "Добавить пакет",
+    "en": "Add package",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_316"
+  },
+  {
+    "id": "could_not_create_the_xray_data_folder",
+    "ru": "Не удалось создать папку данных Xray",
+    "en": "Could not create the Xray data folder",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/BundledRoutingAssets.kt",
+    "key": "text_317"
+  },
+  {
+    "id": "bundled_file_is_corrupted",
+    "ru": "Повреждён встроенный файл %1$s",
+    "en": "Bundled file %1$s is corrupted",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/BundledRoutingAssets.kt",
+    "key": "text_318"
+  },
+  {
+    "id": "could_not_install_for_xray",
+    "ru": "Не удалось установить %1$s для Xray: %2$s",
+    "en": "Could not install %1$s for Xray: %2$s",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/BundledRoutingAssets.kt",
+    "key": "text_319"
+  },
+  {
+    "id": "vpn_is_already_running",
+    "ru": "VPN уже запущен",
+    "en": "VPN is already running",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/BundledVpnCoreManager.kt",
+    "key": "text_320"
+  },
+  {
+    "id": "could_not_start_the_hev_tun_bridge",
+    "ru": "Не удалось запустить TUN-мост HEV",
+    "en": "Could not start the HEV TUN bridge",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/BundledVpnCoreManager.kt",
+    "key": "text_321"
+  },
+  {
+    "id": "the_tun_bridge_stopped_during_startup",
+    "ru": "TUN-мост завершился при запуске",
+    "en": "The TUN bridge stopped during startup",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/BundledVpnCoreManager.kt",
+    "key": "text_322"
+  },
+  {
+    "id": "the_configuration_is_not_a_json_object",
+    "ru": "Конфигурация не является JSON-объектом",
+    "en": "The configuration is not a JSON object",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_323"
+  },
+  {
+    "id": "demo_configurations_were_removed_add_your_own",
+    "ru": "Демонстрационные конфигурации удалены. Добавьте свою подписку.",
+    "en": "Demo configurations were removed. Add your own subscription.",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_324"
+  },
+  {
+    "id": "the_configuration_has_no_outbounds",
+    "ru": "В конфигурации нет outbounds",
+    "en": "The configuration has no outbounds",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_325"
+  },
+  {
+    "id": "the_configuration_has_no_proxy_outbound",
+    "ru": "В конфигурации нет прокси outbound",
+    "en": "The configuration has no proxy outbound",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_326"
+  },
+  {
+    "id": "this_profile_uses_xray_routing_rules_select",
+    "ru": "У профиля правила Xray. Выберите ядро Xray или импортируйте JSON sing-box.",
+    "en": "This profile uses Xray routing rules. Select Xray or import sing-box JSON.",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_327"
+  },
+  {
+    "id": "this_is_a_sing_box_profile_select",
+    "ru": "Это формат sing-box. Выберите «Авто» или sing-box в настройках VPN.",
+    "en": "This is a sing-box profile. Select Auto or sing-box in VPN settings.",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_328"
+  },
+  {
+    "id": "invalid_outbound",
+    "ru": "Некорректный outbound",
+    "en": "Invalid outbound",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_329"
+  },
+  {
+    "id": "this_profile_requires_xray",
+    "ru": "Для этого профиля требуется Xray",
+    "en": "This profile requires Xray",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_330"
+  },
+  {
+    "id": "xhttp_requires_xray_select_auto_or_xray",
+    "ru": "XHTTP работает через Xray. Выберите «Авто» или Xray.",
+    "en": "XHTTP requires Xray. Select Auto or Xray.",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_331"
+  },
+  {
+    "id": "this_profile_uses_certificate_pinning_and_requires",
+    "ru": "Профиль с закреплением сертификата требует Xray",
+    "en": "This profile uses certificate pinning and requires Xray",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreConfigBuilder.kt",
+    "key": "text_332"
+  },
+  {
+    "id": "xray_error",
+    "ru": "Ошибка Xray: %1$s",
+    "en": "Xray error: %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreSessionFactory.kt",
+    "key": "text_333"
+  },
+  {
+    "id": "timed_out_334",
+    "ru": "Превышено время ожидания",
+    "en": "Timed out",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreSessionFactory.kt",
+    "key": "text_334"
+  },
+  {
+    "id": "sing_box_error",
+    "ru": "Ошибка sing-box: %1$s",
+    "en": "sing-box error: %1$s",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreSessionFactory.kt",
+    "key": "text_335"
+  },
+  {
+    "id": "certificate_unavailable",
+    "ru": "сертификат недоступен",
+    "en": "certificate unavailable",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreSessionFactory.kt",
+    "key": "text_336"
+  },
+  {
+    "id": "no_core_selected",
+    "ru": "Ядро не выбрано",
+    "en": "No core selected",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreSessionFactory.kt",
+    "key": "text_337"
+  },
+  {
+    "id": "the_core_stopped",
+    "ru": "%1$s: ядро завершило работу",
+    "en": "%1$s: the core stopped",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreSessionFactory.kt",
+    "key": "text_338"
+  },
+  {
+    "id": "the_socks_listener_did_not_start",
+    "ru": "%1$s: SOCKS-порт не запустился",
+    "en": "%1$s: the SOCKS listener did not start",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreSessionFactory.kt",
+    "key": "text_339"
+  },
+  {
+    "id": "sing_box_no_binary_found_for_this",
+    "ru": "sing-box: отсутствует бинарник для архитектуры устройства",
+    "en": "sing-box: no binary found for this device architecture",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/CoreSessionFactory.kt",
+    "key": "text_340"
+  },
+  {
+    "id": "tls_server_address_is_missing_from_the",
+    "ru": "TLS: в профиле отсутствует адрес сервера",
+    "en": "TLS: server address is missing from the profile",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/LegacyTlsCompatibility.kt",
+    "key": "text_341"
+  },
+  {
+    "id": "tls_the_server_did_not_return_a",
+    "ru": "TLS: сервер не вернул отпечаток сертификата",
+    "en": "TLS: the server did not return a certificate fingerprint",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/core/LegacyTlsCompatibility.kt",
+    "key": "text_342"
+  },
+  {
+    "id": "select_a_server_in_the_app",
+    "ru": "Выберите сервер в приложении",
+    "en": "Select a server in the app",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_343"
+  },
+  {
+    "id": "allow_the_vpn_in_the_android_permission",
+    "ru": "Разрешите VPN в системном диалоге",
+    "en": "Allow the VPN in the Android permission dialog",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_344"
+  },
+  {
+    "id": "primary_dns_must_be_an_ip_address",
+    "ru": "Основной DNS должен быть IP-адресом",
+    "en": "Primary DNS must be an IP address",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_345"
+  },
+  {
+    "id": "secondary_dns_must_be_an_ip_address",
+    "ru": "Резервный DNS должен быть IP-адресом",
+    "en": "Secondary DNS must be an IP address",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_346"
+  },
+  {
+    "id": "enable_ipv6_in_vpn_settings_to_use",
+    "ru": "Для IPv6 DNS включите IPv6 в настройках VPN",
+    "en": "Enable IPv6 in VPN settings to use IPv6 DNS",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_347"
+  },
+  {
+    "id": "select_apps_for_selected_only_mode",
+    "ru": "Выберите приложения для режима «Только выбранные»",
+    "en": "Select apps for Selected only mode",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_348"
+  },
+  {
+    "id": "the_selected_apps_are_not_installed_update",
+    "ru": "Выбранные приложения не установлены. Измените список приложений VPN.",
+    "en": "The selected apps are not installed. Update the per-app VPN list.",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_349"
+  },
+  {
+    "id": "android_could_not_create_the_tun_interface",
+    "ru": "Android не создал TUN-интерфейс",
+    "en": "Android could not create the TUN interface",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_350"
+  },
+  {
+    "id": "the_core_did_not_start_within_25",
+    "ru": "Ядро не запустилось за 25 секунд",
+    "en": "The core did not start within 25 seconds",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_351"
+  },
+  {
+    "id": "the_core_process_or_tun_bridge_stopped",
+    "ru": "%1$s: процесс ядра или TUN-мост остановился",
+    "en": "%1$s: the core process or TUN bridge stopped",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_352"
+  },
+  {
+    "id": "disconnect",
+    "ru": "Отключить",
+    "en": "Disconnect",
+    "source": "app/src/main/java/com/gdhapp/client/vpn/GdhappVpnService.kt",
+    "key": "text_353"
+  },
+  {
+    "id": "timeout",
+    "ru": "Таймаут",
+    "en": "Timeout",
+    "source": "app/src/main/java/com/gdhapp/client/ui/settings/SettingsScreen.kt",
+    "key": "text_354"
+  },
+  {
+    "id": "notification_ping_action",
+    "ru": "Пинг",
+    "en": "Ping",
+    "source": "app/src/main/java/com/gdhapp/client/ui/notifications/VpnNotification.kt"
+  },
+  {
+    "id": "notification_stop_action",
+    "ru": "Стоп",
+    "en": "Stop",
+    "source": "app/src/main/java/com/gdhapp/client/ui/notifications/VpnNotification.kt"
+  },
+  {
+    "id": "notification_ping_idle",
+    "ru": "Пинг: не проверен",
+    "en": "Ping: not checked",
+    "source": "app/src/main/java/com/gdhapp/client/ui/notifications/VpnNotification.kt"
+  },
+  {
+    "id": "notification_ping_checking",
+    "ru": "Пинг: проверка…",
+    "en": "Ping: checking…",
+    "source": "app/src/main/java/com/gdhapp/client/ui/notifications/VpnNotification.kt"
+  },
+  {
+    "id": "notification_ping_result",
+    "ru": "Пинг · %1$s: %2$s",
+    "en": "Ping · %1$s: %2$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/notifications/VpnNotification.kt"
+  },
+  {
+    "id": "notification_ping_failed",
+    "ru": "Пинг · %1$s: ошибка проверки",
+    "en": "Ping · %1$s: check failed",
+    "source": "app/src/main/java/com/gdhapp/client/ui/notifications/VpnNotification.kt"
+  },
+  {
+    "id": "notification_transferred",
+    "ru": "Передано: ↑ %1$s · ↓ %2$s",
+    "en": "Transferred: ↑ %1$s · ↓ %2$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/notifications/VpnNotification.kt"
+  },
+  {
+    "id": "notification_connected_for",
+    "ru": "Подключено: %1$s · %2$s",
+    "en": "Connected: %1$s · %2$s",
+    "source": "app/src/main/java/com/gdhapp/client/ui/notifications/VpnNotification.kt"
+  }
+]
