@@ -1,6 +1,6 @@
 # Лицензии и уведомления
 
-Исходный код GDHAPP распространяется под GNU GPL version 3; полный текст — `LICENSE`.
+Исходный код NyaWire распространяется под GNU GPL version 3; полный текст — `LICENSE`.
 В проекте используются компоненты с собственными лицензиями и уведомлениями:
 
 | Компонент | Лицензия | Текст |
@@ -13,7 +13,7 @@
 | v2fly domain-list-community | MIT | native/licenses/geosite-LICENSE |
 | flag-icons 7.3.2 (Panayiotis Lipiridis) | MIT | native/licenses/flag-icons-LICENSE |
 
-GDHAPP — самостоятельный клиент, не официальный продукт этих проектов.
+NyaWire — самостоятельный клиент, не официальный продукт этих проектов.
 Исходники native-компонентов, соответствующие поставленным версиям, включены
 в `native/sources/`, версии и SHA-256 — в `native/artifacts.json`.
 Оригинальные файлы лицензий также включены в APK в `assets/licenses/`.
@@ -29,3 +29,4 @@ kotlinx.coroutines (Apache-2.0), OkHttp (Apache-2.0), Gson (Apache-2.0),
 ZXing Android Embedded и ZXing Core (Apache-2.0). Их Maven-координаты и точные
 версии перечислены в `app/build.gradle.kts`; исходные уведомления входят
 в опубликованные артефакты соответствующих разработчиков.
+
