@@ -1,18 +1,48 @@
-# NyaWire
+<p align="center">
+  <img src="assets/nyawire.svg" width="88" height="88" alt="NyaWire">
+</p>
 
-VPN-клиент для Android 10+ на Xray и sing-box.
+<h1 align="center">NyaWire</h1>
+<p align="center">VPN-клиент для Android 10+ на Xray и sing-box</p>
+<p align="center">
+  <a href="https://github.com/GODIS00/NyaWire/releases/latest"><b>Скачать APK</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/GODIS00/NyaWire/releases">Все версии</a>
+  &nbsp;·&nbsp;
+  <a href="#исходники">Исходники</a>
+</p>
 
-[Скачать](https://github.com/GODIS00/NyaWire/releases/latest)
+## Возможности
 
-- **arm64.apk** — для большинства телефонов.
-- **universal.apk** — для остальных устройств.
+| | |
+| :--- | :--- |
+| **Подписки** | Импорт по ссылке, из файла, QR-кода и буфера обмена. Автообновление и HWID. |
+| **Маршрутизация** | VPN для выбранных приложений, правила для доменов и IP, фрагментирование Xray. |
+| **Пинг** | Проверка одного сервера или всего списка. HTTP GET/HEAD, TCP, TLS, DNS, ICMP и KeepAlive для HTTP. |
+| **Подключение** | VPN или локальный SOCKS5, быстрое включение из шторки, управление из уведомления. |
+| **Оформление** | Светлая, тёмная и AMOLED-темы, свой цвет, анимированный фон. |
+| **Языки** | Русский и английский. |
+
+**Протоколы:** VLESS, VMess, Trojan, Shadowsocks, Hysteria, Hysteria2 и TUIC.
+
+## Установка
+
+Открой [последний релиз](https://github.com/GODIS00/NyaWire/releases/latest) и выбери APK:
+
+| Файл | Для каких устройств |
+| :--- | :--- |
+| **arm64.apk** | Большинство современных телефонов |
+| **universal.apk** | Остальные архитектуры и эмуляторы |
+
+После установки добавь свою подписку или сервер.
 
 ## Обновления
 
-С версии 2.9.0 приложение само проверяет новые версии.
+При открытии NyaWire проверяет новые версии на GitHub и предлагает скачать APK.
 Вручную: **Настройки → О приложении → Проверить обновления**.
 
 ## Исходники
 
-Полный проект — в файле **NyaWire-2.9.0-source.zip** в [релизе](https://github.com/GODIS00/NyaWire/releases/tag/v2.9.0).
-Лицензия — [GPL-3.0](LICENSE). Сторонние компоненты — [THIRD_PARTY.md](THIRD_PARTY.md).
+[Полный проект 2.9.0](https://github.com/GODIS00/NyaWire/releases/download/v2.9.0/NyaWire-2.9.0-source.zip) — код приложения, встроенные библиотеки и скрипты сборки.
+
+Лицензия — [GPL-3.0](LICENSE). Лицензии сторонних компонентов — [THIRD_PARTY.md](THIRD_PARTY.md).
