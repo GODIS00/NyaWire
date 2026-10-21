@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/nyawire.svg" width="88" height="88" alt="NyaWire">
+  <img src="assets/nyawire.png" width="88" height="88" alt="NyaWire">
 </p>
 
 <h1 align="center">NyaWire</h1>
