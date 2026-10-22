@@ -17,8 +17,12 @@ if ($Publish) {
     if ($LASTEXITCODE -ne 0) { throw 'Repository unavailable' }
     $visibility = & gh repo view $Repository --json visibility --jq '.visibility'
     if ($LASTEXITCODE -ne 0 -or $visibility -ne 'PUBLIC') { throw 'App update checks require a public repository' }
+    # Windows PowerShell turns redirected native stderr ("release not found") into a terminating error under Stop.
+    $ErrorActionPreference = 'Continue'
     & gh release view "v$version" --repo $Repository *> $null
-    if ($LASTEXITCODE -eq 0) { throw "Release v$version already exists; increase versionName and versionCode" }
+    $releaseExists = $LASTEXITCODE -eq 0
+    $ErrorActionPreference = 'Stop'
+    if ($releaseExists) { throw "Release v$version already exists; increase versionName and versionCode" }
 }
 $artifactDir = Join-Path $projectRoot 'artifacts'
 New-Item -ItemType Directory -Path $artifactDir -Force | Out-Null

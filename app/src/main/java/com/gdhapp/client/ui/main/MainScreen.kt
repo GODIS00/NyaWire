@@ -4,8 +4,19 @@ import com.gdhapp.client.i18n.AppText
 
 import androidx.activity.compose.BackHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.expandVertically
@@ -18,6 +29,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -36,6 +48,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.os.Build
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import com.gdhapp.client.domain.model.VpnMetrics
@@ -57,6 +72,8 @@ import com.gdhapp.client.domain.model.SubscriptionGroup
 import com.gdhapp.client.domain.model.VpnState
 import com.gdhapp.client.ui.settings.SettingsScreen
 import com.gdhapp.client.ui.theme.GdhappTheme
+import com.gdhapp.client.ui.theme.IosMotion
+import com.gdhapp.client.ui.theme.LocalMotionEnabled
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -101,13 +118,21 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
         topBar = { Box {
             com.gdhapp.client.ui.theme.AmbientGlow(state.settings.softBlur, Modifier.matchParentSize())
             TopAppBar(title = { Column {
-                Text(if (tab == 0) "NyaWire" else navLabels[tab], fontWeight = FontWeight.Bold, fontSize = 22.sp)
-            } }, actions = {
-                if (tab != 2) IconButton(onClick = { showAdd = true }, enabled = !state.importing) {
-                    if (state.importing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                    else Icon(Icons.Rounded.Add, AppText.text(R.string.add_subscription))
+                Crossfade(if (tab == 0) "NyaWire" else navLabels[tab], animationSpec = if (state.settings.animations) IosMotion.fade() else snap(), label = "screenTitle") { title ->
+                    Text(title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                 }
-                if (tab != 2) IconButton(onClick = { tab = 2 }) { Icon(Icons.Rounded.Tune, AppText.text(R.string.client_settings)) }
+            } }, actions = {
+                // Fade and scale only: the bar never reflows while the buttons come and go.
+                AnimatedVisibility(tab != 2, enter = if (state.settings.animations) fadeIn(IosMotion.fade()) + scaleIn(IosMotion.fade(), initialScale = .85f) else EnterTransition.None,
+                    exit = if (state.settings.animations) fadeOut(IosMotion.fade()) + scaleOut(IosMotion.fade(), targetScale = .85f) else ExitTransition.None) { Row {
+                    IconButton(onClick = { showAdd = true }, enabled = !state.importing) {
+                        Crossfade(state.importing, animationSpec = if (state.settings.animations) tween(180) else snap(), label = "importing") { importing ->
+                            if (importing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                            else Icon(Icons.Rounded.Add, AppText.text(R.string.add_subscription))
+                        }
+                    }
+                    IconButton(onClick = { tab = 2 }) { Icon(Icons.Rounded.Tune, AppText.text(R.string.client_settings)) }
+                } }
                 Spacer(Modifier.width(8.dp))
             }, colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent))
         } },
@@ -139,7 +164,9 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
             }) {
             com.gdhapp.client.ui.theme.DriftingBackground(state.settings.backgroundPictures, state.settings.animations && !scrolling && !state.startupRefreshing,
                 com.gdhapp.client.ui.theme.isDarkAppearance(state.settings), Modifier.matchParentSize())
-            when (tab) {
+            AnimatedContent(tab, Modifier.fillMaxSize().clipToBounds(), transitionSpec = {
+                if (state.settings.animations) IosMotion.page(forward = targetState > initialState) else IosMotion.none
+            }, label = "tabContent") { tab -> when (tab) {
                 2 -> pageState.SaveableStateProvider("settings") {
                     SettingsScreen(state, actions, Modifier.widthIn(max = 820.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding()), onPreviewSound = playConnectionSound)
                 }
@@ -147,13 +174,13 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                 else -> LazyColumn(state = listState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize(),
                     contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 12.dp, bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 104.dp else 20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (listModel.groups.isNotEmpty() || state.connectionBusy) item(key = "connection") { val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
-                        ConnectionCard(state.copy(metrics = currentMetrics), ::connect, { showAdd = true }, { showError = true }) }
+                        Box(itemMotion(state.settings.animations)) { ConnectionCard(state.copy(metrics = currentMetrics), ::connect, { showAdd = true }, { showError = true }) } }
                     if (listModel.groups.isEmpty()) item {
                         EmptyView(Icons.Rounded.TravelExplore, AppText.text(R.string.no_servers_yet),
                             AppText.text(R.string.add_a_subscription_url_paste_a_configuration), AppText.text(R.string.add_subscription), { showAdd = true })
                     } else {
                         item(key = "filters") {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)), verticalAlignment = Alignment.CenterVertically) {
                                 Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                     FilterChip(selected = !listModel.favoritesOnly && listModel.protocolFilter == null,
                                         onClick = { actions.favoritesOnly(false); actions.protocolFilter(null) }, label = { Text(AppText.text(R.string.all, listModel.allNodes.size), fontSize = 11.sp) })
@@ -166,9 +193,9 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                                 SortMenu(listModel, actions)
                             }
                         }
-                        item(key = "ping-all") { PingAllControl(listModel, actions) }
+                        item(key = "ping-all") { Box(itemMotion(state.settings.animations)) { PingAllControl(listModel, actions) } }
                         item(key = "section-title") {
-                            Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)).padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Text(AppText.text(R.string.subscriptions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                                 TextButton(onClick = actions.collapseAll) { Text(AppText.text(R.string.collapse), fontSize = 11.sp) }
                             }
@@ -178,18 +205,18 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                             actions.favoritesOnly(false); actions.protocolFilter(null)
                         }) }
                         visibleGroups.forEach { group ->
-                            item(key = "group:${group.id}") { SubscriptionHeader(group, listModel, actions, onDelete = { deleteGroup = group.id }, onRename = { renameGroup = group.id }) }
+                            item(key = "group:${group.id}") { Box(itemMotion(state.settings.animations)) { SubscriptionHeader(group, listModel, actions, onDelete = { deleteGroup = group.id }, onRename = { renameGroup = group.id }) } }
                             if (group.isExpanded) serverRows(shownNodes.getValue(group.id), listModel, actions,
                                 onSelect = { select(it) }, onInfo = { infoNode = it }, keyPrefix = group.id)
-                            item(key = "space:${group.id}") { Spacer(Modifier.height(6.dp)) }
+                            item(key = "space:${group.id}") { Spacer(Modifier.height(6.dp).then(itemMotion(state.settings.animations))) }
                         }
                     }
                 }
-            }
+            } }
             }
             AnimatedVisibility(visible = showMini, modifier = Modifier.align(Alignment.BottomCenter).padding(start = 8.dp, end = 8.dp, bottom = insets.calculateBottomPadding() + 8.dp),
-                enter = if (state.settings.animations) fadeIn() else EnterTransition.None,
-                exit = if (state.settings.animations) fadeOut() else ExitTransition.None) {
+                enter = if (state.settings.animations) fadeIn() + slideInVertically { it / 3 } else EnterTransition.None,
+                exit = if (state.settings.animations) fadeOut() + slideOutVertically { it / 3 } else ExitTransition.None) {
                 val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
                 FrostedConnectionBar(state.copy(metrics = currentMetrics), ::connect, backdrop, blurPanel, insets.calculateBottomPadding(), refresh = captureBackdrop)
             }
@@ -237,17 +264,20 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
         dismissButton = { TextButton(onClick = { showError = false }) { Text(AppText.text(R.string.close)) } })
 }
 
+/** Placement, appearance and removal animations for keyed list rows; the resting layout is unchanged. */
+private fun LazyItemScope.itemMotion(enabled: Boolean): Modifier = if (enabled) Modifier.animateItem() else Modifier
+
 private fun LazyListScope.serverRows(nodes: List<ServerNode>, state: MainUiState, actions: MainActions, onSelect: (String) -> Unit,
     onInfo: (String) -> Unit, keyPrefix: String) {
     if (state.settings.layout == ServerLayout.GRID) items(nodes.chunked(2), contentType = { "server-grid" }, key = { "${keyPrefix}:${it.first().id}" }) { pair ->
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             pair.forEach { node -> ServerCard(node, state.settings, node.id in state.testingNodes,
                 { onSelect(node.id) }, { onInfo(node.id) }, { actions.favorite(node.id) }, Modifier.weight(1f), grid = true,
                 onCopy = { actions.copyText(node.rawConfigJson) }, onDelete = { actions.deleteNode(node.id) }, onPing = { actions.probeNode(node.id) }) }
             if (pair.size == 1) Spacer(Modifier.weight(1f))
         }
     } else items(nodes, contentType = { "server" }, key = { "${keyPrefix}:${it.id}" }) { node ->
-        ServerCard(node, state.settings, node.id in state.testingNodes, { onSelect(node.id) }, { onInfo(node.id) }, { actions.favorite(node.id) }, Modifier.fillMaxWidth(),
+        ServerCard(node, state.settings, node.id in state.testingNodes, { onSelect(node.id) }, { onInfo(node.id) }, { actions.favorite(node.id) }, Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)),
             onCopy = { actions.copyText(node.rawConfigJson) }, onDelete = { actions.deleteNode(node.id) }, onPing = { actions.probeNode(node.id) })
     }
 }
@@ -270,11 +300,15 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
     var info by remember { mutableStateOf(false) }
     var announcementExpanded by rememberSaveable(group.id) { mutableStateOf(false) }
     val scheme = MaterialTheme.colorScheme
+    val motion = state.settings.animations
+    // ChevronRight turned a quarter is the ExpandMore glyph, so both resting states look as before.
+    val chevron by animateFloatAsState(if (group.isExpanded) 90f else 0f, if (motion) IosMotion.value() else snap(), label = "groupChevron")
     Surface(shape = MaterialTheme.shapes.large, color = scheme.surfaceContainerLow) {
         Column(Modifier.padding(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { actions.toggleGroup(group.id) }, modifier = Modifier.size(34.dp)) {
-                    Icon(if (group.isExpanded) Icons.Rounded.ExpandMore else Icons.Rounded.ChevronRight, if (group.isExpanded) AppText.text(R.string.collapse_subscription) else AppText.text(R.string.expand_subscription), tint = scheme.primary)
+                    Icon(Icons.Rounded.ChevronRight, if (group.isExpanded) AppText.text(R.string.collapse_subscription) else AppText.text(R.string.expand_subscription), tint = scheme.primary,
+                        modifier = Modifier.rotate(chevron))
                 }
                 Column(Modifier.weight(1f).padding(start = 3.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -284,8 +318,10 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
                     Text(AppText.text(R.string.servers, group.servers.size, group.lastUpdated), color = scheme.onSurfaceVariant, fontSize = 10.sp, lineHeight = 13.sp, modifier = Modifier.padding(top = 3.dp))
                 }
                 IconButton(onClick = { actions.refresh(group.id) }, enabled = group.id !in state.refreshing && group.sourceUrl != null, modifier = Modifier.size(36.dp)) {
-                    if (group.id in state.refreshing) CircularProgressIndicator(Modifier.size(17.dp), strokeWidth = 2.dp)
-                    else Icon(Icons.Rounded.Refresh, AppText.text(R.string.update_subscription), modifier = Modifier.size(20.dp))
+                    Crossfade(group.id in state.refreshing, animationSpec = if (motion) tween(180) else snap(), label = "groupRefresh") { refreshing ->
+                        if (refreshing) CircularProgressIndicator(Modifier.size(17.dp), strokeWidth = 2.dp)
+                        else Icon(Icons.Rounded.Refresh, AppText.text(R.string.update_subscription), modifier = Modifier.size(20.dp))
+                    }
                 }
                 Box {
                     IconButton(onClick = { menu = true }, modifier = Modifier.size(32.dp)) { Icon(Icons.Rounded.MoreHoriz, AppText.text(R.string.subscription_menu)) }
@@ -299,7 +335,8 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
                     }
                 }
             }
-            if (group.isExpanded) {
+            AnimatedVisibility(group.isExpanded, enter = if (motion) fadeIn(IosMotion.fade()) + expandVertically(IosMotion.size) else EnterTransition.None,
+                exit = if (motion) fadeOut(IosMotion.fade()) + shrinkVertically(IosMotion.size) else ExitTransition.None) { Column {
                 if (group.usedTrafficText.replace(" ", "") != "0B" || group.expiryDateText != "—") Row(Modifier.fillMaxWidth().padding(start = 8.dp, top = 9.dp, end = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("${group.usedTrafficText} / ${group.totalTrafficText}", color = scheme.primary, fontSize = 11.sp)
                     if (group.expiryDateText != "—") Text(AppText.text(R.string.until, group.expiryDateText), color = scheme.onSurfaceVariant, fontSize = 10.sp)
@@ -307,8 +344,9 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
                 group.trafficFraction?.let { LinearProgressIndicator(progress = { it }, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp).height(3.dp), trackColor = scheme.surfaceContainerHighest) }
                 if (group.announcementText.isNotBlank()) Text(group.announcementText, fontSize = 11.sp, lineHeight = 16.sp,
                     color = scheme.onSurfaceVariant, maxLines = if (announcementExpanded) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth().clickable { announcementExpanded = !announcementExpanded }.padding(horizontal = 8.dp, vertical = 6.dp))
-            }
+                    modifier = Modifier.fillMaxWidth().clickable { announcementExpanded = !announcementExpanded }
+                        .then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 8.dp, vertical = 6.dp))
+            } }
         }
     }
     if (info) AlertDialog(onDismissRequest = { info = false }, title = { Text(group.title) }, text = { Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -343,7 +381,7 @@ private fun ChecksScreen(state: MainUiState, actions: MainActions, onInfo: (Stri
             }
         }
         items(state.allNodes, key = { it.id }) { node -> ServerCard(node, state.settings.copy(layout = ServerLayout.COMPACT), node.id in state.testingNodes,
-            { onInfo(node.id) }, { onInfo(node.id) }, { actions.favorite(node.id) }, Modifier.fillMaxWidth(),
+            { onInfo(node.id) }, { onInfo(node.id) }, { actions.favorite(node.id) }, Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)),
             onCopy = { actions.copyText(node.rawConfigJson) }, onDelete = { actions.deleteNode(node.id) }, onPing = { actions.probeNode(node.id) }) }
         if (state.allNodes.isEmpty()) item { Text(AppText.text(R.string.add_a_subscription_on_the_servers_tab), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(12.dp)) }
     }
@@ -351,7 +389,14 @@ private fun ChecksScreen(state: MainUiState, actions: MainActions, onInfo: (Stri
 
 @Composable
 private fun CheckCounter(label: String, value: Int) { Column(horizontalAlignment = Alignment.CenterHorizontally) {
-    Text(value.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    val motion = LocalMotionEnabled.current
+    AnimatedContent(value, transitionSpec = {
+        if (!motion) EnterTransition.None togetherWith ExitTransition.None
+        else if (targetState > initialState) (slideInVertically { it / 2 } + fadeIn()) togetherWith (slideOutVertically { -it / 2 } + fadeOut())
+        else (slideInVertically { -it / 2 } + fadeIn()) togetherWith (slideOutVertically { it / 2 } + fadeOut())
+    }, label = "checkCounter") { count ->
+        Text(count.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    }
     Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 } }
 
@@ -365,8 +410,12 @@ private fun PingAllControl(state: MainUiState, actions: MainActions) {
             Text(AppText.text(if (state.isTesting) R.string.stop_ping else R.string.ping_all_servers), modifier = Modifier.weight(1f), fontSize = 12.sp)
             Text(if (state.isTesting) "${state.probeCompleted}/${state.probeTotal}" else state.allNodes.size.toString(), fontSize = 11.sp)
         }
+        val motion = state.settings.animations
+        val progress by animateFloatAsState(if (state.probeTotal == 0) 0f else state.probeCompleted.toFloat() / state.probeTotal,
+            if (motion) tween(300) else snap(), label = "pingProgress")
+        val barAlpha by animateFloatAsState(if (state.isTesting) 1f else 0f, if (motion) tween(220) else snap(), label = "pingBar")
         Box(Modifier.fillMaxWidth().height(3.dp)) {
-            if (state.isTesting) LinearProgressIndicator(progress = { if (state.probeTotal == 0) 0f else state.probeCompleted.toFloat() / state.probeTotal }, modifier = Modifier.fillMaxSize())
+            if (barAlpha > 0f) LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxSize().alpha(barAlpha))
         }
     }
 }

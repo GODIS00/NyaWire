@@ -5,6 +5,8 @@ import com.gdhapp.client.i18n.AppText
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -30,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -60,16 +63,21 @@ fun ServerCard(node: ServerNode, settings: ClientSettings, testing: Boolean, onS
 private fun ServerCardContent(node: ServerNode, settings: ClientSettings, testing: Boolean, onSelect: () -> Unit,
     onInfo: () -> Unit, onFavorite: () -> Unit, grid: Boolean, onCopy: (() -> Unit)?, onDelete: (() -> Unit)?, onPing: (() -> Unit)?) = com.gdhapp.client.ui.theme.BlockColors {
     val scheme = MaterialTheme.colorScheme
+    val motion = LocalMotionEnabled.current
     val background by animateColorAsState(if (node.isSelected) androidx.compose.ui.graphics.lerp(scheme.surfaceContainerLow, scheme.primary, .08f) else scheme.surfaceContainerLow,
-        animationSpec = if (LocalMotionEnabled.current) tween(180) else snap(), label = "nodeColor")
+        animationSpec = if (motion) tween(180) else snap(), label = "nodeColor")
+    val borderColor by animateColorAsState(if (node.isSelected) scheme.primary.copy(alpha = .5f) else scheme.outlineVariant.copy(alpha = .35f),
+        animationSpec = if (motion) tween(180) else snap(), label = "nodeBorder")
+    val marker by animateFloatAsState(if (node.isSelected) 1f else 0f, if (motion) tween(220) else snap(), label = "nodeMarker")
     val compact = settings.layout == ServerLayout.COMPACT
     val displayName = remember(node.name) { cleanNodeName(node.name) }
     val protocol = remember(node.protocolSummary) { node.protocolSummary.substringBefore('|').trim().replace(" / ", " · ") }
     Surface(color = background, shape = MaterialTheme.shapes.medium,
-        border = BorderStroke(1.dp, if (node.isSelected) scheme.primary.copy(alpha = .5f) else scheme.outlineVariant.copy(alpha = .35f)),
+        border = BorderStroke(1.dp, borderColor),
         modifier = Modifier.fillMaxWidth().semantics { selected = node.isSelected }.combinedClickable(role = Role.RadioButton, onClick = onSelect, onLongClick = onInfo)) {
         Box {
-            if (node.isSelected) Box(Modifier.align(Alignment.CenterStart).width(2.dp).height(22.dp).background(scheme.primary, CircleShape))
+            if (marker > 0f) Box(Modifier.align(Alignment.CenterStart).width(2.dp).height(22.dp)
+                .graphicsLayer { alpha = marker; scaleY = marker }.background(scheme.primary, CircleShape))
             if (grid) Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     if (settings.showFlags) CountryBadge(node.flagResOrCode, Modifier.size(25.dp), small = true)
@@ -133,22 +141,25 @@ private fun ServerActionsMenu(node: ServerNode, onInfo: () -> Unit, onFavorite: 
 @Composable
 fun LatencyChip(result: ProbeResult?, testing: Boolean, modifier: Modifier = Modifier, compact: Boolean = false, flat: Boolean = false) {
     val scheme = MaterialTheme.colorScheme
-    val color = when {
+    val motion = LocalMotionEnabled.current
+    val color by animateColorAsState(when {
         testing || result == null -> scheme.onSurfaceVariant
         !result.isSuccess -> scheme.error
         result.latencyMs!! < 250 -> scheme.primary
         result.latencyMs < 800 -> scheme.primary
         else -> scheme.tertiary
-    }
+    }, animationSpec = if (motion) tween(220) else snap(), label = "latencyColor")
     Surface(color = if (flat) Color.Transparent else color.copy(alpha = .1f), shape = CircleShape, modifier = modifier) {
         Row(Modifier.padding(horizontal = if (flat) 0.dp else if (compact) 8.dp else 10.dp, vertical = if (flat) 0.dp else 5.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             if (testing) CircularProgressIndicator(Modifier.size(10.dp), strokeWidth = 1.5.dp, color = color)
             else if (!compact) Icon(when { result == null -> Icons.Rounded.Schedule; result.isSuccess -> Icons.Rounded.NetworkCheck; else -> Icons.Rounded.ErrorOutline },
                 null, tint = color, modifier = Modifier.size(12.dp))
-            Text(when { testing -> AppText.text(R.string.checking); result == null -> if (compact) "—" else AppText.text(R.string.not_checked); result.isSuccess -> AppText.text(R.string.ms, result.latencyMs);
-                else -> probeFailureTitle(result.error) },
-                color = color, fontSize = if (compact) 10.sp else 11.sp, fontWeight = FontWeight.SemiBold, lineHeight = if (compact) 12.sp else 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val label = when { testing -> AppText.text(R.string.checking); result == null -> if (compact) "—" else AppText.text(R.string.not_checked); result.isSuccess -> AppText.text(R.string.ms, result.latencyMs);
+                else -> probeFailureTitle(result.error) }
+            Crossfade(label, animationSpec = if (motion) tween(200) else snap(), label = "latencyText") { text ->
+                Text(text, color = color, fontSize = if (compact) 10.sp else 11.sp, fontWeight = FontWeight.SemiBold, lineHeight = if (compact) 12.sp else 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }

@@ -5,6 +5,15 @@ import com.gdhapp.client.BuildConfig
 import com.gdhapp.client.i18n.AppText
 
 import android.os.Build
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +40,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -42,6 +52,8 @@ import com.gdhapp.client.domain.model.*
 import com.gdhapp.client.ui.main.AppEntry
 import com.gdhapp.client.ui.main.MainActions
 import com.gdhapp.client.ui.main.MainUiState
+import com.gdhapp.client.ui.theme.IosMotion
+import com.gdhapp.client.ui.theme.LocalMotionEnabled
 import com.gdhapp.client.vpn.NetworkRoutes
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import kotlin.math.roundToInt
@@ -78,28 +90,41 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
     val context = LocalContext.current
     val categories = listOf(AppText.text(R.string.connection_section), AppText.text(R.string.appearance), AppText.text(R.string.checks), AppText.text(R.string.about), AppText.text(R.string.routing_title), AppText.text(R.string.tunnel_section), AppText.text(R.string.subscriptions))
     val icons = listOf(Icons.Rounded.Shield, Icons.Rounded.Palette, Icons.Rounded.NetworkCheck, Icons.Rounded.Info, Icons.AutoMirrored.Rounded.AltRoute, Icons.Rounded.Layers, Icons.Rounded.Update)
+    val motion = LocalMotionEnabled.current
+    // The header keeps its last title while it slides away.
+    val headerCategory = remember { intArrayOf(0) }.also { if (category >= 0) it[0] = category }[0]
+    val page = if (query.isNotBlank()) -2 else category
     Column(modifier) {
-        if (category >= 0) Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { if (query.isNotBlank()) query = "" else category = -1 }) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, AppText.text(R.string.back_to_settings))
+        AnimatedVisibility(category >= 0, enter = if (motion) fadeIn(IosMotion.fade()) + expandVertically(IosMotion.size) else EnterTransition.None,
+            exit = if (motion) fadeOut(IosMotion.fade()) + shrinkVertically(IosMotion.size) else ExitTransition.None) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { if (query.isNotBlank()) query = "" else category = -1 }) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, AppText.text(R.string.back_to_settings))
+                }
+                Text(categories[headerCategory], fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             }
-            Text(categories[category], fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
         }
         OutlinedTextField(query, { query = it }, singleLine = true, label = { Text(AppText.text(R.string.search_settings), fontSize = 12.sp) },
             leadingIcon = { Icon(Icons.Rounded.Search, null, modifier = Modifier.size(20.dp)) },
             trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, AppText.text(R.string.clear_search)) } },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), shape = MaterialTheme.shapes.medium)
-        if (category < 0 && query.isBlank()) SettingsOverview(categories,
+        // Categories push and pop like an iOS navigation stack; search results swap in place.
+        AnimatedContent(page, Modifier.weight(1f).fillMaxWidth().clipToBounds(), transitionSpec = {
+            if (!motion || initialState == -2 || targetState == -2) IosMotion.none else IosMotion.page(forward = targetState > initialState)
+        }, label = "settingsPage") { shown ->
+        if (shown == -1) SettingsOverview(categories,
             listOf("${settings.connectionMode.label} · ${settings.coreEngine.label}", "${settings.theme.label} · ${if (settings.dynamicColors) AppText.text(R.string.android_wallpaper_colors) else if (settings.customAccent != null) AppText.text(R.string.custom_color) else settings.accent.label}",
-                settings.probeMethod.label, "NyaWire ${BuildConfig.VERSION_NAME}", settings.routingMode.label, "${settings.coreEngine.label} · MTU ${settings.mtu}", AppText.text(R.string.auto_update_subscriptions)), icons, Modifier.weight(1f).fillMaxWidth()) { openCategory(it) }
-        else LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (query.isNotBlank()) {
+                settings.probeMethod.label, "NyaWire ${BuildConfig.VERSION_NAME}", settings.routingMode.label, "${settings.coreEngine.label} · MTU ${settings.mtu}", AppText.text(R.string.auto_update_subscriptions)), icons, Modifier.fillMaxSize()) { openCategory(it) }
+        // Only the current page drives the shared scroll state; a leaving page keeps a copy of its position.
+        else LazyColumn(state = if (shown == page) listState else androidx.compose.foundation.lazy.rememberLazyListState(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset),
+            modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (shown == -2) {
                 val results = settingsSearchTargets.filter { it.matches(query) }.distinctBy { it.category to it.title }
                 if (results.isEmpty()) item { SettingsHint(AppText.text(R.string.no_results)) }
                 items(results, key = { "search:${it.category}:${it.title}" }, contentType = { "settings-result" }) { result ->
                     SettingsDestination(result.label, categories[result.category], icons[result.category]) { openCategory(result.category, result.key) }
                 }
-            } else when (category) {
+            } else when (shown) {
                 0 -> {
                     item(key = "settings-content:1", contentType = "settings-content") { SettingsIntro(AppText.text(R.string.vpn_configuration), AppText.text(R.string.vpn_settings_take_effect_when_you_reconnect)) }
                     item(key = "settings-content:2", contentType = "settings-content") { SettingsSection(AppText.text(R.string.connection_mode), Icons.Rounded.SwapHoriz) {
@@ -343,6 +368,7 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
         }
     }
     }
+    }
     if (showColorPicker) CustomColorDialog(settings.customAccent ?: settings.accent.argb,
         onDismiss = { showColorPicker = false }, onSave = { color ->
             actions.updateSettings(settings.copy(customAccent = color, dynamicColors = false)); showColorPicker = false
@@ -400,7 +426,7 @@ private fun SettingsIntro(title: String, subtitle: String, showTitle: Boolean = 
 @Composable
 private fun SettingsSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) = com.gdhapp.client.ui.theme.BlockColors {
     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.then(if (LocalMotionEnabled.current) Modifier.animateContentSize(IosMotion.size) else Modifier).padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 2.dp)) {
                 Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
                 Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)

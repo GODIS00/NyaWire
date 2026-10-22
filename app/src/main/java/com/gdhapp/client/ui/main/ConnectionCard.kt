@@ -3,11 +3,19 @@ package com.gdhapp.client.ui.main
 import com.gdhapp.client.R
 import com.gdhapp.client.i18n.AppText
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -15,6 +23,7 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -23,6 +32,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.text.font.FontWeight
@@ -39,9 +49,13 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
     val connecting = state.vpnState == VpnState.Connecting
     val error = state.vpnState as? VpnState.Error
     val add = state.selectedNode == null && !state.connectionBusy
+    val motion = LocalMotionEnabled.current
     val background by animateColorAsState(if (connected) scheme.surfaceContainer else scheme.surfaceContainerLow,
-        animationSpec = if (LocalMotionEnabled.current) tween(250) else snap(), label = "connectionCard")
-    val statusColor = if (error != null) scheme.errorContainer else if (state.connectionBusy) scheme.primaryContainer else scheme.surfaceContainerHigh
+        animationSpec = if (motion) tween(250) else snap(), label = "connectionCard")
+    val statusColor by animateColorAsState(if (error != null) scheme.errorContainer else if (state.connectionBusy) scheme.primaryContainer else scheme.surfaceContainerHigh,
+        animationSpec = if (motion) tween(250) else snap(), label = "statusColor")
+    val statusTint by animateColorAsState(if (error != null) scheme.onErrorContainer else if (state.connectionBusy) scheme.onPrimaryContainer else scheme.onSurfaceVariant,
+        animationSpec = if (motion) tween(250) else snap(), label = "statusTint")
     val statusText = when {
         connected -> AppText.text(if (state.metrics.proxyOnly) R.string.proxy_started else R.string.vpn_connected)
         connecting -> AppText.text(R.string.connecting)
@@ -51,26 +65,34 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
     }
     ElevatedCard(shape = MaterialTheme.shapes.large, colors = CardDefaults.elevatedCardColors(containerColor = background),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.fillMaxWidth().then(if (motion) Modifier.animateContentSize() else Modifier).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Surface(shape = CircleShape, color = statusColor) {
-                        Row(Modifier.padding(horizontal = 9.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically,
+                        Row(Modifier.then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 9.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            val tint = if (error != null) scheme.onErrorContainer else if (state.connectionBusy) scheme.onPrimaryContainer else scheme.onSurfaceVariant
-                            if (connecting) CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = tint)
-                            else Icon(when { error != null -> Icons.Rounded.ErrorOutline; connected -> Icons.Rounded.VerifiedUser; else -> Icons.Rounded.Shield },
-                                null, tint = tint, modifier = Modifier.size(13.dp))
-                            Text(statusText, fontSize = 10.sp, fontWeight = FontWeight.Medium, color = tint, maxLines = 1)
+                            val tint = statusTint
+                            val statusIcon = when { connecting -> null; error != null -> Icons.Rounded.ErrorOutline; connected -> Icons.Rounded.VerifiedUser; else -> Icons.Rounded.Shield }
+                            Crossfade(statusIcon, animationSpec = if (motion) tween(200) else snap(), label = "statusIcon") { icon ->
+                                if (icon == null) CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = tint)
+                                else Icon(icon, null, tint = tint, modifier = Modifier.size(13.dp))
+                            }
+                            AnimatedContent(statusText, transitionSpec = {
+                                if (motion) fadeIn(tween(200, delayMillis = 60)) togetherWith fadeOut(tween(100)) else fadeIn(snap()) togetherWith fadeOut(snap())
+                            }, label = "statusText") { text ->
+                                Text(text, fontSize = 10.sp, fontWeight = FontWeight.Medium, color = tint, maxLines = 1)
+                            }
                         }
                     }
                     Text(state.connectionNode?.let { cleanNodeName(it.name) } ?: AppText.text(R.string.your_servers_will_appear_here),
                         fontSize = 17.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 GradientPowerButton(connecting, onClick = { if (add) onAdd() else onConnect() }) {
-                    Icon(if (add) Icons.Rounded.Add else Icons.Rounded.PowerSettingsNew,
-                        AppText.text(if (add) R.string.add_subscription else if (state.connectionBusy) R.string.disconnect_vpn else R.string.connect_vpn),
-                        modifier = Modifier.size(29.dp))
+                    Crossfade(add, animationSpec = if (motion) tween(200) else snap(), label = "powerIcon") { adding ->
+                        Icon(if (adding) Icons.Rounded.Add else Icons.Rounded.PowerSettingsNew,
+                            AppText.text(if (adding) R.string.add_subscription else if (state.connectionBusy) R.string.disconnect_vpn else R.string.connect_vpn),
+                            modifier = Modifier.size(29.dp))
+                    }
                 }
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -106,14 +128,19 @@ private fun GradientPowerButton(connecting: Boolean, onClick: () -> Unit, conten
     val motion = LocalMotionEnabled.current
     val phase = if (motion) rememberInfiniteTransition(label = "powerGradient").animateFloat(0f, 6.283185f,
         infiniteRepeatable(tween(if (connecting) 2400 else 10000, easing = LinearEasing)), label = "gradientAngle") else androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed && motion) .92f else 1f,
+        if (motion) com.gdhapp.client.ui.theme.IosMotion.value() else snap(), label = "powerPress")
     // Animate the shader direction only: the rounded outline stays aligned with the button.
-    Box(Modifier.size(64.dp).drawBehind {
+    Box(Modifier.size(64.dp).graphicsLayer { scaleX = scale; scaleY = scale }.drawBehind {
         val center = Offset(size.width / 2, size.height / 2)
         val delta = Offset(cos(phase.value) * size.width * .7f, sin(phase.value) * size.height * .7f)
         drawRoundRect(Brush.linearGradient(listOf(Color(0xFF468CFF), Color(0xFF9759F5)), center - delta, center + delta), cornerRadius = CornerRadius(22.dp.toPx()))
     }.padding(2.dp), contentAlignment = Alignment.Center) {
         FilledIconButton(onClick, modifier = Modifier.fillMaxSize(), shape = RoundedCornerShape(20.dp),
-            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF182342).copy(alpha = .76f), contentColor = Color.White), content = content)
+            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF182342).copy(alpha = .76f), contentColor = Color.White),
+            interactionSource = interaction, content = content)
     }
 }
 
