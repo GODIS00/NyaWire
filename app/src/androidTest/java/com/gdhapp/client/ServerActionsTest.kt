@@ -104,6 +104,9 @@ class ServerActionsTest {
                 text("Gesture1")
                 assertFalse(nodes().any { it.className?.toString() == "android.widget.EditText" })
                 swipe("Gesture1", true)
+                Thread.sleep(350)
+                val pingBounds = Rect().also { bounds -> nodes().last { it.text?.toString() == "Gesture1" }.getBoundsInScreen(bounds) }
+                shell("input tap ${(app.resources.displayMetrics.widthPixels * .12f).toInt()} ${pingBounds.centerY()}")
                 awaitCondition { app.subscriptions.groups.value.single { it.id == group.id }.servers.first().probeResults[ProbeMethod.TCP] != null }
                 menu("Gesture1")
                 click("Копировать конфигурацию")
@@ -112,6 +115,9 @@ class ServerActionsTest {
                 assertEquals(first.rawConfigJson, copied)
                 assertEquals(3, app.subscriptions.groups.value.single { it.id == group.id }.servers.size)
                 swipe("Gesture2", false)
+                Thread.sleep(350)
+                val deleteBounds = Rect().also { bounds -> nodes().last { it.text?.toString() == "Gesture2" }.getBoundsInScreen(bounds) }
+                shell("input tap ${(app.resources.displayMetrics.widthPixels * .88f).toInt()} ${deleteBounds.centerY()}")
                 awaitCondition { app.subscriptions.groups.value.single { it.id == group.id }.servers.size == 2 }
                 click("Отменить")
                 awaitCondition { app.subscriptions.groups.value.single { it.id == group.id }.servers.size == 3 }

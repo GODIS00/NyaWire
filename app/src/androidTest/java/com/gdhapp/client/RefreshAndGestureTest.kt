@@ -243,7 +243,7 @@ class RefreshAndGestureTest {
         }
     }
 
-    @Test fun swipesActOnceOnReleaseAndShortOrCancelledDragsDoNothing(): Unit = runBlocking {
+    @Test fun swipesRevealButtonsAndNeverActOnRelease(): Unit = runBlocking {
         Fixture().use { fixture ->
             val repository = LocalSubscriptionRepository(fixture.context)
             repository.importText(links(3))
@@ -262,11 +262,19 @@ class RefreshAndGestureTest {
                     assertTrue("Crossing a threshold must not fire before release", tester.calls.isEmpty())
                     screenshot("swipe-280-held.png")
                 })
+                Thread.sleep(350)
+                assertTrue("Releasing a swipe must only reveal the button", tester.calls.isEmpty())
+                val pingBounds = Rect().also { nodes().last { node -> node.text?.toString() == "Gesture1" }.getBoundsInScreen(it) }
+                shell("input tap ${(app.resources.displayMetrics.widthPixels * .12f).toInt()} ${pingBounds.centerY()}")
                 await { tester.calls.size == 1 && !model.uiState.value.isTesting }
                 assertEquals(repository.groups.value.single().servers.first().id, tester.calls.single())
                 screenshot("swipe-280-settled.png")
                 assertEquals(3, repository.groups.value.single().servers.size)
                 drag("Gesture2", -.46f, beforeUp = { assertEquals(3, repository.groups.value.single().servers.size) })
+                Thread.sleep(350)
+                assertEquals("Releasing a swipe must not delete", 3, repository.groups.value.single().servers.size)
+                val deleteBounds = Rect().also { nodes().last { node -> node.text?.toString() == "Gesture2" }.getBoundsInScreen(it) }
+                shell("input tap ${(app.resources.displayMetrics.widthPixels * .88f).toInt()} ${deleteBounds.centerY()}")
                 await { repository.groups.value.single().servers.size == 2 }
                 assertEquals(1, tester.calls.size)
                 // Normal taps still select after cancelled gestures and spring return.
@@ -277,6 +285,26 @@ class RefreshAndGestureTest {
                 shell("input swipe $x ${bounds.centerY()} ${x + 15} ${bounds.centerY() - 180} 400")
                 assertEquals("Vertical scrolling must not ping or delete", 1, tester.calls.size)
                 assertEquals(2, repository.groups.value.single().servers.size)
+            }
+        }
+    }
+
+    @Test fun connectionAndTunnelSettingsHaveSeparateDestinations(): Unit = runBlocking {
+        Fixture().use { fixture ->
+            val repository = LocalSubscriptionRepository(fixture.context)
+            repository.importText(links(1))
+            fixture.show(fixture.model(repository)).use {
+                click("Настройки")
+                text("Соединение"); text("Туннель"); text("Подписки")
+                click("Туннель")
+                text("Встроенный TUN Xray")
+                screenshot("tunnel-2100.png")
+                shell("input swipe 500 1700 500 650 400")
+                text("Тип IP")
+                shell("input keyevent 4")
+                click("Соединение")
+                text("Режим подключения")
+                screenshot("connection-2100.png")
             }
         }
     }

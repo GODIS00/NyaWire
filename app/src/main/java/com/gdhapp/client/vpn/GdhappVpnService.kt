@@ -58,6 +58,7 @@ class GdhappVpnService : VpnService() {
     private var probeJob: Job? = null
     private var stopping = false
     private var proxyOnly = false
+    private var wakeLock: android.os.PowerManager.WakeLock? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -68,6 +69,8 @@ class GdhappVpnService : VpnService() {
         var notificationLanguage = app.settings.settings.value.language
         scope.launch {
             app.settings.settings.collect { settings ->
+                if (app.vpnSession.state.value == VpnState.Connected && !stopping) updateWakeLock(settings.keepAwake)
+                if (!settings.killSwitch && app.vpnSession.state.value is VpnState.Error && tunnel != null && !stopping) stopVpn(preserveError = true)
                 if (notificationLanguage != settings.language) {
                     notificationLanguage = settings.language
                     getSystemService(NotificationManager::class.java).createNotificationChannel(
@@ -112,7 +115,7 @@ class GdhappVpnService : VpnService() {
         val settings = app.settings.settings.value
         operation = scope.launch {
             app.vpnSession.coreMutex.withLock {
-                releaseResources()
+                releaseResources(keepTunnel = settings.killSwitch && !proxyOnly)
                 try {
                     if (waitForNetwork) {
                         val network = getSystemService(android.net.ConnectivityManager::class.java)
@@ -154,7 +157,9 @@ class GdhappVpnService : VpnService() {
                             try { builder.addDisallowedApplication(it) } catch (_: PackageManager.NameNotFoundException) { }
                         }
                     }
+                    val previousTunnel = tunnel
                     tunnel = builder.establish() ?: error(AppText.text(R.string.android_could_not_create_the_tun_interface))
+                    runCatching { previousTunnel?.close() }
                     }
                     withTimeout(25_000) { core.start(config, tunnel?.fd ?: 0, settings) }
                     if (settings.verifyOnConnect) withContext(Dispatchers.IO) {
@@ -166,6 +171,7 @@ class GdhappVpnService : VpnService() {
                     if (!app.vpnSession.isCurrent(attempt)) throw CancellationException()
                     val connectedAt = System.currentTimeMillis()
                     stopping = false
+                    updateWakeLock(app.settings.settings.value.keepAwake)
                     app.vpnSession.updateMetrics(VpnMetrics(connectedAt = connectedAt, engine = core.name, localPort = core.localPort,
                         proxyOnly = proxyOnly, trafficAvailable = !proxyOnly || core.name == "Xray"))
                     app.vpnSession.update(VpnState.Connected)
@@ -191,11 +197,13 @@ class GdhappVpnService : VpnService() {
                 delay(1000)
                 if (!core.isRunning) {
                     app.vpnSession.update(VpnState.Error(AppText.text(R.string.the_core_process_or_tun_bridge_stopped, core.name)))
-                    stopVpn(preserveError = true)
+                    val reason = AppText.text(R.string.the_core_process_or_tun_bridge_stopped, core.name)
+                    scope.launch { app.vpnSession.coreMutex.withLock { failAfterCleanup(attempt, reason) } }
                     return@launch
                 }
                 val totals = withContext(Dispatchers.IO) { core.trafficTotals() }
                 val now = SystemClock.elapsedRealtime()
+                if (wakeLock != null && now / 300_000 != previousAt / 300_000) wakeLock?.acquire(10 * 60 * 1000L)
                 val elapsed = (now - previousAt).coerceAtLeast(1).toDouble() / 1000
                 app.vpnSession.updateMetrics(VpnMetrics(connectedAt, totals.first, totals.second,
                     ((totals.first - previous.first).coerceAtLeast(0) / elapsed).toLong(),
@@ -224,15 +232,25 @@ class GdhappVpnService : VpnService() {
     }
 
     private suspend fun failAfterCleanup(attempt: Long, message: String) {
-        releaseResources()
+        val hold = app.settings.settings.value.killSwitch && !proxyOnly && tunnel != null
+        releaseResources(keepTunnel = hold)
+        stopping = !hold
         if (app.vpnSession.isCurrent(attempt)) { app.vpnSession.update(VpnState.Error(message)); app.vpnSession.updateMetrics(VpnMetrics()) }
-        finishService()
+        if (hold) promoteToForeground(AppText.text(R.string.kill_switch_blocked)) else finishService()
     }
 
-    private suspend fun releaseResources() = withContext(NonCancellable + Dispatchers.IO) {
+    private suspend fun releaseResources(keepTunnel: Boolean = false) = withContext(NonCancellable + Dispatchers.IO) {
         monitor?.cancel(); monitor = null
         probeJob?.cancel(); probeJob = null; notificationProbe = null
-        try { core.stop() } finally { runCatching { tunnel?.close() }; tunnel = null }
+        wakeLock?.let { runCatching { if (it.isHeld) it.release() } }; wakeLock = null
+        try { core.stop() } finally { if (!keepTunnel) { runCatching { tunnel?.close() }; tunnel = null } }
+    }
+    private fun updateWakeLock(enabled: Boolean) {
+        if (!enabled) { wakeLock?.let { if (it.isHeld) it.release() }; wakeLock = null; return }
+        if (wakeLock?.isHeld == true) return
+        wakeLock = getSystemService(android.os.PowerManager::class.java).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "NyaWire:Vpn").apply {
+            setReferenceCounted(false); acquire(10 * 60 * 1000L)
+        }
     }
     private fun finishService() { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
     private fun promoteToForeground(status: String) = ServiceCompat.startForeground(this, NOTIFICATION_ID, notification(status),
@@ -295,7 +313,7 @@ class GdhappVpnService : VpnService() {
         val stop = PendingIntent.getService(this, 1, Intent(this, GdhappVpnService::class.java).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val ping = PendingIntent.getService(this, 2, Intent(this, GdhappVpnService::class.java).setAction(ACTION_PING), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         return VpnNotification.build(this, CHANNEL_ID, activeNode, status, app.vpnSession.metrics.value,
-            app.vpnSession.state.value == VpnState.Connected && !stopping, probeJob?.isActive == true, notificationProbe, open, ping, stop)
+            app.vpnSession.state.value == VpnState.Connected && !stopping, probeJob?.isActive == true, notificationProbe, open, ping, stop, app.settings.settings.value.notificationSpeed)
     }
 
     companion object {

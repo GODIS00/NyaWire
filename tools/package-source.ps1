@@ -1,4 +1,4 @@
-param([string]$OutputName = 'NyaWire-2.9.2-source.zip')
+param([string]$OutputName = 'NyaWire-2.10.0-source.zip')
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem

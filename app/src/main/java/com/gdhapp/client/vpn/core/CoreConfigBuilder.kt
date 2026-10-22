@@ -12,7 +12,7 @@ import com.google.gson.JsonParser
 data class PreparedCoreConfig(val engine: CoreEngine, val json: String)
 
 object CoreConfigBuilder {
-    fun build(raw: String, settings: ClientSettings, port: Int, nativeTun: Boolean = false, includeSocks: Boolean = true, socksCredentials: Pair<String, String>? = null): PreparedCoreConfig {
+    fun build(raw: String, settings: ClientSettings, port: Int, nativeTun: Boolean = false, includeSocks: Boolean = true, socksCredentials: Pair<String, String>? = null, shareProxy: Boolean = false): PreparedCoreConfig {
         val root = runCatching { JsonParser.parseString(raw).asJsonObject.deepCopy() }
             .getOrElse { throw IllegalArgumentException(AppText.text(R.string.the_configuration_is_not_a_json_object)) }
         require(root.get("demo")?.asBoolean != true) { AppText.text(R.string.demo_configurations_were_removed_add_your_own) }
@@ -97,6 +97,23 @@ object CoreConfigBuilder {
             root.obj("experimental")?.let { it.remove("clash_api"); it.remove("v2ray_api") }
         }
         ClientCoreOptions.apply(root, engine, settings)
+        if (shareProxy && settings.hotspotEnabled) {
+            require(settings.hotspotUser.isNotBlank() && settings.hotspotPassword.length >= 8 && settings.hotspotPort in 1024..65535 && settings.hotspotPort != port) { AppText.text(R.string.hotspot_credentials_error) }
+            root.getAsJsonArray("inbounds").add(JsonObject().apply {
+                addProperty("tag", "nyawire-share")
+                addProperty("listen", "0.0.0.0")
+                if (engine == CoreEngine.XRAY) {
+                    addProperty("port", settings.hotspotPort); addProperty("protocol", "socks")
+                    add("settings", JsonObject().apply {
+                        addProperty("auth", "password"); addProperty("udp", false)
+                        add("accounts", JsonArray().apply { add(JsonObject().apply { addProperty("user", settings.hotspotUser); addProperty("pass", settings.hotspotPassword) }) })
+                    })
+                } else {
+                    addProperty("listen_port", settings.hotspotPort); addProperty("type", "mixed")
+                    add("users", JsonArray().apply { add(JsonObject().apply { addProperty("username", settings.hotspotUser); addProperty("password", settings.hotspotPassword) }) })
+                }
+            })
+        }
         return PreparedCoreConfig(engine, root.toString())
     }
 

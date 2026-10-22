@@ -33,6 +33,10 @@ enum class AppLanguage(val tag: String) { SYSTEM(""), RUSSIAN("ru"), ENGLISH("en
     val label get() = when (this) { SYSTEM -> AppText.text(R.string.follow_system); RUSSIAN -> AppText.text(R.string.language_russian); ENGLISH -> "English" }
 }
 enum class ProbeConnectionMode(val label: String) { DEFAULT("Default"), DISABLE("Disable"), KEEP_ALIVE("KeepAlive") }
+enum class IpMode(val label: String) { AUTO("Auto"), IPV4("IPv4"), IPV6("IPv6") }
+enum class TunnelMode(val labelRes: Int) { VPN(R.string.mode_vpn), VPN_PROXY(R.string.mode_vpn_proxy), PROXY(R.string.mode_proxy);
+    val label get() = AppText.text(labelRes)
+}
 enum class ConnectionMode { VPN, PROXY;
     val label get() = AppText.text(if (this == VPN) R.string.mode_vpn else R.string.mode_proxy)
 }
@@ -79,6 +83,15 @@ data class ClientSettings(
     val connectOnBoot: Boolean = false,
     val xrayCompatibilityMode: Boolean = false,
     val ipv6: Boolean = false,
+    val ipMode: IpMode = IpMode.AUTO,
+    val muxEnabled: Boolean = false,
+    val notificationSpeed: Boolean = true,
+    val keepAwake: Boolean = false,
+    val killSwitch: Boolean = false,
+    val hotspotEnabled: Boolean = false,
+    val hotspotPort: Int = 10809,
+    val hotspotUser: String = "nyawire",
+    val hotspotPassword: String = "",
     val mtu: Int = 1500,
     val dnsPrimary: String = "1.1.1.1",
     val dnsSecondary: String = "8.8.8.8",

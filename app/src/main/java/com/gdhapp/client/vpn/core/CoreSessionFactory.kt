@@ -64,7 +64,7 @@ class CoreSessionFactory(private val context: Context) {
         val credentials = if (internalOnly) UUID.randomUUID().toString().replace("-", "") to UUID.randomUUID().toString().replace("-", "") else null
         val candidatePort = if (!forProbe && !internalOnly && settings.localSocksPort != 0) settings.localSocksPort
             else if (!forProbe && publicProxy) 10808 else ServerSocket(0).use { it.localPort }
-        val config = CoreConfigBuilder.build(raw, settings, candidatePort, nativeTun = tunFd > 0, includeSocks = !internalOnly, socksCredentials = credentials)
+        val config = CoreConfigBuilder.build(raw, settings, candidatePort, nativeTun = tunFd > 0, includeSocks = !internalOnly, socksCredentials = credentials, shareProxy = !forProbe)
         val noListener = internalOnly && config.engine == CoreEngine.XRAY && tunFd > 0
         val port = if (noListener) 0 else candidatePort
         var opened: ProxySession? = null

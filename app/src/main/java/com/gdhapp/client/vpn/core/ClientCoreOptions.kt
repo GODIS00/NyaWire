@@ -32,6 +32,31 @@ object ClientCoreOptions {
         val outbounds = root.getAsJsonArray("outbounds")
         val xray = engine == CoreEngine.XRAY
         val proxy = outbounds.first { (it.asJsonObject.text(if (xray) "protocol" else "type")) !in setOf("freedom", "direct", "blackhole", "block", "dns", "selector", "urltest") }.asJsonObject
+        if (settings.ipMode != IpMode.AUTO) {
+            if (xray) {
+                val stream = proxy.obj("streamSettings") ?: JsonObject().also { proxy.add("streamSettings", it) }
+                val socket = stream.obj("sockopt") ?: JsonObject().also { stream.add("sockopt", it) }
+                socket.addProperty("domainStrategy", if (settings.ipMode == IpMode.IPV4) "ForceIPv4" else "ForceIPv6")
+            } else {
+                val route = root.obj("route") ?: JsonObject().also { root.add("route", it) }
+                val resolver = route.text("default_domain_resolver") ?: "nyawire-ip-dns"
+                if (resolver == "nyawire-ip-dns") {
+                    val dns = root.obj("dns") ?: JsonObject().also { root.add("dns", it) }
+                    val servers = dns.get("servers")?.asJsonArray ?: JsonArray().also { dns.add("servers", it) }
+                    if (servers.none { it.asJsonObject.text("tag") == resolver }) servers.add(JsonObject().apply { addProperty("tag", resolver); addProperty("type", "local") })
+                }
+                proxy.add("domain_resolver", JsonObject().apply { addProperty("server", resolver); addProperty("strategy", if (settings.ipMode == IpMode.IPV4) "ipv4_only" else "ipv6_only") })
+            }
+        }
+        if (settings.muxEnabled && xray) {
+            val protocol = proxy.text("protocol")
+            val vision = proxy.toString().contains("xtls-rprx-vision")
+            val network = proxy.obj("streamSettings")?.text("network") ?: "tcp"
+            // QUIC, Vision, gRPC and XHTTP already manage their streams differently.
+            if (protocol in setOf("vless", "vmess", "trojan", "shadowsocks") && !vision && network in setOf("tcp", "raw", "ws", "httpupgrade")) {
+                proxy.add("mux", JsonObject().apply { addProperty("enabled", true); addProperty("concurrency", 8); addProperty("xudpConcurrency", 16) })
+            }
+        }
         fun tag(out: JsonObject): String {
             out.text("tag")?.takeIf { it.isNotBlank() }?.let { return it }
             var next = "gdhapp-proxy"

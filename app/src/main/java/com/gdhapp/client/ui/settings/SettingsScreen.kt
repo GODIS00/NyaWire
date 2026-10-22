@@ -76,8 +76,8 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
     var showDiagnostics by rememberSaveable { mutableStateOf(false) }
     var showLicenses by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-    val categories = listOf("VPN", AppText.text(R.string.appearance), AppText.text(R.string.checks), AppText.text(R.string.about), AppText.text(R.string.routing_title))
-    val icons = listOf(Icons.Rounded.Shield, Icons.Rounded.Palette, Icons.Rounded.NetworkCheck, Icons.Rounded.Info, Icons.AutoMirrored.Rounded.AltRoute)
+    val categories = listOf(AppText.text(R.string.connection_section), AppText.text(R.string.appearance), AppText.text(R.string.checks), AppText.text(R.string.about), AppText.text(R.string.routing_title), AppText.text(R.string.tunnel_section), AppText.text(R.string.subscriptions))
+    val icons = listOf(Icons.Rounded.Shield, Icons.Rounded.Palette, Icons.Rounded.NetworkCheck, Icons.Rounded.Info, Icons.AutoMirrored.Rounded.AltRoute, Icons.Rounded.Layers, Icons.Rounded.Update)
     Column(modifier) {
         if (category >= 0) Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (query.isNotBlank()) query = "" else category = -1 }) {
@@ -91,10 +91,10 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), shape = MaterialTheme.shapes.medium)
         if (category < 0 && query.isBlank()) SettingsOverview(categories,
             listOf("${settings.connectionMode.label} · ${settings.coreEngine.label}", "${settings.theme.label} · ${if (settings.dynamicColors) AppText.text(R.string.android_wallpaper_colors) else if (settings.customAccent != null) AppText.text(R.string.custom_color) else settings.accent.label}",
-                settings.probeMethod.label, "NyaWire ${BuildConfig.VERSION_NAME}", settings.routingMode.label), icons, Modifier.weight(1f).fillMaxWidth()) { openCategory(it) }
+                settings.probeMethod.label, "NyaWire ${BuildConfig.VERSION_NAME}", settings.routingMode.label, "${settings.coreEngine.label} · MTU ${settings.mtu}", AppText.text(R.string.auto_update_subscriptions)), icons, Modifier.weight(1f).fillMaxWidth()) { openCategory(it) }
         else LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (query.isNotBlank()) {
-                val results = settingsSearchTargets.filter { it.matches(query) }
+                val results = settingsSearchTargets.filter { it.matches(query) }.distinctBy { it.category to it.title }
                 if (results.isEmpty()) item { SettingsHint(AppText.text(R.string.no_results)) }
                 items(results, key = { "search:${it.category}:${it.title}" }, contentType = { "settings-result" }) { result ->
                     SettingsDestination(result.label, categories[result.category], icons[result.category]) { openCategory(result.category, result.key) }
@@ -103,41 +103,9 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                 0 -> {
                     item(key = "settings-content:1", contentType = "settings-content") { SettingsIntro(AppText.text(R.string.vpn_configuration), AppText.text(R.string.vpn_settings_take_effect_when_you_reconnect)) }
                     item(key = "settings-content:2", contentType = "settings-content") { SettingsSection(AppText.text(R.string.connection_mode), Icons.Rounded.SwapHoriz) {
-                        ChoiceChips(ConnectionMode.entries, settings.connectionMode, { it.label }) { actions.updateSettings(settings.copy(connectionMode = it)) }
-                        SettingsHint(AppText.text(R.string.proxy_mode_hint))
-                    } }
-                    item(key = "settings-content:24", contentType = "settings-content") { SettingsSection(AppText.text(R.string.local_socks_title), Icons.Rounded.Lan) {
-                        val proxyOnly = settings.connectionMode == ConnectionMode.PROXY
-                        ToggleSetting(AppText.text(R.string.local_socks_title), AppText.text(R.string.local_socks_hint), settings.localSocksEnabled || proxyOnly, enabled = !proxyOnly) {
-                            actions.updateSettings(settings.copy(localSocksEnabled = it))
-                        }
-                        if (proxyOnly) SettingsHint(AppText.text(R.string.socks_required_proxy))
-                        if (settings.localSocksEnabled || proxyOnly) {
-                        EditSetting(AppText.text(R.string.local_socks_port), AppText.text(R.string.value_0_selects_an_available_port_automatically), if (settings.localSocksPort == 0) "10808" else settings.localSocksPort.toString()) {
-                            editor = TextEditor(AppText.text(R.string.local_socks_port), settings.localSocksPort.toString(), AppText.text(R.string.value_0_or_1024_65535), { value -> if (value.toIntOrNull() == 0 || value.toIntOrNull() in 1024..65535) null else AppText.text(R.string.enter_0_or_a_port_between_1024) }, { actions.updateSettings(settings.copy(localSocksPort = it.toInt())) })
-                        }
-                        }
-                        SettingsHint(AppText.text(R.string.vpn_settings_take_effect_when_you_reconnect))
-                    } }
-                    item(key = "settings-content:3", contentType = "settings-content") { SettingsSection(AppText.text(R.string.connection_core), Icons.Rounded.Memory) {
-                        ChoiceChips(CoreEngine.entries, settings.coreEngine, { it.label }) { actions.updateSettings(settings.copy(coreEngine = it)) }
-                        SettingsHint(AppText.text(R.string.auto_keeps_the_profile_s_format_xray))
-                        ToggleSetting(AppText.text(R.string.xray_compatibility_mode), AppText.text(R.string.xray_compatibility_hint), settings.xrayCompatibilityMode) {
-                            actions.updateSettings(settings.copy(xrayCompatibilityMode = it))
-                        }
-                    } }
-                    item(key = "settings-content:4", contentType = "settings-content") { SettingsSection(AppText.text(R.string.network), Icons.Rounded.Wifi) {
-                        ToggleSetting("IPv6", AppText.text(R.string.route_ipv6_through_the_tunnel_ipv6_is), settings.ipv6) { actions.updateSettings(settings.copy(ipv6 = it)) }
-                        EditSetting("MTU", AppText.text(R.string.tunnel_packet_size), "${settings.mtu}") {
-                            editor = TextEditor("MTU", settings.mtu.toString(), AppText.text(R.string.value_1280_to_9000), { value -> if (value.toIntOrNull() in 1280..9000) null else AppText.text(R.string.enter_a_number_between_1280_and_9000) }, { actions.updateSettings(settings.copy(mtu = it.toInt())) })
-                        }
-                        EditSetting(AppText.text(R.string.primary_dns), AppText.text(R.string.for_apps_routed_through_the_vpn), settings.dnsPrimary) {
-                            editor = TextEditor(AppText.text(R.string.primary_dns), settings.dnsPrimary, AppText.text(R.string.ipv4_or_ipv6_address), { if (NetworkRoutes.isLiteralAddress(it)) null else AppText.text(R.string.enter_a_dns_server_ip_address) }, { actions.updateSettings(settings.copy(dnsPrimary = it)) })
-                        }
-                        EditSetting(AppText.text(R.string.secondary_dns), AppText.text(R.string.optional), settings.dnsSecondary.ifBlank { AppText.text(R.string.not_set) }) {
-                            editor = TextEditor(AppText.text(R.string.secondary_dns), settings.dnsSecondary, AppText.text(R.string.ip_address_or_leave_blank), { if (it.isBlank() || NetworkRoutes.isLiteralAddress(it)) null else AppText.text(R.string.enter_a_dns_server_ip_address) }, { actions.updateSettings(settings.copy(dnsSecondary = it)) })
-                        }
-                        ToggleSetting(AppText.text(R.string.bypass_local_network), AppText.text(R.string.access_home_devices_and_local_addresses_directly), settings.bypassLan) { actions.updateSettings(settings.copy(bypassLan = it)) }
+                        val mode = if (settings.connectionMode == ConnectionMode.PROXY) TunnelMode.PROXY else if (settings.localSocksEnabled) TunnelMode.VPN_PROXY else TunnelMode.VPN
+                        ChoiceChips(TunnelMode.entries, mode, { it.label }) { actions.updateSettings(settings.copy(connectionMode = if (it == TunnelMode.PROXY) ConnectionMode.PROXY else ConnectionMode.VPN, localSocksEnabled = it != TunnelMode.VPN)) }
+                        SettingsHint(if (mode == TunnelMode.VPN) AppText.text(R.string.vpn_mode_hint) else "SOCKS5 · 127.0.0.1:${settings.localSocksPort.takeIf { it != 0 } ?: 10808}")
                     } }
                     item(key = "settings-content:6", contentType = "settings-content") { SettingsSection(AppText.text(R.string.behavior), Icons.Rounded.Tune) {
                         ToggleSetting(AppText.text(R.string.connect_on_open), AppText.text(R.string.connect_on_open_hint), settings.connectOnOpen) { actions.updateSettings(settings.copy(connectOnOpen = it)) }
@@ -150,6 +118,59 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                             Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.width(8.dp)); Text(AppText.text(R.string.android_vpn_settings), fontSize = 12.sp)
                         }
                     } }
+                    item(key = "settings-content:27", contentType = "settings-content") { SettingsSection("Kill Switch", Icons.Rounded.Security) {
+                        ToggleSetting("Kill Switch", AppText.text(R.string.kill_switch_hint), settings.killSwitch, enabled = settings.connectionMode == ConnectionMode.VPN) { actions.updateSettings(settings.copy(killSwitch = it)) }
+                    } }
+                    item(key = "settings-content:24", contentType = "settings-content") { SettingsSection(AppText.text(R.string.local_socks_title), Icons.Rounded.Lan) {
+                        val proxyOnly = settings.connectionMode == ConnectionMode.PROXY
+                        if (proxyOnly) SettingsHint(AppText.text(R.string.socks_required_proxy))
+                        EditSetting(AppText.text(R.string.local_socks_port), AppText.text(R.string.value_0_selects_an_available_port_automatically), if (settings.localSocksPort == 0) "10808" else settings.localSocksPort.toString()) {
+                            editor = TextEditor(AppText.text(R.string.local_socks_port), settings.localSocksPort.toString(), AppText.text(R.string.value_0_or_1024_65535), { value -> if (value.toIntOrNull() == 0 || value.toIntOrNull() in 1024..65535) null else AppText.text(R.string.enter_0_or_a_port_between_1024) }, { actions.updateSettings(settings.copy(localSocksPort = it.toInt())) })
+                        }
+                        SettingsHint(AppText.text(if (settings.connectionMode == ConnectionMode.VPN && !settings.localSocksEnabled) R.string.proxy_mode_required else R.string.vpn_settings_take_effect_when_you_reconnect))
+                    } }
+                    item(key = "settings-content:28", contentType = "settings-content") { SettingsSection(AppText.text(R.string.hotspot_proxy), Icons.Rounded.WifiTethering) {
+                        ToggleSetting(AppText.text(R.string.hotspot_proxy), AppText.text(R.string.hotspot_proxy_hint), settings.hotspotEnabled) { actions.updateSettings(settings.copy(hotspotEnabled = it, hotspotPassword = settings.hotspotPassword.ifBlank { java.util.UUID.randomUUID().toString().replace("-", "").take(16) })) }
+                        if (settings.hotspotEnabled) {
+                            EditSetting(AppText.text(R.string.local_socks_port), "SOCKS5 · Wi-Fi", settings.hotspotPort.toString()) { editor = TextEditor(AppText.text(R.string.local_socks_port), settings.hotspotPort.toString(), "10809", { if (it.toIntOrNull() in 1024..65535 && it.toIntOrNull() != (settings.localSocksPort.takeIf { p -> p != 0 } ?: 10808)) null else AppText.text(R.string.hotspot_credentials_error) }, { actions.updateSettings(settings.copy(hotspotPort = it.toInt())) }) }
+                            EditSetting(AppText.text(R.string.proxy_username), "", settings.hotspotUser) { editor = TextEditor(AppText.text(R.string.proxy_username), settings.hotspotUser, "nyawire", { if (it.isNotBlank() && it.length <= 64) null else AppText.text(R.string.hotspot_credentials_error) }, { actions.updateSettings(settings.copy(hotspotUser = it)) }) }
+                            EditSetting(AppText.text(R.string.proxy_password), AppText.text(R.string.proxy_password_hint), settings.hotspotPassword) { editor = TextEditor(AppText.text(R.string.proxy_password), settings.hotspotPassword, "", { if (it.length in 8..128) null else AppText.text(R.string.hotspot_credentials_error) }, { actions.updateSettings(settings.copy(hotspotPassword = it)) }) }
+                        }
+                    } }
+                }
+                5 -> {
+                    item(key = "settings-content:3", contentType = "settings-content") { SettingsSection(AppText.text(R.string.connection_core), Icons.Rounded.Memory) {
+                        ChoiceChips(CoreEngine.entries, settings.coreEngine, { it.label }) { actions.updateSettings(settings.copy(coreEngine = it)) }
+                        SettingsHint(AppText.text(R.string.auto_keeps_the_profile_s_format_xray))
+                        ToggleSetting(AppText.text(R.string.native_xray_tun), AppText.text(R.string.native_xray_tun_hint), !settings.xrayCompatibilityMode, enabled = settings.coreEngine != CoreEngine.SING_BOX) {
+                            actions.updateSettings(settings.copy(xrayCompatibilityMode = !it))
+                        }
+                    } }
+                    item(key = "settings-content:4", contentType = "settings-content") { SettingsSection(AppText.text(R.string.network), Icons.Rounded.Wifi) {
+                        Text(AppText.text(R.string.ip_type), fontSize = 12.sp)
+                        ChoiceChips(IpMode.entries, settings.ipMode, { if (it == IpMode.AUTO) AppText.text(R.string.auto) else it.label }) { actions.updateSettings(settings.copy(ipMode = it, ipv6 = it != IpMode.IPV4)) }
+                        Text("DNS", fontSize = 12.sp)
+                        ChoiceChips(listOf("Cloudflare + Google", "Cloudflare", "Google", "AdGuard"), when (settings.dnsPrimary to settings.dnsSecondary) {
+                            "1.1.1.1" to "8.8.8.8" -> "Cloudflare + Google"; "1.1.1.1" to "1.0.0.1" -> "Cloudflare"; "8.8.8.8" to "8.8.4.4" -> "Google"; "94.140.14.14" to "94.140.15.15" -> "AdGuard"; else -> ""
+                        }, { it }) { val dns = when (it) { "Cloudflare" -> "1.1.1.1" to "1.0.0.1"; "Google" -> "8.8.8.8" to "8.8.4.4"; "AdGuard" -> "94.140.14.14" to "94.140.15.15"; else -> "1.1.1.1" to "8.8.8.8" }; actions.updateSettings(settings.copy(dnsPrimary = dns.first, dnsSecondary = dns.second)) }
+                        ChoiceChips(listOf(1280, 1380, 1500), settings.mtu, { "MTU $it" }) { actions.updateSettings(settings.copy(mtu = it)) }
+                        EditSetting("MTU", AppText.text(R.string.tunnel_packet_size), "${settings.mtu}") {
+                            editor = TextEditor("MTU", settings.mtu.toString(), AppText.text(R.string.value_1280_to_9000), { value -> if (value.toIntOrNull() in 1280..9000) null else AppText.text(R.string.enter_a_number_between_1280_and_9000) }, { actions.updateSettings(settings.copy(mtu = it.toInt())) })
+                        }
+                        EditSetting(AppText.text(R.string.primary_dns), AppText.text(R.string.for_apps_routed_through_the_vpn), settings.dnsPrimary) {
+                            editor = TextEditor(AppText.text(R.string.primary_dns), settings.dnsPrimary, AppText.text(R.string.ipv4_or_ipv6_address), { if (NetworkRoutes.isLiteralAddress(it)) null else AppText.text(R.string.enter_a_dns_server_ip_address) }, { actions.updateSettings(settings.copy(dnsPrimary = it)) })
+                        }
+                        EditSetting(AppText.text(R.string.secondary_dns), AppText.text(R.string.optional), settings.dnsSecondary.ifBlank { AppText.text(R.string.not_set) }) {
+                            editor = TextEditor(AppText.text(R.string.secondary_dns), settings.dnsSecondary, AppText.text(R.string.ip_address_or_leave_blank), { if (it.isBlank() || NetworkRoutes.isLiteralAddress(it)) null else AppText.text(R.string.enter_a_dns_server_ip_address) }, { actions.updateSettings(settings.copy(dnsSecondary = it)) })
+                        }
+                    } }
+                    item(key = "settings-content:29", contentType = "settings-content") { SettingsSection(AppText.text(R.string.tunnel_options), Icons.Rounded.Tune) {
+                        ToggleSetting(AppText.text(R.string.mux_title), AppText.text(R.string.mux_hint), settings.muxEnabled, enabled = settings.coreEngine != CoreEngine.SING_BOX) { actions.updateSettings(settings.copy(muxEnabled = it)) }
+                        ToggleSetting(AppText.text(R.string.notification_speed), AppText.text(R.string.notification_speed_hint), settings.notificationSpeed) { actions.updateSettings(settings.copy(notificationSpeed = it)) }
+                        ToggleSetting(AppText.text(R.string.keep_awake), AppText.text(R.string.keep_awake_hint), settings.keepAwake) { actions.updateSettings(settings.copy(keepAwake = it)) }
+                    } }
+                }
+                6 -> {
                     item(key = "settings-content:7", contentType = "settings-content") { SettingsSection(AppText.text(R.string.auto_update_subscriptions), Icons.Rounded.Update) {
                         ToggleSetting(AppText.text(R.string.update_when_opened), AppText.text(R.string.uses_the_interval_provided_by_the_subscription), settings.refreshOnOpen) { actions.updateSettings(settings.copy(refreshOnOpen = it)) }
                         SettingsHint(AppText.text(R.string.import_xray_and_sing_box_json_base64))
@@ -159,6 +180,10 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                     } }
                 }
                 4 -> {
+                    item(key = "settings-content:30", contentType = "settings-content") { SettingsSection(AppText.text(R.string.local_network), Icons.Rounded.Lan) {
+                        ChoiceChips(listOf(true, false), settings.bypassLan, { AppText.text(if (it) R.string.lan_direct else R.string.lan_proxy) }) { actions.updateSettings(settings.copy(bypassLan = it)) }
+                        SettingsHint(AppText.text(R.string.lan_routing_hint))
+                    } }
                     item(key = "settings-content:9", contentType = "settings-content") { SettingsSection(AppText.text(R.string.routing_mode), Icons.AutoMirrored.Rounded.AltRoute) {
                         ChoiceChips(RoutingMode.entries, settings.routingMode, { it.label }) { actions.updateSettings(settings.copy(routingMode = it)) }
                         SettingsHint(AppText.text(R.string.routing_rules_hint))
@@ -418,4 +443,5 @@ private fun EditSetting(title: String, subtitle: String, value: String, onClick:
 
 @Composable
 private fun SettingsHint(text: String) { Text(text, fontSize = 11.sp, lineHeight = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 4.dp)) }
+
 

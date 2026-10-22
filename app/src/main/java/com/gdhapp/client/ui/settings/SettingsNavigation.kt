@@ -42,9 +42,9 @@ internal fun SettingsDestination(title: String, subtitle: String?, icon: ImageVe
 @Composable
 internal fun SettingsOverview(titles: List<String>, subtitles: List<String>, icons: List<ImageVector>, modifier: Modifier, onOpen: (Int) -> Unit) {
     BoxWithConstraints(modifier.padding(12.dp)) {
-        val height = ((maxHeight - 32.dp) / 5).coerceAtLeast(80.dp)
+        val height = ((maxHeight - 48.dp) / 7).coerceAtLeast(64.dp)
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(0, 4, 1, 2, 3).forEach { index ->
+            listOf(0, 5, 4, 6, 1, 2, 3).forEach { index ->
                 SettingsDestination(titles[index], subtitles[index], icons[index], Modifier.height(height), prominent = true) { onOpen(index) }
             }
         }
