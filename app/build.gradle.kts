@@ -11,8 +11,8 @@ android {
         applicationId = "com.gdhapp.client"
         minSdk = 29
         targetSdk = 35
-        versionCode = 33
-        versionName = "2.11.2"
+        versionCode = 34
+        versionName = "2.11.3"
         val githubRepository = providers.gradleProperty("githubRepository").getOrElse("")
         require(githubRepository.isEmpty() || githubRepository.matches(Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")))
         buildConfigField("String", "GITHUB_REPOSITORY", "\"$githubRepository\"")

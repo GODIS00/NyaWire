@@ -54,11 +54,11 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
         add -> AppText.text(R.string.add_a_subscription)
         else -> AppText.text(R.string.vpn_is_off)
     }
-        Column(Modifier.fillMaxWidth().then(if (motion) Modifier.animateContentSize() else Modifier).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(Modifier.fillMaxWidth().then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 8.dp, vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Surface(shape = CircleShape, color = statusColor) {
-                    Row(Modifier.padding(horizontal = 12.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically,
+                    Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         if (connecting) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = statusTint)
                         else Icon(if (connected) Icons.Rounded.VerifiedUser else Icons.Rounded.Shield, null, tint = statusTint, modifier = Modifier.size(16.dp))

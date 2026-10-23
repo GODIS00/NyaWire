@@ -118,7 +118,7 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                 settings.probeMethod.label, "NyaWire ${BuildConfig.VERSION_NAME}", settings.routingMode.label, "${settings.coreEngine.label} · MTU ${settings.mtu}", AppText.text(R.string.auto_update_subscriptions)), icons, Modifier.fillMaxSize()) { openCategory(it) }
         // Only the current page drives the shared scroll state; a leaving page keeps a copy of its position.
         else LazyColumn(state = if (shown == page) listState else androidx.compose.foundation.lazy.rememberLazyListState(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset),
-            modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (shown == -2) {
                 val results = settingsSearchTargets.filter { it.matches(query) }.distinctBy { it.category to it.title }
                 if (results.isEmpty()) item { SettingsHint(AppText.text(R.string.no_results)) }
@@ -447,7 +447,7 @@ private fun SettingsIntro(title: String, subtitle: String, showTitle: Boolean = 
 @Composable
 private fun SettingsSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) = com.gdhapp.client.ui.theme.BlockColors {
     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Column(Modifier.then(if (LocalMotionEnabled.current) Modifier.animateContentSize(IosMotion.size) else Modifier).padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.then(if (LocalMotionEnabled.current) Modifier.animateContentSize(IosMotion.size) else Modifier).padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 2.dp)) {
                 Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
                 Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)

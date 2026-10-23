@@ -43,6 +43,26 @@ class PowerButtonPreviewTest {
                     }
                     bitmap.recycle()
                 }
+                // Capture the settings overview too, to review spacing without fixed-height tiles.
+                val labels = mutableListOf<android.view.accessibility.AccessibilityNodeInfo>()
+                fun visit(node: android.view.accessibility.AccessibilityNodeInfo) {
+                    if (node.isVisibleToUser && (node.text?.toString() == "Настройки" || node.contentDescription?.toString() == "Настройки")) labels.add(node)
+                    repeat(node.childCount) { node.getChild(it)?.let(::visit) }
+                }
+                visit(instrumentation.uiAutomation.rootInActiveWindow)
+                val label = labels.last()
+                val bounds = android.graphics.Rect().also { label.getBoundsInScreen(it) }
+                var target: android.view.accessibility.AccessibilityNodeInfo? = label
+                while (target != null && !target.isClickable) target = target.parent
+                if (target?.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK) != true) {
+                    android.os.ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("input tap ${bounds.centerX()} ${bounds.centerY()}")).use { it.readBytes() }
+                }
+                Thread.sleep(2000)
+                val settingsBitmap = instrumentation.uiAutomation.takeScreenshot()
+                app.externalCacheDir!!.resolve("settings-compact.png").outputStream().use {
+                    settingsBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+                }
+                settingsBitmap.recycle()
             }
         } finally { app.settings.update { original } }
     }

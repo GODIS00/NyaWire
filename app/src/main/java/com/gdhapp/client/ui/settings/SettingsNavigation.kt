@@ -24,10 +24,10 @@ import com.gdhapp.client.i18n.AppText
 internal fun SettingsDestination(title: String, subtitle: String?, icon: ImageVector, modifier: Modifier = Modifier, prominent: Boolean = false, onClick: () -> Unit) = com.gdhapp.client.ui.theme.BlockColors {
     Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Row(Modifier.heightIn(min = 54.dp).padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+        Row(Modifier.heightIn(min = 54.dp).padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             if (prominent) Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer) {
-                Icon(icon, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.padding(12.dp).size(24.dp))
+                Icon(icon, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.padding(8.dp).size(20.dp))
             } else Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, fontSize = if (prominent) 17.sp else 13.sp, fontWeight = FontWeight.SemiBold)
@@ -41,11 +41,10 @@ internal fun SettingsDestination(title: String, subtitle: String?, icon: ImageVe
 
 @Composable
 internal fun SettingsOverview(titles: List<String>, subtitles: List<String>, icons: List<ImageVector>, modifier: Modifier, onOpen: (Int) -> Unit) {
-    BoxWithConstraints(modifier.padding(12.dp)) {
-        val height = ((maxHeight - 48.dp) / 7).coerceAtLeast(64.dp)
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Box(modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf(0, 5, 4, 6, 1, 2, 3).forEach { index ->
-                SettingsDestination(titles[index], subtitles[index], icons[index], Modifier.height(height), prominent = true) { onOpen(index) }
+                SettingsDestination(titles[index], subtitles[index], icons[index], Modifier.heightIn(min = 64.dp), prominent = true) { onOpen(index) }
             }
         }
     }

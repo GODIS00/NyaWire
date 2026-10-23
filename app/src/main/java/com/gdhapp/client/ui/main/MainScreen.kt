@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import com.gdhapp.client.domain.model.VpnMetrics
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalDensity
 import com.gdhapp.client.ui.theme.touchFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -99,6 +100,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
     val feedbackView = LocalView.current
     val playConnectionSound = com.gdhapp.client.ui.theme.rememberVpnButtonSound(state.settings.connectionSound)
     val scheme = MaterialTheme.colorScheme
+    val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
     val listModel = state
     val shownNodes = remember(listModel) { listModel.groups.associate { it.id to listModel.visibleNodes(it) } }
     val backdrop = rememberGraphicsLayer().apply { clip = true }
@@ -122,7 +124,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
         containerColor = scheme.background,
         topBar = { Box {
             com.gdhapp.client.ui.theme.AmbientGlow(state.settings.softBlur, Modifier.matchParentSize())
-            TopAppBar(title = { Column {
+            TopAppBar(expandedHeight = (56 * fontScale).dp, title = { Column {
                 Crossfade(if (tab == 0) "NyaWire" else navLabels[tab], animationSpec = if (state.settings.animations) IosMotion.fade() else snap(), label = "screenTitle") { title ->
                     Text(title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                 }
@@ -145,7 +147,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
             Column {
                 Box {
                 FrostedNavigationBackground(backdrop, blurPanel, Modifier.matchParentSize(), refresh = captureBackdrop)
-                NavigationBar(containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp) {
+                NavigationBar(modifier = Modifier.height((64 * fontScale.coerceAtMost(1.5f)).dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()), containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp) {
                     navLabels.forEachIndexed { index, title -> NavigationBarItem(selected = tab == index, onClick = { tab = index },
                         icon = { Icon(navIcons[index], title) }, label = { Text(title, fontSize = 11.sp) }) }
                 }
@@ -185,7 +187,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                         enabled = hasSubscriptions && !state.startupRefreshing,
                         onRefresh = actions.refreshAll)) {
                     LazyColumn(state = listState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize(),
-                    contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 12.dp, bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 104.dp else 20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 4.dp, bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 92.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     item(key = "connection") { val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
                         Box(itemMotion(state.settings.animations)) { ConnectionCard(state.copy(metrics = currentMetrics), ::connect, { showAdd = true }, { showError = true }) } }
                     if (listModel.groups.isEmpty()) item {
@@ -210,7 +212,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                         item(key = "section-title") {
                             Row(Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)).padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Text(AppText.text(R.string.subscriptions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                                TextButton(onClick = actions.collapseAll) { Text(AppText.text(R.string.collapse), fontSize = 11.sp) }
+                                TextButton(onClick = actions.collapseAll, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) { Text(AppText.text(R.string.collapse), fontSize = 11.sp) }
                             }
                         }
                         val visibleGroups = listModel.groups.filter { shownNodes.getValue(it.id).isNotEmpty() || it.servers.isEmpty() }
@@ -221,7 +223,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                             item(key = "group:${group.id}") { Box(itemMotion(state.settings.animations)) { SubscriptionHeader(group, listModel, actions, onDelete = { deleteGroup = group.id }, onRename = { renameGroup = group.id }) } }
                             if (group.isExpanded) serverRows(shownNodes.getValue(group.id), listModel, actions,
                                 onSelect = { select(it) }, onInfo = { infoNode = it }, keyPrefix = group.id)
-                            item(key = "space:${group.id}") { Spacer(Modifier.height(6.dp).then(itemMotion(state.settings.animations))) }
+                            item(key = "space:${group.id}") { Spacer(Modifier.height(2.dp).then(itemMotion(state.settings.animations))) }
                         }
                     }
                 }
@@ -381,13 +383,13 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
 @Composable
 private fun ChecksScreen(state: MainUiState, actions: MainActions, onInfo: (String) -> Unit, listState: androidx.compose.foundation.lazy.LazyListState, modifier: Modifier = Modifier) {
     val results = state.allNodes.mapNotNull { it.probeResults[state.settings.probeMethod] }
-    LazyColumn(modifier, state = listState, contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(modifier, state = listState, contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ProbeMethod.entries.forEach { method ->
             FilterChip(selected = state.settings.probeMethod == method, onClick = { actions.updateSettings(state.settings.copy(probeMethod = method)) }, label = { Text(method.label, fontSize = 12.sp) })
         } } }
         item {
             Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(AppText.text(R.string.timeout_s_samples_concurrent, state.settings.probeTimeoutSeconds, state.settings.probeSamples, state.settings.probeConcurrency),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     PingAllControl(state, actions)
@@ -434,11 +436,11 @@ private fun PingAllControl(state: MainUiState, actions: MainActions) {
         modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
         color = scheme.surfaceContainerLow, border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = .45f))) {
         Column {
-            Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+            Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Surface(shape = MaterialTheme.shapes.medium, color = scheme.primaryContainer) {
                     Icon(if (state.isTesting) Icons.Rounded.Stop else Icons.Rounded.NetworkCheck, null,
-                        modifier = Modifier.padding(10.dp).size(22.dp), tint = scheme.onPrimaryContainer)
+                        modifier = Modifier.padding(8.dp).size(20.dp), tint = scheme.onPrimaryContainer)
                 }
                 Text(AppText.text(if (state.isTesting) R.string.stop_ping else R.string.ping_all_servers),
                     modifier = Modifier.weight(1f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
