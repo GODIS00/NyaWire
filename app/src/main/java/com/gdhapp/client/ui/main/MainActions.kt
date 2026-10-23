@@ -12,6 +12,7 @@ data class MainActions(
     val toggleGroup: (String) -> Unit = {},
     val collapseAll: () -> Unit = {},
     val refresh: (String) -> Unit = {},
+    val refreshAll: () -> Unit = {},
     val cancelStartupRefresh: () -> Unit = {},
     val togglePin: (String) -> Unit = {},
     val deleteGroup: (String) -> Unit = {},

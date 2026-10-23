@@ -41,6 +41,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -171,7 +176,15 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                     SettingsScreen(state, actions, Modifier.widthIn(max = 820.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding()), onPreviewSound = playConnectionSound)
                 }
                 1 -> ChecksScreen(state, actions, onInfo = { infoNode = it }, listState = pingListState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 84.dp else 0.dp))
-                else -> LazyColumn(state = listState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize(),
+                else -> {
+                    val pullState = rememberPullToRefreshState()
+                    val hasSubscriptions = state.groups.any { it.sourceUrl != null }
+                    val refreshDescription = AppText.text(R.string.refresh_all_subscriptions)
+                    Box(Modifier.widthIn(max = 820.dp).fillMaxSize().pullToRefresh(
+                        isRefreshing = state.pullRefreshing, state = pullState,
+                        enabled = hasSubscriptions && !state.startupRefreshing,
+                        onRefresh = actions.refreshAll)) {
+                    LazyColumn(state = listState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize(),
                     contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 12.dp, bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 104.dp else 20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     item(key = "connection") { val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
                         Box(itemMotion(state.settings.animations)) { ConnectionCard(state.copy(metrics = currentMetrics), ::connect, { showAdd = true }, { showError = true }) } }
@@ -210,6 +223,11 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                                 onSelect = { select(it) }, onInfo = { infoNode = it }, keyPrefix = group.id)
                             item(key = "space:${group.id}") { Spacer(Modifier.height(6.dp).then(itemMotion(state.settings.animations))) }
                         }
+                    }
+                }
+                    if (hasSubscriptions) PullToRefreshDefaults.Indicator(
+                        isRefreshing = state.pullRefreshing, state = pullState,
+                        modifier = Modifier.align(Alignment.TopCenter).semantics { contentDescription = refreshDescription })
                     }
                 }
             } }
@@ -317,6 +335,10 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
                     }
                     Text(AppText.text(R.string.servers, group.servers.size, group.lastUpdated), color = scheme.onSurfaceVariant, fontSize = 10.sp, lineHeight = 13.sp, modifier = Modifier.padding(top = 3.dp))
                 }
+                IconButton(onClick = { actions.probeGroup(group.id) }, enabled = !state.isTesting && group.servers.isNotEmpty(), modifier = Modifier.size(44.dp)) {
+                    if (state.isTesting && group.servers.any { it.id in state.testingNodes }) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                    else Icon(Icons.Rounded.NetworkCheck, AppText.text(R.string.ping_subscription_named, group.title), tint = if (state.isTesting) scheme.onSurfaceVariant else scheme.primary, modifier = Modifier.size(22.dp))
+                }
                 IconButton(onClick = { actions.refresh(group.id) }, enabled = group.id !in state.refreshing && group.sourceUrl != null, modifier = Modifier.size(36.dp)) {
                     Crossfade(group.id in state.refreshing, animationSpec = if (motion) tween(180) else snap(), label = "groupRefresh") { refreshing ->
                         if (refreshing) CircularProgressIndicator(Modifier.size(17.dp), strokeWidth = 2.dp)
@@ -402,20 +424,34 @@ private fun CheckCounter(label: String, value: Int) { Column(horizontalAlignment
 
 @Composable
 private fun PingAllControl(state: MainUiState, actions: MainActions) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Button(onClick = if (state.isTesting) actions.stopProbes else actions.probeAll,
-            enabled = state.isTesting || state.allNodes.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
-            Icon(if (state.isTesting) Icons.Rounded.Stop else Icons.Rounded.NetworkCheck, null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(AppText.text(if (state.isTesting) R.string.stop_ping else R.string.ping_all_servers), modifier = Modifier.weight(1f), fontSize = 12.sp)
-            Text(if (state.isTesting) "${state.probeCompleted}/${state.probeTotal}" else state.allNodes.size.toString(), fontSize = 11.sp)
-        }
-        val motion = state.settings.animations
-        val progress by animateFloatAsState(if (state.probeTotal == 0) 0f else state.probeCompleted.toFloat() / state.probeTotal,
-            if (motion) tween(300) else snap(), label = "pingProgress")
-        val barAlpha by animateFloatAsState(if (state.isTesting) 1f else 0f, if (motion) tween(220) else snap(), label = "pingBar")
-        Box(Modifier.fillMaxWidth().height(3.dp)) {
-            if (barAlpha > 0f) LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxSize().alpha(barAlpha))
+    val scheme = MaterialTheme.colorScheme
+    val motion = LocalMotionEnabled.current
+    val progress by animateFloatAsState(
+        if (state.probeTotal == 0) 0f else state.probeCompleted.toFloat() / state.probeTotal,
+        if (motion) tween(300) else snap(), label = "pingProgress")
+    Surface(onClick = if (state.isTesting) actions.stopProbes else actions.probeAll,
+        enabled = state.isTesting || state.allNodes.isNotEmpty(),
+        modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
+        color = scheme.surfaceContainerLow, border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = .45f))) {
+        Column {
+            Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(shape = MaterialTheme.shapes.medium, color = scheme.primaryContainer) {
+                    Icon(if (state.isTesting) Icons.Rounded.Stop else Icons.Rounded.NetworkCheck, null,
+                        modifier = Modifier.padding(10.dp).size(22.dp), tint = scheme.onPrimaryContainer)
+                }
+                Text(AppText.text(if (state.isTesting) R.string.stop_ping else R.string.ping_all_servers),
+                    modifier = Modifier.weight(1f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Surface(shape = CircleShape, color = scheme.surfaceContainerHigh) {
+                    Text(if (state.isTesting) "${state.probeCompleted}/${state.probeTotal}" else state.allNodes.size.toString(),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp), fontSize = 11.sp, color = scheme.onSurfaceVariant)
+                }
+            }
+            // Keep the row's height stable when a batch starts or finishes.
+            Box(Modifier.fillMaxWidth().height(3.dp)) {
+                if (state.isTesting) LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxSize(),
+                    trackColor = scheme.surfaceContainerHigh)
+            }
         }
     }
 }

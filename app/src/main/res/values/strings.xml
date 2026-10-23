@@ -501,4 +501,7 @@
     <string name="border_sunset">Sunset</string>
     <string name="gradient_start">First color</string>
     <string name="gradient_end">Second color</string>
+    <string name="refresh_all_subscriptions">Refresh all subscriptions</string>
+    <string name="ping_subscription_named">Ping subscription %1$s</string>
+    <string name="subscriptions_refresh_result">Updated: %1$d · Failed: %2$d</string>
 </resources>

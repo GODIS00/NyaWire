@@ -308,4 +308,68 @@ class RefreshAndGestureTest {
             }
         }
     }
+
+    @Test fun bulkRefreshSkipsLocalProfilesAndContinuesAfterAnError(): Unit = runBlocking {
+        Fixture().use { fixture ->
+            val tls = com.gdhapp.client.testing.FixtureTls(instrumentation.context.applicationInfo.sourceDir)
+            val server = MockWebServer().apply { useHttps(tls.context.socketFactory, false); start() }
+            val client = OkHttpClient.Builder().sslSocketFactory(tls.context.socketFactory, tls.trust).hostnameVerifier { host, _ -> host == "localhost" }.build()
+            try {
+                val repository = LocalSubscriptionRepository(fixture.context, client)
+                for (path in listOf("/one", "/two")) {
+                    server.enqueue(MockResponse().setBody(links(1)))
+                    repository.importText(server.url(path).toString()); server.takeRequest(5, TimeUnit.SECONDS)
+                }
+                repository.importText(links(3))
+                val local = repository.groups.value.single { it.sourceUrl == null }
+                val remote = repository.groups.value.filter { it.sourceUrl != null }
+                val model = fixture.model(repository)
+                server.enqueue(MockResponse().setResponseCode(503))
+                server.enqueue(MockResponse().setBody(links(2)).setBodyDelay(500, TimeUnit.MILLISECONDS))
+                instrumentation.runOnMainSync {
+                    model.refreshAllSubscriptions()
+                    model.refreshAllSubscriptions()
+                    model.refresh(remote.first().id)
+                    assertTrue(model.uiState.value.pullRefreshing)
+                }
+                withTimeout(10_000) { model.uiState.first { !it.pullRefreshing } }
+                assertEquals("One request per remote subscription", 4, server.requestCount)
+                assertEquals(local, repository.groups.value.single { it.id == local.id })
+                assertEquals(1, repository.groups.value.single { it.id == remote.first().id }.servers.size)
+                assertEquals(2, repository.groups.value.single { it.id == remote.last().id }.servers.size)
+                assertTrue(model.uiState.value.refreshing.isEmpty())
+                assertFalse(model.uiState.value.startupRefreshing)
+            } finally { server.shutdown(); client.connectionPool.evictAll(); client.dispatcher.executorService.shutdown() }
+        }
+    }
+
+    @Test fun pullToRefreshAndSubscriptionPingWorkWithoutOpeningAMenu(): Unit = runBlocking {
+        Fixture().use { fixture ->
+            val tls = com.gdhapp.client.testing.FixtureTls(instrumentation.context.applicationInfo.sourceDir)
+            val server = MockWebServer().apply { useHttps(tls.context.socketFactory, false); start() }
+            val client = OkHttpClient.Builder().sslSocketFactory(tls.context.socketFactory, tls.trust).hostnameVerifier { host, _ -> host == "localhost" }.build()
+            try {
+                val repository = LocalSubscriptionRepository(fixture.context, client)
+                server.enqueue(MockResponse().setBody(links(1)))
+                repository.importText(server.url("/pull").toString()); server.takeRequest(5, TimeUnit.SECONDS)
+                repository.collapseAll()
+                val tester = CountingTester()
+                val model = fixture.model(repository, tester)
+                fixture.show(model).use {
+                    text("Пинг всех серверов")
+                    server.enqueue(MockResponse().setBody(links(2)).setBodyDelay(1, TimeUnit.SECONDS))
+                    val metrics = app.resources.displayMetrics
+                    shell("input swipe ${metrics.widthPixels / 10} ${metrics.heightPixels * 30 / 100} ${metrics.widthPixels / 10} ${metrics.heightPixels * 75 / 100} 650")
+                    assertNotNull("Pull gesture must request a subscription refresh", server.takeRequest(5, TimeUnit.SECONDS))
+                    withTimeout(10_000) { model.uiState.first { !it.pullRefreshing && it.groups.single().servers.size == 2 } }
+                    assertEquals(2, server.requestCount)
+                    assertFalse(model.uiState.value.startupRefreshing)
+                    click("Пинг подписки ${repository.groups.value.single().title}")
+                    await { tester.calls.size == 2 && !model.uiState.value.isTesting }
+                    assertEquals(repository.groups.value.single().servers.map { it.id }.toSet(), tester.calls.toSet())
+                    screenshot("pull-ping-2112.png")
+                }
+            } finally { server.shutdown(); client.connectionPool.evictAll(); client.dispatcher.executorService.shutdown() }
+        }
+    }
 }

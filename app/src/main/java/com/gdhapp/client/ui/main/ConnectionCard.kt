@@ -123,7 +123,7 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
         animationSpec = if (motion) tween(250) else snap(), label = "powerFillEnd")
     val glow by animateFloatAsState(if (connected) .24f else .12f,
         animationSpec = if (motion) tween(250) else snap(), label = "powerGlow")
-    Box(Modifier.size(184.dp).graphicsLayer { scaleX = scale; scaleY = scale }.drawBehind {
+    Box(Modifier.size(200.dp).graphicsLayer { scaleX = scale; scaleY = scale }.drawBehind {
         val brush = Brush.sweepGradient(colors + colors.first())
         drawCircle(Brush.linearGradient(listOf(base, end)), radius = size.minDimension / 2 - 16.dp.toPx())
         drawCircle(Color.White.copy(alpha = .07f), radius = size.minDimension / 2 - 19.dp.toPx(), style = Stroke(1.dp.toPx()))

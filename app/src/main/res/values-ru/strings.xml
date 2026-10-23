@@ -500,4 +500,7 @@
     <string name="border_sunset">Закат</string>
     <string name="gradient_start">Первый цвет</string>
     <string name="gradient_end">Второй цвет</string>
+    <string name="refresh_all_subscriptions">Обновить все подписки</string>
+    <string name="ping_subscription_named">Пинг подписки %1$s</string>
+    <string name="subscriptions_refresh_result">Обновлено: %1$d · Ошибок: %2$d</string>
 </resources>

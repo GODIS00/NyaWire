@@ -40,6 +40,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class AppEntry(val packageName: String, val label: String)
 
@@ -51,6 +52,7 @@ data class MainUiState(
     val importing: Boolean = false,
     val refreshing: Set<String> = emptySet(),
     val startupRefreshing: Boolean = false,
+    val pullRefreshing: Boolean = false,
     val refreshTotal: Int = 0,
     val refreshCompleted: Int = 0,
     val activeNode: ServerNode? = null,
@@ -219,6 +221,35 @@ class MainViewModel(
         mutableState.update { it.copy(refreshing = it.refreshing + id) }
         runAction(onFinally = { mutableState.update { it.copy(refreshing = it.refreshing - id) } }) {
             repository.refresh(id); if (!automatic) message(AppText.text(R.string.subscription_updated))
+        }
+    }
+
+    fun refreshAllSubscriptions() {
+        val current = uiState.value
+        if (current.pullRefreshing || current.startupRefreshing) return
+        val ids = current.groups.filter { it.sourceUrl != null && it.id !in current.refreshing }.map { it.id }.toSet()
+        if (ids.isEmpty()) return
+        // Reserve the whole batch before launching: another pull or an individual tap must not queue it again.
+        mutableState.update { it.copy(pullRefreshing = true, refreshing = it.refreshing + ids) }
+        viewModelScope.launch {
+            var succeeded = 0
+            var failed = 0
+            val pending = ids.toMutableSet()
+            try {
+                for (id in ids) {
+                    try {
+                        if (withTimeoutOrNull(20_000) { repository.refresh(id); true } == true) succeeded++ else failed++
+                    } catch (cancelled: CancellationException) { throw cancelled }
+                    catch (_: Exception) { failed++ }
+                    finally {
+                        pending.remove(id)
+                        mutableState.update { it.copy(refreshing = it.refreshing - id) }
+                    }
+                }
+                message(AppText.text(R.string.subscriptions_refresh_result, succeeded, failed))
+            } finally {
+                mutableState.update { it.copy(pullRefreshing = false, refreshing = it.refreshing - pending) }
+            }
         }
     }
 

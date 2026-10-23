@@ -158,6 +158,7 @@ private fun MainRoute(viewModel: MainViewModel) {
             toggleGroup = viewModel::toggleExpanded,
             collapseAll = viewModel::collapseAll,
             refresh = { viewModel.refresh(it) },
+            refreshAll = viewModel::refreshAllSubscriptions,
             togglePin = viewModel::togglePinned,
             deleteGroup = viewModel::remove,
             deleteNode = viewModel::removeNode,
