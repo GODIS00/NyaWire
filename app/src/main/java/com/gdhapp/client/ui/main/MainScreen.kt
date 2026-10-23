@@ -124,10 +124,12 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
         containerColor = scheme.background,
         topBar = { Box {
             com.gdhapp.client.ui.theme.AmbientGlow(state.settings.softBlur, Modifier.matchParentSize())
-            TopAppBar(expandedHeight = (56 * fontScale).dp, title = { Column {
+            TopAppBar(expandedHeight = (56 * fontScale).dp, title = { Row(Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Crossfade(if (tab == 0) "NyaWire" else navLabels[tab], animationSpec = if (state.settings.animations) IosMotion.fade() else snap(), label = "screenTitle") { title ->
                     Text(title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                 }
+                if (tab == 0) VpnHeaderStatus(state, metrics, Modifier.weight(1f))
             } }, actions = {
                 // Fade and scale only: the bar never reflows while the buttons come and go.
                 AnimatedVisibility(tab != 2, enter = if (state.settings.animations) fadeIn(IosMotion.fade()) + scaleIn(IosMotion.fade(), initialScale = .85f) else EnterTransition.None,

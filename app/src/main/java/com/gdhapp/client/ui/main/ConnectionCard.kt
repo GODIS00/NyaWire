@@ -43,66 +43,45 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
     val error = state.vpnState as? VpnState.Error
     val add = state.selectedNode == null && !state.connectionBusy
     val motion = LocalMotionEnabled.current
-    val statusColor by animateColorAsState(if (error != null) scheme.errorContainer else if (state.connectionBusy) scheme.primaryContainer else scheme.surfaceContainerHigh,
-        animationSpec = if (motion) tween(250) else snap(), label = "statusColor")
-    val statusTint by animateColorAsState(if (error != null) scheme.onErrorContainer else if (state.connectionBusy) scheme.onPrimaryContainer else scheme.onSurfaceVariant,
-        animationSpec = if (motion) tween(250) else snap(), label = "statusTint")
-    val statusText = when {
-        connected -> AppText.text(if (state.metrics.proxyOnly) R.string.proxy_started else R.string.vpn_connected)
-        connecting -> AppText.text(R.string.connecting)
-        error != null -> AppText.text(R.string.connection_failed)
-        add -> AppText.text(R.string.add_a_subscription)
-        else -> AppText.text(R.string.vpn_is_off)
-    }
-        Column(Modifier.fillMaxWidth().then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 8.dp, vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                GradientPowerButton(connecting, connected, state.settings, onClick = { if (add) onAdd() else onConnect() }) {
-                    Crossfade(add, animationSpec = if (motion) tween(180) else snap(), label = "powerIcon") { adding ->
-                        Icon(if (adding) Icons.Rounded.Add else Icons.Rounded.PowerSettingsNew,
-                            AppText.text(if (adding) R.string.add_subscription else if (state.connectionBusy) R.string.disconnect_vpn else R.string.connect_vpn),
-                            modifier = Modifier.size(62.dp))
-                    }
-                }
-                Text(state.connectionNode?.let { cleanNodeName(it.name) } ?: AppText.text(R.string.your_servers_will_appear_here),
-                    fontSize = 18.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold, maxLines = 2,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center, overflow = TextOverflow.Ellipsis)
-                Surface(shape = CircleShape, color = statusColor) {
-                    Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (connecting) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = statusTint)
-                        else Icon(if (connected) Icons.Rounded.VerifiedUser else Icons.Rounded.Shield, null, tint = statusTint, modifier = Modifier.size(16.dp))
-                        Crossfade(statusText, animationSpec = if (motion) tween(180) else snap(), label = "statusText") { text ->
-                            Text(text, fontSize = 12.sp, color = statusTint, fontWeight = FontWeight.Medium)
-                        }
-                    }
+    Column(Modifier.fillMaxWidth().then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 8.dp, vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            GradientPowerButton(connecting, connected, state.settings, onClick = { if (add) onAdd() else onConnect() }) {
+                Crossfade(add, animationSpec = if (motion) tween(180) else snap(), label = "powerIcon") { adding ->
+                    Icon(if (adding) Icons.Rounded.Add else Icons.Rounded.PowerSettingsNew,
+                        AppText.text(if (adding) R.string.add_subscription else if (state.connectionBusy) R.string.disconnect_vpn else R.string.connect_vpn),
+                        modifier = Modifier.size(62.dp))
                 }
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp, Alignment.CenterHorizontally)) {
-                Surface(shape = RoundedCornerShape(7.dp), color = scheme.secondaryContainer) {
-                    Row(Modifier.padding(horizontal = 7.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Rounded.Memory, null, modifier = Modifier.size(12.dp), tint = scheme.onSecondaryContainer)
-                        Text(if (connected) state.metrics.engine else state.settings.coreEngine.label, fontSize = 9.sp, color = scheme.onSecondaryContainer)
-                    }
+            Text(state.connectionNode?.let { cleanNodeName(it.name) } ?: AppText.text(R.string.your_servers_will_appear_here),
+                fontSize = 18.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold, maxLines = 2,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center, overflow = TextOverflow.Ellipsis)
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp, Alignment.CenterHorizontally)) {
+            Surface(shape = RoundedCornerShape(7.dp), color = scheme.secondaryContainer) {
+                Row(Modifier.padding(horizontal = 7.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Rounded.Memory, null, modifier = Modifier.size(12.dp), tint = scheme.onSecondaryContainer)
+                    Text(if (connected) state.metrics.engine else state.settings.coreEngine.label, fontSize = 9.sp, color = scheme.onSecondaryContainer)
                 }
-                if (connected) {
-                    Text(elapsed(state.metrics.connectedAt), fontSize = 10.sp, color = scheme.onSurfaceVariant)
-                    Spacer(Modifier.weight(1f))
-                    if (state.metrics.proxyOnly) Text("127.0.0.1:${state.metrics.localPort}", fontSize = 10.sp, color = scheme.onSurfaceVariant)
-                    else Text("↑ ${formatBytes(state.metrics.uploadBytesPerSecond, true)}   ↓ ${formatBytes(state.metrics.downloadBytesPerSecond, true)}",
-                        fontSize = 10.sp, maxLines = 1, color = scheme.onSurfaceVariant, overflow = TextOverflow.Ellipsis)
-                } else Text(AppText.text(R.string.server_count_short, state.allNodes.size), fontSize = 10.sp, color = scheme.onSurfaceVariant)
             }
-            if (error != null) Surface(onClick = onErrorInfo, shape = MaterialTheme.shapes.small, color = scheme.errorContainer) {
-                Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Rounded.Info, null, tint = scheme.onErrorContainer, modifier = Modifier.size(17.dp))
-                    Text(connectionErrorSummary(error.message), fontSize = 11.sp, lineHeight = 15.sp, color = scheme.onErrorContainer,
-                        maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    Icon(Icons.Rounded.ChevronRight, AppText.text(R.string.view_error_details), tint = scheme.onErrorContainer, modifier = Modifier.size(18.dp))
-                }
+            if (connected) {
+                Text(elapsed(state.metrics.connectedAt), fontSize = 10.sp, color = scheme.onSurfaceVariant)
+                Spacer(Modifier.weight(1f))
+                if (state.metrics.proxyOnly) Text("127.0.0.1:${state.metrics.localPort}", fontSize = 10.sp, color = scheme.onSurfaceVariant)
+                else Text("↑ ${formatBytes(state.metrics.uploadBytesPerSecond, true)}   ↓ ${formatBytes(state.metrics.downloadBytesPerSecond, true)}",
+                    fontSize = 10.sp, maxLines = 1, color = scheme.onSurfaceVariant, overflow = TextOverflow.Ellipsis)
+            } else Text(AppText.text(R.string.server_count_short, state.allNodes.size), fontSize = 10.sp, color = scheme.onSurfaceVariant)
+        }
+        if (error != null) Surface(onClick = onErrorInfo, shape = MaterialTheme.shapes.small, color = scheme.errorContainer) {
+            Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Rounded.Info, null, tint = scheme.onErrorContainer, modifier = Modifier.size(17.dp))
+                Text(connectionErrorSummary(error.message), fontSize = 11.sp, lineHeight = 15.sp, color = scheme.onErrorContainer,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Icon(Icons.Rounded.ChevronRight, AppText.text(R.string.view_error_details), tint = scheme.onErrorContainer, modifier = Modifier.size(18.dp))
             }
         }
+    }
 }
 
 @Composable

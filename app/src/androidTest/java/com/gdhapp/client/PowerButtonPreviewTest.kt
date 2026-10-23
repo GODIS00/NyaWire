@@ -27,18 +27,26 @@ class PowerButtonPreviewTest {
                     ServerNode("one", "Нидерланды #1", "NL", "VLESS / TCP / REALITY", "{}", isSelected = true),
                     ServerNode("two", "Германия #2", "DE", "VLESS / WS / TLS", "{}")
                 )
-                for ((light, connected) in listOf(false to false, false to true, true to true)) {
+                val cases = listOf(false to VpnState.Disconnected, false to VpnState.Connecting,
+                    false to VpnState.Error("Не удалось подключиться"), false to VpnState.Connected, true to VpnState.Connected)
+                for ((light, vpnState) in cases) {
                     scenario.onActivity { activity -> activity.setContent {
                         val settings = ClientSettings(language = AppLanguage.RUSSIAN, theme = if (light) ThemeMode.LIGHT else ThemeMode.DARK,
                             connectionSound = false, backgroundDensity = 9, powerBorder = PowerBorder.CUSTOM,
                             powerGradientStart = 0xFF6E8BFF, powerGradientEnd = 0xFFE070D3)
-                        val state = MainUiState(settings = settings, vpnState = if (connected) VpnState.Connected else VpnState.Disconnected,
+                        val state = MainUiState(settings = settings, vpnState = vpnState,
                             groups = listOf(SubscriptionGroup("preview", "Список серверов", lastUpdated = "", servers = nodes)))
                         NyaWireTheme(settings) { MainScreen(state, MainActions(), remember { SnackbarHostState() }) }
                     } }
                     Thread.sleep(2000)
                     val bitmap = instrumentation.uiAutomation.takeScreenshot()
-                    app.externalCacheDir!!.resolve("power-button-2114-${if (light) "light" else "dark"}-${if (connected) "connected" else "off"}.png").outputStream().use {
+                    val status = when (vpnState) {
+                        VpnState.Connected -> "connected"
+                        VpnState.Connecting -> "connecting"
+                        is VpnState.Error -> "error"
+                        else -> "off"
+                    }
+                    app.externalCacheDir!!.resolve("header-2115-${if (light) "light" else "dark"}-$status.png").outputStream().use {
                         bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
                     }
                     bitmap.recycle()
