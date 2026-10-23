@@ -84,206 +84,255 @@ import com.gdhapp.client.ui.theme.LocalMotionEnabled
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: SnackbarHostState, metrics: kotlinx.coroutines.flow.StateFlow<VpnMetrics>? = null) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    var showAdd by rememberSaveable { mutableStateOf(false) }
-    var showInput by rememberSaveable { mutableStateOf(false) }
-    var input by rememberSaveable { mutableStateOf("") }
-    var infoNode by rememberSaveable { mutableStateOf<String?>(null) }
-    var editNode by rememberSaveable { mutableStateOf<String?>(null) }
-    var deleteGroup by rememberSaveable { mutableStateOf<String?>(null) }
-    var renameGroup by rememberSaveable { mutableStateOf<String?>(null) }
-    var showError by rememberSaveable { mutableStateOf(false) }
-    val listState = rememberLazyListState()
-    val pingListState = rememberLazyListState()
-    val pageState = rememberSaveableStateHolder()
-    val connectionCardScrolled by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
-    val feedbackView = LocalView.current
-    val playConnectionSound = com.gdhapp.client.ui.theme.rememberVpnButtonSound(state.settings.connectionSound)
-    val scheme = MaterialTheme.colorScheme
-    val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
-    val listModel = state
-    val shownNodes = remember(listModel) { listModel.groups.associate { it.id to listModel.visibleNodes(it) } }
-    val backdrop = rememberGraphicsLayer().apply { clip = true }
-    val showMini = state.connectionBusy && tab != 2 && (tab == 1 || connectionCardScrolled)
-    // Keep the glass stable during flings without recording another viewport pass.
-    val scrolling by remember { derivedStateOf { if (tab == 1) pingListState.isScrollInProgress else listState.isScrollInProgress } }
-    val blurPanel = !state.startupRefreshing && state.settings.softBlur && Build.VERSION.SDK_INT >= 31
-    val captureBackdrop = !scrolling && blurPanel
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val useRail = maxWidth >= 600.dp && maxHeight >= 480.dp
+        val twoPane = maxWidth >= 1000.dp
+        var tab by rememberSaveable { mutableIntStateOf(0) }
+        var showAdd by rememberSaveable { mutableStateOf(false) }
+        var showInput by rememberSaveable { mutableStateOf(false) }
+        var input by rememberSaveable { mutableStateOf("") }
+        var infoNode by rememberSaveable { mutableStateOf<String?>(null) }
+        var editNode by rememberSaveable { mutableStateOf<String?>(null) }
+        var deleteGroup by rememberSaveable { mutableStateOf<String?>(null) }
+        var renameGroup by rememberSaveable { mutableStateOf<String?>(null) }
+        var showError by rememberSaveable { mutableStateOf(false) }
+        val listState = rememberLazyListState()
+        val pingListState = rememberLazyListState()
+        val pageState = rememberSaveableStateHolder()
+        val connectionCardScrolled by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+        val feedbackView = LocalView.current
+        val playConnectionSound = com.gdhapp.client.ui.theme.rememberVpnButtonSound(state.settings.connectionSound)
+        val scheme = MaterialTheme.colorScheme
+        val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
+        val backdrop = rememberGraphicsLayer().apply { clip = true }
+        val showMini = state.connectionBusy && tab != 2 && (tab == 1 || (!twoPane && connectionCardScrolled))
+        // Keep the glass stable during flings without recording another viewport pass.
+        val scrolling by remember { derivedStateOf { if (tab == 1) pingListState.isScrollInProgress else listState.isScrollInProgress } }
+        val blurPanel = !state.startupRefreshing && state.settings.softBlur && Build.VERSION.SDK_INT >= 31
+        val captureBackdrop = !scrolling && blurPanel
 
-    val navIcons = listOf(Icons.Rounded.Dns, Icons.Rounded.NetworkCheck, Icons.Rounded.Tune)
-    val navLabels = listOf(AppText.text(R.string.servers_091), AppText.text(R.string.checks), AppText.text(R.string.settings))
-    BackHandler(enabled = tab != 0) { tab = 0 }
-    fun select(id: String) { touchFeedback(feedbackView, state.settings.haptics); actions.selectNode(id) }
-    fun connect() {
-        touchFeedback(feedbackView, state.settings.haptics)
-        if (!state.connectionBusy && state.selectedNode != null) playConnectionSound()
-        actions.connect()
-    }
+        val navIcons = listOf(Icons.Rounded.Dns, Icons.Rounded.NetworkCheck, Icons.Rounded.Tune)
+        val navLabels = listOf(AppText.text(R.string.servers_091), AppText.text(R.string.checks), AppText.text(R.string.settings))
+        BackHandler(enabled = tab != 0) { tab = 0 }
+        fun select(id: String) { touchFeedback(feedbackView, state.settings.haptics); actions.selectNode(id) }
+        fun connect() {
+            touchFeedback(feedbackView, state.settings.haptics)
+            if (!state.connectionBusy && state.selectedNode != null) playConnectionSound()
+            actions.connect()
+        }
 
-    Scaffold(
-        containerColor = scheme.background,
-        topBar = { Box {
-            com.gdhapp.client.ui.theme.AmbientGlow(state.settings.softBlur, Modifier.matchParentSize())
-            TopAppBar(expandedHeight = (56 * fontScale).dp, title = { Row(Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Crossfade(if (tab == 0) "NyaWire" else navLabels[tab], animationSpec = if (state.settings.animations) IosMotion.fade() else snap(), label = "screenTitle") { title ->
-                    Text(title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                }
-                if (tab == 0) VpnHeaderStatus(state, metrics, Modifier.weight(1f))
-            } }, actions = {
-                // Fade and scale only: the bar never reflows while the buttons come and go.
-                AnimatedVisibility(tab != 2, enter = if (state.settings.animations) fadeIn(IosMotion.fade()) + scaleIn(IosMotion.fade(), initialScale = .85f) else EnterTransition.None,
-                    exit = if (state.settings.animations) fadeOut(IosMotion.fade()) + scaleOut(IosMotion.fade(), targetScale = .85f) else ExitTransition.None) { Row {
-                    IconButton(onClick = { showAdd = true }, enabled = !state.importing) {
-                        Crossfade(state.importing, animationSpec = if (state.settings.animations) tween(180) else snap(), label = "importing") { importing ->
-                            if (importing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                            else Icon(Icons.Rounded.Add, AppText.text(R.string.add_subscription))
-                        }
+        Scaffold(
+            containerColor = scheme.background,
+            topBar = { Box {
+                com.gdhapp.client.ui.theme.AmbientGlow(state.settings.softBlur, Modifier.matchParentSize())
+                TopAppBar(expandedHeight = (56 * fontScale).dp, title = { Row(Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Crossfade(if (tab == 0) "NyaWire" else navLabels[tab], animationSpec = if (state.settings.animations) IosMotion.fade() else snap(), label = "screenTitle") { title ->
+                        Text(title, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                     }
-                    IconButton(onClick = { tab = 2 }) { Icon(Icons.Rounded.Tune, AppText.text(R.string.client_settings)) }
-                } }
-                Spacer(Modifier.width(8.dp))
-            }, colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent))
-        } },
-        bottomBar = {
-            Column {
-                Box {
-                FrostedNavigationBackground(backdrop, blurPanel, Modifier.matchParentSize(), refresh = captureBackdrop)
-                NavigationBar(modifier = Modifier.height((64 * fontScale.coerceAtMost(1.5f)).dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()), containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp) {
-                    navLabels.forEachIndexed { index, title -> NavigationBarItem(selected = tab == index, onClick = { tab = index },
-                        icon = { Icon(navIcons[index], title) }, label = { Text(title, fontSize = 11.sp) }) }
+                    if (tab == 0) VpnHeaderStatus(state, metrics, Modifier.weight(1f))
+                } }, actions = {
+                    // Fade and scale only: the bar never reflows while the buttons come and go.
+                    AnimatedVisibility(tab != 2, enter = if (state.settings.animations) fadeIn(IosMotion.fade()) + scaleIn(IosMotion.fade(), initialScale = .85f) else EnterTransition.None,
+                        exit = if (state.settings.animations) fadeOut(IosMotion.fade()) + scaleOut(IosMotion.fade(), targetScale = .85f) else ExitTransition.None) { Row {
+                        IconButton(onClick = { showAdd = true }, enabled = !state.importing) {
+                            Crossfade(state.importing, animationSpec = if (state.settings.animations) tween(180) else snap(), label = "importing") { importing ->
+                                if (importing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                                else Icon(Icons.Rounded.Add, AppText.text(R.string.add_subscription))
+                            }
+                        }
+                        IconButton(onClick = { tab = 2 }) { Icon(Icons.Rounded.Tune, AppText.text(R.string.client_settings)) }
+                    } }
+                    Spacer(Modifier.width(8.dp))
+                }, colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent))
+            } },
+            bottomBar = {
+                if (!useRail) Column {
+                    Box {
+                    FrostedNavigationBackground(backdrop, blurPanel, Modifier.matchParentSize(), refresh = captureBackdrop)
+                    NavigationBar(modifier = Modifier.height((64 * fontScale.coerceAtMost(1.5f)).dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()), containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp) {
+                        navLabels.forEachIndexed { index, title -> NavigationBarItem(selected = tab == index, onClick = { tab = index },
+                            icon = { Icon(navIcons[index], title) }, label = { Text(title, fontSize = 11.sp) }) }
+                    }
+                    }
                 }
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+        ) { insets ->
+            Row(Modifier.fillMaxSize().padding(top = insets.calculateTopPadding())) {
+                if (useRail) NavigationRail(Modifier.fillMaxHeight().padding(bottom = insets.calculateBottomPadding()),
+                    containerColor = scheme.surfaceContainerLow, windowInsets = WindowInsets(0, 0, 0, 0)) {
+                    Spacer(Modifier.height(12.dp))
+                    navLabels.forEachIndexed { index, title ->
+                        NavigationRailItem(selected = tab == index, onClick = { tab = index },
+                            icon = { Icon(navIcons[index], title) }, label = { Text(title, fontSize = 11.sp) },
+                            modifier = Modifier.padding(vertical = 4.dp))
+                    }
+                }
+                Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.TopCenter) {
+                Box(Modifier.fillMaxSize().drawWithContent {
+                    if (captureBackdrop) {
+                        // Retain drawing commands once. The panel clips its blur pass to its own bounds.
+                        backdrop.record {
+                            // An opaque retained background prevents sharp content showing through
+                            // transparent pixels of the blurred copy under the navigation strip.
+                            drawRect(scheme.background)
+                            this@drawWithContent.drawContent()
+                        }
+                        drawLayer(backdrop)
+                    } else drawContent()
+                }) {
+                com.gdhapp.client.ui.theme.DriftingBackground(state.settings.backgroundPictures, state.settings.animations && !scrolling && !state.startupRefreshing,
+                    com.gdhapp.client.ui.theme.isDarkAppearance(state.settings), Modifier.matchParentSize(), state.settings.backgroundDensity, state.settings.backgroundOpacity)
+                AnimatedContent(tab, Modifier.fillMaxSize().clipToBounds(), transitionSpec = {
+                    if (state.settings.animations) IosMotion.page(forward = targetState > initialState) else IosMotion.none
+                }, label = "tabContent") { tab -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) { when (tab) {
+                    2 -> pageState.SaveableStateProvider("settings") {
+                        SettingsScreen(state, actions, Modifier.widthIn(max = 820.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding()), onPreviewSound = playConnectionSound)
+                    }
+                    1 -> ChecksScreen(state, actions, onInfo = { infoNode = it }, onAdd = { showAdd = true }, wide = twoPane, listState = pingListState, modifier = Modifier.widthIn(max = if (twoPane) 1200.dp else 720.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 84.dp else 0.dp))
+                    else -> {
+                        ServersScreen(state, actions, listState, metrics, useRail, twoPane,
+                            Modifier.widthIn(max = if (twoPane) 1200.dp else 720.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding()),
+                            onConnect = ::connect, onAdd = { showAdd = true }, onErrorInfo = { showError = true },
+                            onSelect = ::select, onInfo = { infoNode = it },
+                            onDeleteGroup = { deleteGroup = it }, onRenameGroup = { renameGroup = it })
+                    }
+                } } }
+                }
+                androidx.compose.animation.AnimatedVisibility(visible = showMini, modifier = Modifier.align(Alignment.BottomCenter).widthIn(max = 640.dp).fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = insets.calculateBottomPadding() + 8.dp),
+                    enter = if (state.settings.animations) fadeIn() + slideInVertically { it / 3 } else EnterTransition.None,
+                    exit = if (state.settings.animations) fadeOut() + slideOutVertically { it / 3 } else ExitTransition.None) {
+                    val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
+                    FrostedConnectionBar(state.copy(metrics = currentMetrics), ::connect, backdrop, blurPanel, insets.calculateBottomPadding(), refresh = captureBackdrop)
                 }
             }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { insets ->
-        Box(Modifier.fillMaxSize().padding(top = insets.calculateTopPadding()), contentAlignment = Alignment.TopCenter) {
-            Box(Modifier.fillMaxSize().drawWithContent {
-                if (captureBackdrop) {
-                    // Retain drawing commands once. The panel clips its blur pass to its own bounds.
-                    backdrop.record {
-                        // An opaque retained background prevents sharp content showing through
-                        // transparent pixels of the blurred copy under the navigation strip.
-                        drawRect(scheme.background)
-                        this@drawWithContent.drawContent()
-                    }
-                    drawLayer(backdrop)
-                } else drawContent()
-            }) {
-            com.gdhapp.client.ui.theme.DriftingBackground(state.settings.backgroundPictures, state.settings.animations && !scrolling && !state.startupRefreshing,
-                com.gdhapp.client.ui.theme.isDarkAppearance(state.settings), Modifier.matchParentSize(), state.settings.backgroundDensity, state.settings.backgroundOpacity)
-            AnimatedContent(tab, Modifier.fillMaxSize().clipToBounds(), transitionSpec = {
-                if (state.settings.animations) IosMotion.page(forward = targetState > initialState) else IosMotion.none
-            }, label = "tabContent") { tab -> when (tab) {
-                2 -> pageState.SaveableStateProvider("settings") {
-                    SettingsScreen(state, actions, Modifier.widthIn(max = 820.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding()), onPreviewSound = playConnectionSound)
+            }
+        }
+
+        if (state.startupRefreshing) SubscriptionRefreshDialog(state, actions.cancelStartupRefresh)
+        if (showAdd) ModalBottomSheet(onDismissRequest = { showAdd = false }, containerColor = scheme.surfaceContainerLow) {
+            Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)) {
+                Text(AppText.text(R.string.add_servers), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(AppText.text(R.string.subscription_or_individual_configuration), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+            }
+            AddAction(Icons.Rounded.ContentPaste, AppText.text(R.string.paste_from_clipboard), AppText.text(R.string.link_json_or_server_list)) { showAdd = false; actions.paste() }
+            AddAction(Icons.Rounded.Link, AppText.text(R.string.add_a_link_or_configuration), "VLESS, VMess, Trojan, SS, Hysteria, TUIC") { showAdd = false; showInput = true }
+            AddAction(Icons.Rounded.QrCodeScanner, AppText.text(R.string.scan_qr_code), AppText.text(R.string.opens_the_camera)) { showAdd = false; actions.scanQr() }
+            AddAction(Icons.Rounded.Description, AppText.text(R.string.import_file), AppText.text(R.string.json_or_text_subscription)) { showAdd = false; actions.importFile() }
+            Spacer(Modifier.height(22.dp))
+        }
+        if (showInput) AlertDialog(onDismissRequest = { showInput = false }, title = { Text(AppText.text(R.string.add_connection)) },
+            text = { OutlinedTextField(input, { input = it }, label = { Text(AppText.text(R.string.link_or_configuration)) }, minLines = 3, maxLines = 8, modifier = Modifier.fillMaxWidth()) },
+            confirmButton = { TextButton(onClick = { actions.importText(input); input = ""; showInput = false }, enabled = input.isNotBlank()) { Text(AppText.text(R.string.add)) } },
+            dismissButton = { TextButton(onClick = { showInput = false }) { Text(AppText.text(R.string.cancel)) } })
+
+        infoNode?.let { id -> state.allNodes.firstOrNull { it.id == id }?.let { node ->
+            ServerDetails(node, state, actions, onDismiss = { infoNode = null }, onSelect = { select(id); infoNode = null; tab = 0 },
+                onEdit = { infoNode = null; editNode = id })
+        } }
+        editNode?.let { id -> state.allNodes.firstOrNull { it.id == id }?.let { node ->
+            EditNodeDialog(node, onDismiss = { editNode = null }, onSave = { name, config -> actions.editNode(id, name, config); editNode = null })
+        } }
+        deleteGroup?.let { id -> AlertDialog(onDismissRequest = { deleteGroup = null }, title = { Text(AppText.text(R.string.delete_subscription)) },
+            text = { Text(AppText.text(R.string.and_its_servers_will_be_removed_from, state.groups.firstOrNull { it.id == id }?.title.orEmpty())) },
+            confirmButton = { TextButton(onClick = { actions.deleteGroup(id); deleteGroup = null }) { Text(AppText.text(R.string.delete), color = scheme.error) } },
+            dismissButton = { TextButton(onClick = { deleteGroup = null }) { Text(AppText.text(R.string.cancel)) } }) }
+        renameGroup?.let { id ->
+            var title by remember(id) { mutableStateOf(state.groups.firstOrNull { it.id == id }?.title.orEmpty()) }
+            AlertDialog(onDismissRequest = { renameGroup = null }, title = { Text(AppText.text(R.string.subscription_name)) },
+                text = { OutlinedTextField(title, { title = it }, singleLine = true) },
+                confirmButton = { TextButton(enabled = title.isNotBlank(), onClick = { actions.renameGroup(id, title); renameGroup = null }) { Text(AppText.text(R.string.save)) } },
+                dismissButton = { TextButton(onClick = { renameGroup = null }) { Text(AppText.text(R.string.cancel)) } })
+        }
+        if (showError) AlertDialog(onDismissRequest = { showError = false }, title = { Text(AppText.text(R.string.connection_diagnostics)) },
+            text = { SelectionContainer { Text((state.vpnState as? VpnState.Error)?.message ?: AppText.text(R.string.no_errors)) } },
+            confirmButton = { TextButton(onClick = { showError = false; tab = 2 }) { Text(AppText.text(R.string.vpn_settings)) } },
+            dismissButton = { TextButton(onClick = { showError = false }) { Text(AppText.text(R.string.close)) } })
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ServersScreen(state: MainUiState, actions: MainActions,
+    listState: androidx.compose.foundation.lazy.LazyListState, metrics: kotlinx.coroutines.flow.StateFlow<VpnMetrics>?,
+    tablet: Boolean, wide: Boolean, modifier: Modifier,
+    onConnect: () -> Unit, onAdd: () -> Unit, onErrorInfo: () -> Unit,
+    onSelect: (String) -> Unit, onInfo: (String) -> Unit,
+    onDeleteGroup: (String) -> Unit, onRenameGroup: (String) -> Unit) {
+    val shownNodes = remember(state) { state.groups.associate { it.id to state.visibleNodes(it) } }
+    val pullState = rememberPullToRefreshState()
+    val hasSubscriptions = state.groups.any { it.sourceUrl != null }
+    val refreshDescription = AppText.text(R.string.refresh_all_subscriptions)
+    if (tablet && state.groups.isEmpty()) {
+        Box(modifier.padding(24.dp), contentAlignment = Alignment.Center) {
+            Column(Modifier.widthIn(max = 480.dp).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                EmptyView(Icons.Rounded.TravelExplore, AppText.text(R.string.no_servers_yet),
+                    AppText.text(R.string.add_a_subscription_url_paste_a_configuration), AppText.text(R.string.add_subscription), onAdd)
+            }
+        }
+        return
+    }
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(if (wide) 20.dp else 0.dp)) {
+        if (wide) Column(Modifier.width(320.dp).fillMaxHeight().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically)) {
+            val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
+            ConnectionCard(state.copy(metrics = currentMetrics), onConnect, onAdd, onErrorInfo)
+            PingAllControl(state, actions)
+        }
+        Box(Modifier.weight(1f).fillMaxHeight().pullToRefresh(
+            isRefreshing = state.pullRefreshing, state = pullState,
+            enabled = hasSubscriptions && !state.startupRefreshing, onRefresh = actions.refreshAll)) {
+            LazyColumn(state = listState, modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = if (wide) 16.dp else 4.dp,
+                    bottom = if (state.connectionBusy && !wide) 92.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (!wide) item(key = "connection") {
+                    val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
+                    Box(itemMotion(state.settings.animations)) { ConnectionCard(state.copy(metrics = currentMetrics), onConnect, onAdd, onErrorInfo) }
                 }
-                1 -> ChecksScreen(state, actions, onInfo = { infoNode = it }, listState = pingListState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 84.dp else 0.dp))
-                else -> {
-                    val pullState = rememberPullToRefreshState()
-                    val hasSubscriptions = state.groups.any { it.sourceUrl != null }
-                    val refreshDescription = AppText.text(R.string.refresh_all_subscriptions)
-                    Box(Modifier.widthIn(max = 820.dp).fillMaxSize().pullToRefresh(
-                        isRefreshing = state.pullRefreshing, state = pullState,
-                        enabled = hasSubscriptions && !state.startupRefreshing,
-                        onRefresh = actions.refreshAll)) {
-                    LazyColumn(state = listState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize(),
-                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 4.dp, bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 92.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    item(key = "connection") { val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
-                        Box(itemMotion(state.settings.animations)) { ConnectionCard(state.copy(metrics = currentMetrics), ::connect, { showAdd = true }, { showError = true }) } }
-                    if (listModel.groups.isEmpty()) item {
-                        EmptyView(Icons.Rounded.TravelExplore, AppText.text(R.string.no_servers_yet),
-                            AppText.text(R.string.add_a_subscription_url_paste_a_configuration), AppText.text(R.string.add_subscription), { showAdd = true })
-                    } else {
-                        item(key = "filters") {
-                            Row(Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)), verticalAlignment = Alignment.CenterVertically) {
-                                Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    FilterChip(selected = !listModel.favoritesOnly && listModel.protocolFilter == null,
-                                        onClick = { actions.favoritesOnly(false); actions.protocolFilter(null) }, label = { Text(AppText.text(R.string.all, listModel.allNodes.size), fontSize = 11.sp) })
-                                    FilterChip(selected = listModel.favoritesOnly, onClick = { actions.favoritesOnly(!listModel.favoritesOnly) },
-                                        label = { Text(AppText.text(R.string.favorites), fontSize = 11.sp) }, leadingIcon = { Icon(Icons.Rounded.StarBorder, null, modifier = Modifier.size(14.dp)) })
-                                    listModel.allNodes.map { it.protocolSummary.substringBefore(" /") }.distinct().forEach { protocol ->
-                                        FilterChip(selected = listModel.protocolFilter == protocol, onClick = { actions.protocolFilter(if (listModel.protocolFilter == protocol) null else protocol) }, label = { Text(protocol, fontSize = 10.sp) })
-                                    }
+                if (state.groups.isEmpty()) item {
+                    EmptyView(Icons.Rounded.TravelExplore, AppText.text(R.string.no_servers_yet),
+                        AppText.text(R.string.add_a_subscription_url_paste_a_configuration), AppText.text(R.string.add_subscription), onAdd)
+                } else {
+                    item(key = "filters") {
+                        Row(Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                FilterChip(selected = !state.favoritesOnly && state.protocolFilter == null,
+                                    onClick = { actions.favoritesOnly(false); actions.protocolFilter(null) }, label = { Text(AppText.text(R.string.all, state.allNodes.size), fontSize = 11.sp) })
+                                FilterChip(selected = state.favoritesOnly, onClick = { actions.favoritesOnly(!state.favoritesOnly) },
+                                    label = { Text(AppText.text(R.string.favorites), fontSize = 11.sp) }, leadingIcon = { Icon(Icons.Rounded.StarBorder, null, modifier = Modifier.size(14.dp)) })
+                                state.allNodes.map { it.protocolSummary.substringBefore(" /") }.distinct().forEach { protocol ->
+                                    FilterChip(selected = state.protocolFilter == protocol, onClick = { actions.protocolFilter(if (state.protocolFilter == protocol) null else protocol) }, label = { Text(protocol, fontSize = 10.sp) })
                                 }
-                                SortMenu(listModel, actions)
                             }
-                        }
-                        item(key = "ping-all") { Box(itemMotion(state.settings.animations)) { PingAllControl(listModel, actions) } }
-                        item(key = "section-title") {
-                            Row(Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)).padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(AppText.text(R.string.subscriptions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                                TextButton(onClick = actions.collapseAll, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) { Text(AppText.text(R.string.collapse), fontSize = 11.sp) }
-                            }
-                        }
-                        val visibleGroups = listModel.groups.filter { shownNodes.getValue(it.id).isNotEmpty() || it.servers.isEmpty() }
-                        if (visibleGroups.isEmpty()) item { EmptyView(Icons.Rounded.SearchOff, AppText.text(R.string.no_results), AppText.text(R.string.try_a_different_search_or_filter), AppText.text(R.string.reset_filters), {
-                            actions.favoritesOnly(false); actions.protocolFilter(null)
-                        }) }
-                        visibleGroups.forEach { group ->
-                            item(key = "group:${group.id}") { Box(itemMotion(state.settings.animations)) { SubscriptionHeader(group, listModel, actions, onDelete = { deleteGroup = group.id }, onRename = { renameGroup = group.id }) } }
-                            if (group.isExpanded) serverRows(shownNodes.getValue(group.id), listModel, actions,
-                                onSelect = { select(it) }, onInfo = { infoNode = it }, keyPrefix = group.id)
-                            item(key = "space:${group.id}") { Spacer(Modifier.height(2.dp).then(itemMotion(state.settings.animations))) }
+                            SortMenu(state, actions)
                         }
                     }
-                }
-                    if (hasSubscriptions) PullToRefreshDefaults.Indicator(
-                        isRefreshing = state.pullRefreshing, state = pullState,
-                        modifier = Modifier.align(Alignment.TopCenter).semantics { contentDescription = refreshDescription })
+                    if (!wide) item(key = "ping-all") { Box(itemMotion(state.settings.animations)) { PingAllControl(state, actions) } }
+                    item(key = "section-title") {
+                        Row(Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)).padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(AppText.text(R.string.subscriptions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            TextButton(onClick = actions.collapseAll, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) { Text(AppText.text(R.string.collapse), fontSize = 11.sp) }
+                        }
+                    }
+                    val visibleGroups = state.groups.filter { shownNodes.getValue(it.id).isNotEmpty() || it.servers.isEmpty() }
+                    if (visibleGroups.isEmpty()) item { EmptyView(Icons.Rounded.SearchOff, AppText.text(R.string.no_results), AppText.text(R.string.try_a_different_search_or_filter), AppText.text(R.string.reset_filters), {
+                        actions.favoritesOnly(false); actions.protocolFilter(null)
+                    }) }
+                    visibleGroups.forEach { group ->
+                        item(key = "group:${group.id}") { Box(itemMotion(state.settings.animations)) { SubscriptionHeader(group, state, actions, onDelete = { onDeleteGroup(group.id) }, onRename = { onRenameGroup(group.id) }) } }
+                        if (group.isExpanded) serverRows(shownNodes.getValue(group.id), state, actions,
+                            onSelect = onSelect, onInfo = onInfo, keyPrefix = group.id)
+                        item(key = "space:${group.id}") { Spacer(Modifier.height(2.dp).then(itemMotion(state.settings.animations))) }
                     }
                 }
-            } }
             }
-            AnimatedVisibility(visible = showMini, modifier = Modifier.align(Alignment.BottomCenter).padding(start = 8.dp, end = 8.dp, bottom = insets.calculateBottomPadding() + 8.dp),
-                enter = if (state.settings.animations) fadeIn() + slideInVertically { it / 3 } else EnterTransition.None,
-                exit = if (state.settings.animations) fadeOut() + slideOutVertically { it / 3 } else ExitTransition.None) {
-                val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
-                FrostedConnectionBar(state.copy(metrics = currentMetrics), ::connect, backdrop, blurPanel, insets.calculateBottomPadding(), refresh = captureBackdrop)
-            }
+            if (hasSubscriptions) PullToRefreshDefaults.Indicator(
+                isRefreshing = state.pullRefreshing, state = pullState,
+                modifier = Modifier.align(Alignment.TopCenter).semantics { contentDescription = refreshDescription })
         }
     }
-
-    if (state.startupRefreshing) SubscriptionRefreshDialog(state, actions.cancelStartupRefresh)
-    if (showAdd) ModalBottomSheet(onDismissRequest = { showAdd = false }, containerColor = scheme.surfaceContainerLow) {
-        Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)) {
-            Text(AppText.text(R.string.add_servers), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text(AppText.text(R.string.subscription_or_individual_configuration), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
-        }
-        AddAction(Icons.Rounded.ContentPaste, AppText.text(R.string.paste_from_clipboard), AppText.text(R.string.link_json_or_server_list)) { showAdd = false; actions.paste() }
-        AddAction(Icons.Rounded.Link, AppText.text(R.string.add_a_link_or_configuration), "VLESS, VMess, Trojan, SS, Hysteria, TUIC") { showAdd = false; showInput = true }
-        AddAction(Icons.Rounded.QrCodeScanner, AppText.text(R.string.scan_qr_code), AppText.text(R.string.opens_the_camera)) { showAdd = false; actions.scanQr() }
-        AddAction(Icons.Rounded.Description, AppText.text(R.string.import_file), AppText.text(R.string.json_or_text_subscription)) { showAdd = false; actions.importFile() }
-        Spacer(Modifier.height(22.dp))
-    }
-    if (showInput) AlertDialog(onDismissRequest = { showInput = false }, title = { Text(AppText.text(R.string.add_connection)) },
-        text = { OutlinedTextField(input, { input = it }, label = { Text(AppText.text(R.string.link_or_configuration)) }, minLines = 3, maxLines = 8, modifier = Modifier.fillMaxWidth()) },
-        confirmButton = { TextButton(onClick = { actions.importText(input); input = ""; showInput = false }, enabled = input.isNotBlank()) { Text(AppText.text(R.string.add)) } },
-        dismissButton = { TextButton(onClick = { showInput = false }) { Text(AppText.text(R.string.cancel)) } })
-
-    infoNode?.let { id -> state.allNodes.firstOrNull { it.id == id }?.let { node ->
-        ServerDetails(node, state, actions, onDismiss = { infoNode = null }, onSelect = { select(id); infoNode = null; tab = 0 },
-            onEdit = { infoNode = null; editNode = id })
-    } }
-    editNode?.let { id -> state.allNodes.firstOrNull { it.id == id }?.let { node ->
-        EditNodeDialog(node, onDismiss = { editNode = null }, onSave = { name, config -> actions.editNode(id, name, config); editNode = null })
-    } }
-    deleteGroup?.let { id -> AlertDialog(onDismissRequest = { deleteGroup = null }, title = { Text(AppText.text(R.string.delete_subscription)) },
-        text = { Text(AppText.text(R.string.and_its_servers_will_be_removed_from, state.groups.firstOrNull { it.id == id }?.title.orEmpty())) },
-        confirmButton = { TextButton(onClick = { actions.deleteGroup(id); deleteGroup = null }) { Text(AppText.text(R.string.delete), color = scheme.error) } },
-        dismissButton = { TextButton(onClick = { deleteGroup = null }) { Text(AppText.text(R.string.cancel)) } }) }
-    renameGroup?.let { id ->
-        var title by remember(id) { mutableStateOf(state.groups.firstOrNull { it.id == id }?.title.orEmpty()) }
-        AlertDialog(onDismissRequest = { renameGroup = null }, title = { Text(AppText.text(R.string.subscription_name)) },
-            text = { OutlinedTextField(title, { title = it }, singleLine = true) },
-            confirmButton = { TextButton(enabled = title.isNotBlank(), onClick = { actions.renameGroup(id, title); renameGroup = null }) { Text(AppText.text(R.string.save)) } },
-            dismissButton = { TextButton(onClick = { renameGroup = null }) { Text(AppText.text(R.string.cancel)) } })
-    }
-    if (showError) AlertDialog(onDismissRequest = { showError = false }, title = { Text(AppText.text(R.string.connection_diagnostics)) },
-        text = { SelectionContainer { Text((state.vpnState as? VpnState.Error)?.message ?: AppText.text(R.string.no_errors)) } },
-        confirmButton = { TextButton(onClick = { showError = false; tab = 2 }) { Text(AppText.text(R.string.vpn_settings)) } },
-        dismissButton = { TextButton(onClick = { showError = false }) { Text(AppText.text(R.string.close)) } })
 }
 
 /** Placement, appearance and removal animations for keyed list rows; the resting layout is unchanged. */
@@ -381,36 +430,66 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
     } }, confirmButton = { TextButton(onClick = { info = false }) { Text(AppText.text(R.string.close)) } })
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ChecksScreen(state: MainUiState, actions: MainActions, onInfo: (String) -> Unit, listState: androidx.compose.foundation.lazy.LazyListState, modifier: Modifier = Modifier) {
-    val results = state.allNodes.mapNotNull { it.probeResults[state.settings.probeMethod] }
-    LazyColumn(modifier, state = listState, contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ProbeMethod.entries.forEach { method ->
-            FilterChip(selected = state.settings.probeMethod == method, onClick = { actions.updateSettings(state.settings.copy(probeMethod = method)) }, label = { Text(method.label, fontSize = 12.sp) })
-        } } }
-        item {
-            Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(AppText.text(R.string.timeout_s_samples_concurrent, state.settings.probeTimeoutSeconds, state.settings.probeSamples, state.settings.probeConcurrency),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    PingAllControl(state, actions)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        CheckCounter(AppText.text(R.string.total), state.allNodes.size)
-                        CheckCounter(AppText.text(R.string.successful), results.count { it.isSuccess })
-                        CheckCounter(AppText.text(R.string.failed), results.count { !it.isSuccess })
-                    }
-                    OutlinedButton(onClick = actions.chooseFastest, modifier = Modifier.fillMaxWidth(), enabled = results.any { it.isSuccess }) {
-                        Icon(Icons.Rounded.Bolt, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(AppText.text(R.string.select_fastest))
-                    }
-                }
+private fun ChecksScreen(state: MainUiState, actions: MainActions, onInfo: (String) -> Unit, onAdd: () -> Unit,
+    wide: Boolean, listState: androidx.compose.foundation.lazy.LazyListState, modifier: Modifier = Modifier) {
+    if (wide) Row(modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+        Column(Modifier.width(320.dp).fillMaxHeight().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            ProbeMethods(state, actions)
+            ProbeSummary(state, actions)
+        }
+        Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+            if (state.allNodes.isEmpty()) Column(Modifier.widthIn(max = 480.dp).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                EmptyView(Icons.Rounded.NetworkCheck, AppText.text(R.string.no_servers_yet),
+                    AppText.text(R.string.add_a_subscription_url_paste_a_configuration), AppText.text(R.string.add_subscription), onAdd)
+            } else LazyColumn(Modifier.fillMaxSize(), state = listState,
+                contentPadding = PaddingValues(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                probeRows(state, actions, onInfo)
             }
         }
-        items(state.allNodes, key = { it.id }) { node -> ServerCard(node, state.settings.copy(layout = ServerLayout.COMPACT), node.id in state.testingNodes,
-            { onInfo(node.id) }, { onInfo(node.id) }, { actions.favorite(node.id) }, Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)),
-            onCopy = { actions.copyText(node.rawConfigJson) }, onDelete = { actions.deleteNode(node.id) }, onPing = { actions.probeNode(node.id) }) }
-        if (state.allNodes.isEmpty()) item { Text(AppText.text(R.string.add_a_subscription_on_the_servers_tab), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(12.dp)) }
+    } else LazyColumn(modifier, state = listState, contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { ProbeMethods(state, actions) }
+        item { ProbeSummary(state, actions) }
+        probeRows(state, actions, onInfo)
+        if (state.allNodes.isEmpty()) item { Text(AppText.text(R.string.add_a_subscription_on_the_servers_tab),
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(12.dp)) }
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ProbeMethods(state: MainUiState, actions: MainActions) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ProbeMethod.entries.forEach { method ->
+        FilterChip(selected = state.settings.probeMethod == method, onClick = { actions.updateSettings(state.settings.copy(probeMethod = method)) },
+            label = { Text(method.label, fontSize = 12.sp) })
+    } }
+}
+
+@Composable
+private fun ProbeSummary(state: MainUiState, actions: MainActions) {
+    val results = state.allNodes.mapNotNull { it.probeResults[state.settings.probeMethod] }
+    Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(AppText.text(R.string.timeout_s_samples_concurrent, state.settings.probeTimeoutSeconds, state.settings.probeSamples, state.settings.probeConcurrency),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            PingAllControl(state, actions)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                CheckCounter(AppText.text(R.string.total), state.allNodes.size)
+                CheckCounter(AppText.text(R.string.successful), results.count { it.isSuccess })
+                CheckCounter(AppText.text(R.string.failed), results.count { !it.isSuccess })
+            }
+            OutlinedButton(onClick = actions.chooseFastest, modifier = Modifier.fillMaxWidth(), enabled = results.any { it.isSuccess }) {
+                Icon(Icons.Rounded.Bolt, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(AppText.text(R.string.select_fastest))
+            }
+        }
+    }
+}
+
+private fun LazyListScope.probeRows(state: MainUiState, actions: MainActions, onInfo: (String) -> Unit) {
+    items(state.allNodes, key = { it.id }) { node -> ServerCard(node, state.settings.copy(layout = ServerLayout.COMPACT), node.id in state.testingNodes,
+        { onInfo(node.id) }, { onInfo(node.id) }, { actions.favorite(node.id) }, Modifier.fillMaxWidth().then(itemMotion(state.settings.animations)),
+        onCopy = { actions.copyText(node.rawConfigJson) }, onDelete = { actions.deleteNode(node.id) }, onPing = { actions.probeNode(node.id) }) }
 }
 
 @Composable

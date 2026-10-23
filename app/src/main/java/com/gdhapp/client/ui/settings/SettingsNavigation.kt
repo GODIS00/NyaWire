@@ -41,10 +41,17 @@ internal fun SettingsDestination(title: String, subtitle: String?, icon: ImageVe
 
 @Composable
 internal fun SettingsOverview(titles: List<String>, subtitles: List<String>, icons: List<ImageVector>, modifier: Modifier, onOpen: (Int) -> Unit) {
-    Box(modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+    BoxWithConstraints(modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+        val columns = if (maxWidth >= 640.dp) 2 else 1
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(0, 5, 4, 6, 1, 2, 3).forEach { index ->
-                SettingsDestination(titles[index], subtitles[index], icons[index], Modifier.heightIn(min = 64.dp), prominent = true) { onOpen(index) }
+            listOf(0, 5, 4, 6, 1, 2, 3).chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { index ->
+                        SettingsDestination(titles[index], subtitles[index], icons[index],
+                            Modifier.weight(1f).heightIn(min = if (columns == 2) 88.dp else 64.dp), prominent = true) { onOpen(index) }
+                    }
+                    if (row.size < columns) Spacer(Modifier.weight(1f))
+                }
             }
         }
     }
