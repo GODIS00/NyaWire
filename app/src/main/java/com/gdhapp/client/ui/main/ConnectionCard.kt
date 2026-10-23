@@ -57,16 +57,6 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
         Column(Modifier.fillMaxWidth().then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 8.dp, vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Surface(shape = CircleShape, color = statusColor) {
-                    Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (connecting) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = statusTint)
-                        else Icon(if (connected) Icons.Rounded.VerifiedUser else Icons.Rounded.Shield, null, tint = statusTint, modifier = Modifier.size(16.dp))
-                        Crossfade(statusText, animationSpec = if (motion) tween(180) else snap(), label = "statusText") { text ->
-                            Text(text, fontSize = 12.sp, color = statusTint, fontWeight = FontWeight.Medium)
-                        }
-                    }
-                }
                 GradientPowerButton(connecting, connected, state.settings, onClick = { if (add) onAdd() else onConnect() }) {
                     Crossfade(add, animationSpec = if (motion) tween(180) else snap(), label = "powerIcon") { adding ->
                         Icon(if (adding) Icons.Rounded.Add else Icons.Rounded.PowerSettingsNew,
@@ -77,6 +67,16 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
                 Text(state.connectionNode?.let { cleanNodeName(it.name) } ?: AppText.text(R.string.your_servers_will_appear_here),
                     fontSize = 18.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold, maxLines = 2,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center, overflow = TextOverflow.Ellipsis)
+                Surface(shape = CircleShape, color = statusColor) {
+                    Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (connecting) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = statusTint)
+                        else Icon(if (connected) Icons.Rounded.VerifiedUser else Icons.Rounded.Shield, null, tint = statusTint, modifier = Modifier.size(16.dp))
+                        Crossfade(statusText, animationSpec = if (motion) tween(180) else snap(), label = "statusText") { text ->
+                            Text(text, fontSize = 12.sp, color = statusTint, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp, Alignment.CenterHorizontally)) {
                 Surface(shape = RoundedCornerShape(7.dp), color = scheme.secondaryContainer) {

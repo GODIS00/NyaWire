@@ -273,9 +273,6 @@ class MainViewModel(
                     try { repository.updateProbe(node.id, latencyTester.test(node, current.settings.probeMethod, current.settings)) }
                     finally { mutableState.update { it.copy(testingNodes = it.testingNodes - node.id, probeCompleted = it.probeCompleted + 1) } }
                 } } }.awaitAll()
-                val successful = uiState.value.allNodes.filter { node -> nodes.any { it.id == node.id } }
-                    .count { it.probeResults[current.settings.probeMethod]?.isSuccess == true }
-                message(AppText.text(R.string.of_successful, current.settings.probeMethod.label, successful, nodes.size))
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { message(safeCoreError(error)) }
             finally { mutableState.update { it.copy(isTesting = false, testingNodes = emptySet()) } }
