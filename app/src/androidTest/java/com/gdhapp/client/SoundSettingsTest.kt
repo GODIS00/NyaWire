@@ -166,6 +166,83 @@ class SoundSettingsTest {
         } } } finally { instrumentation.runOnMainSync { sound.close() } }
     }
 
+    @Test fun failedPlayerRecoversWithoutRestartingTheActivity() {
+        val players = mutableListOf<android.media.MediaPlayer>()
+        val failures = mutableListOf<Int>()
+        lateinit var sound: VpnButtonSound
+        ActivityScenario.launch(MainActivity::class.java).use { withMutedRinger {
+            instrumentation.runOnMainSync {
+                sound = VpnButtonSound(app, createPlayer = { android.media.MediaPlayer().also { players.add(it) } },
+                    onFailure = { failures.add(it) })
+            }
+            try {
+                await { sound.isLoaded }
+                repeat(3) {
+                    instrumentation.runOnMainSync {
+                        // Simulate the media service invalidating a previously prepared player.
+                        players.last().release()
+                        assertTrue(sound.play())
+                    }
+                    await {
+                        var advanced = false
+                        instrumentation.runOnMainSync { advanced = sound.isLoaded && sound.positionMs >= 40 }
+                        advanced
+                    }
+                    instrumentation.runOnMainSync { sound.stop() }
+                }
+                assertEquals(4, players.size)
+                assertTrue("Recovered taps must not report failure", failures.isEmpty())
+                instrumentation.runOnMainSync {
+                    sound.enabled = false
+                    assertFalse(sound.play())
+                    sound.enabled = true
+                    assertTrue(sound.play())
+                }
+            } finally { instrumentation.runOnMainSync { sound.close() } }
+        } }
+    }
+
+    @Test fun failedInitialPreparationCanRecoverOnTheNextTap() {
+        var attempts = 0
+        lateinit var sound: VpnButtonSound
+        ActivityScenario.launch(MainActivity::class.java).use { withMutedRinger {
+            instrumentation.runOnMainSync {
+                sound = VpnButtonSound(app, createPlayer = {
+                    if (++attempts == 1) error("Temporary media service failure")
+                    android.media.MediaPlayer()
+                })
+                assertFalse(sound.isLoaded)
+                assertTrue(sound.play())
+            }
+            try {
+                await {
+                    var advanced = false
+                    instrumentation.runOnMainSync { advanced = sound.positionMs >= 40 }
+                    advanced
+                }
+                assertEquals(2, attempts)
+            } finally { instrumentation.runOnMainSync { sound.close() } }
+        } }
+    }
+
+    @Test fun customButtonGradientPersistsAndResets() {
+        val name = "gradient-settings-${UUID.randomUUID()}"
+        val context = object : ContextWrapper(app) {
+            override fun getSharedPreferences(ignored: String, mode: Int) = app.getSharedPreferences(name, mode)
+        }
+        try {
+            val repository = SettingsRepository(context)
+            repository.update { it.copy(powerBorder = com.gdhapp.client.domain.model.PowerBorder.CUSTOM,
+                powerGradientStart = 0xFFFF9944, powerGradientEnd = 0xFFAA55FF) }
+            val restored = SettingsRepository(context).settings.value
+            assertEquals(com.gdhapp.client.domain.model.PowerBorder.CUSTOM, restored.powerBorder)
+            assertEquals(0xFFFF9944, restored.powerGradientStart)
+            assertEquals(0xFFAA55FF, restored.powerGradientEnd)
+            repository.resetAppearance()
+            assertEquals(com.gdhapp.client.domain.model.PowerBorder.NEON, SettingsRepository(context).settings.value.powerBorder)
+        } finally { app.deleteSharedPreferences(name) }
+    }
+
     @Test fun actualVpnButtonProducesMediaPlaybackWithMutedRinger() {
         org.junit.Assume.assumeTrue(android.os.Build.FINGERPRINT.contains("generic") || android.os.Build.MODEL.contains("sdk"))
         assertFalse(app.vpnSession.state.value == com.gdhapp.client.domain.model.VpnState.Connected)

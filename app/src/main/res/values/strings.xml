@@ -498,4 +498,7 @@
     <string name="vpn_button_style">VPN button</string>
     <string name="background_density">Background pictures: %1$d</string>
     <string name="background_opacity">Picture opacity: %1$d%%</string>
+    <string name="border_sunset">Sunset</string>
+    <string name="gradient_start">First color</string>
+    <string name="gradient_end">Second color</string>
 </resources>

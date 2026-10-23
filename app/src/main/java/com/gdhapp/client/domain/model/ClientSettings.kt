@@ -33,7 +33,7 @@ enum class AppLanguage(val tag: String) { SYSTEM(""), RUSSIAN("ru"), ENGLISH("en
     val label get() = when (this) { SYSTEM -> AppText.text(R.string.follow_system); RUSSIAN -> AppText.text(R.string.language_russian); ENGLISH -> "English" }
 }
 enum class ProbeConnectionMode(val label: String) { DEFAULT("Default"), DISABLE("Disable"), KEEP_ALIVE("KeepAlive") }
-enum class PowerBorder(val labelRes: Int) { NEON(R.string.border_neon), AURORA(R.string.border_aurora), ACCENT(R.string.border_accent);
+enum class PowerBorder(val labelRes: Int) { NEON(R.string.border_neon), AURORA(R.string.border_aurora), ACCENT(R.string.border_accent), SUNSET(R.string.border_sunset), CUSTOM(R.string.custom_color);
     val label get() = AppText.text(labelRes)
 }
 enum class IpMode(val label: String) { AUTO("Auto"), IPV4("IPv4"), IPV6("IPv6") }
@@ -65,6 +65,8 @@ data class ClientSettings(
     val backgroundDensity: Int = 9,
     val backgroundOpacity: Int = 12,
     val powerBorder: PowerBorder = PowerBorder.NEON,
+    val powerGradientStart: Long = 0xFF538AFF,
+    val powerGradientEnd: Long = 0xFFBB69FF,
     val layout: ServerLayout = ServerLayout.COMFORTABLE,
     val sort: ServerSort = ServerSort.ORIGINAL,
     val showFlags: Boolean = true,

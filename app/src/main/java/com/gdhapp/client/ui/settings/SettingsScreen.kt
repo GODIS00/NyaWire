@@ -70,6 +70,7 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
     var pendingKey by rememberSaveable { mutableStateOf<String?>(null) }
     var showColorPicker by rememberSaveable { mutableStateOf(false) }
     var showBlockColorPicker by rememberSaveable { mutableStateOf(false) }
+    var gradientColor by rememberSaveable { mutableIntStateOf(0) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     fun openCategory(value: Int, target: String? = null) { category = value; query = ""; pendingKey = target; focus.clearFocus() }
@@ -312,6 +313,13 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                         ToggleSetting(AppText.text(R.string.background_pictures), AppText.text(R.string.background_pictures_hint), settings.backgroundPictures) { actions.updateSettings(settings.copy(backgroundPictures = it)) }
                         Text(AppText.text(R.string.vpn_button_style), fontSize = 13.sp)
                         ChoiceChips(PowerBorder.entries, settings.powerBorder, { it.label }) { actions.updateSettings(settings.copy(powerBorder = it)) }
+                        Box(Modifier.fillMaxWidth().height(12.dp).background(
+                            androidx.compose.ui.graphics.Brush.linearGradient(com.gdhapp.client.ui.theme.powerGradientColors(settings)), CircleShape))
+                        if (settings.powerBorder == PowerBorder.CUSTOM) {
+                            EditSetting(AppText.text(R.string.gradient_start), "", "#%06X".format(settings.powerGradientStart and 0xFFFFFF)) { gradientColor = 1 }
+                            EditSetting(AppText.text(R.string.gradient_end), "", "#%06X".format(settings.powerGradientEnd and 0xFFFFFF)) { gradientColor = 2 }
+                        }
+
                         if (settings.backgroundPictures) {
                             Text(AppText.text(R.string.background_density, settings.backgroundDensity), fontSize = 13.sp)
                             ChoiceChips(listOf(6, 9, 12), settings.backgroundDensity, { it.toString() }) { actions.updateSettings(settings.copy(backgroundDensity = it)) }
@@ -380,6 +388,11 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
     if (showColorPicker) CustomColorDialog(settings.customAccent ?: settings.accent.argb,
         onDismiss = { showColorPicker = false }, onSave = { color ->
             actions.updateSettings(settings.copy(customAccent = color, dynamicColors = false)); showColorPicker = false
+        })
+    if (gradientColor != 0) CustomColorDialog(if (gradientColor == 1) settings.powerGradientStart else settings.powerGradientEnd,
+        onDismiss = { gradientColor = 0 }, onSave = { color ->
+            actions.updateSettings(if (gradientColor == 1) settings.copy(powerGradientStart = color) else settings.copy(powerGradientEnd = color))
+            gradientColor = 0
         })
     if (showBlockColorPicker) CustomColorDialog(settings.customBlockColor ?: (if (com.gdhapp.client.ui.theme.isDarkAppearance(settings)) settings.blockStyle.darkArgb else settings.blockStyle.lightArgb),
         onDismiss = { showBlockColorPicker = false }, onSave = { color ->

@@ -497,4 +497,7 @@
     <string name="vpn_button_style">Кнопка VPN</string>
     <string name="background_density">Картинок на фоне: %1$d</string>
     <string name="background_opacity">Яркость картинок: %1$d%%</string>
+    <string name="border_sunset">Закат</string>
+    <string name="gradient_start">Первый цвет</string>
+    <string name="gradient_end">Второй цвет</string>
 </resources>
