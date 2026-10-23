@@ -17,11 +17,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -87,8 +95,6 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
 @Composable
 private fun GradientPowerButton(connecting: Boolean, connected: Boolean, settings: com.gdhapp.client.domain.model.ClientSettings, onClick: () -> Unit, content: @Composable () -> Unit) {
     val motion = LocalMotionEnabled.current
-    val phase = if (motion) rememberInfiniteTransition(label = "powerGradient").animateFloat(0f, 6.283185f,
-        infiniteRepeatable(tween(if (connecting) 2400 else 10000, easing = LinearEasing)), label = "gradientAngle") else androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed && motion) .92f else 1f,
@@ -100,21 +106,91 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
     val end by animateColorAsState(
         androidx.compose.ui.graphics.lerp(Color(0xFF111522), colors.last(), if (connected) .52f else .32f),
         animationSpec = if (motion) tween(250) else snap(), label = "powerFillEnd")
-    val glow by animateFloatAsState(if (connected) .24f else .12f,
-        animationSpec = if (motion) tween(250) else snap(), label = "powerGlow")
-    Box(Modifier.size(200.dp).graphicsLayer { scaleX = scale; scaleY = scale }.drawBehind {
-        val brush = Brush.sweepGradient(colors + colors.first())
-        drawCircle(Brush.linearGradient(listOf(base, end)), radius = size.minDimension / 2 - 16.dp.toPx())
-        drawCircle(Color.White.copy(alpha = .07f), radius = size.minDimension / 2 - 19.dp.toPx(), style = Stroke(1.dp.toPx()))
-        rotate(phase.value * 180f / kotlin.math.PI.toFloat()) {
-            drawCircle(brush, radius = size.minDimension / 2 - 8.dp.toPx(), style = Stroke(18.dp.toPx()), alpha = glow * .5f)
-            drawCircle(brush, radius = size.minDimension / 2 - 8.dp.toPx(), style = Stroke(8.dp.toPx()), alpha = glow)
-            drawCircle(brush, radius = size.minDimension / 2 - 8.dp.toPx(), style = Stroke(3.5.dp.toPx()))
+    val glow by animateFloatAsState(if (connected) .3f else if (connecting) .2f else .12f,
+        animationSpec = if (motion) tween(400) else snap(), label = "powerGlow")
+    // Everything below is read only inside drawBehind/graphicsLayer, so the per-frame loop redraws without recomposing.
+    val lit = animateFloatAsState(if (connected) 1f else 0f,
+        if (motion) tween(700, easing = FastOutSlowInEasing) else snap(), label = "powerLit")
+    val comet = animateFloatAsState(if (connecting) 1f else 0f,
+        if (motion) tween(450, easing = FastOutSlowInEasing) else snap(), label = "powerComet")
+    // Degrees per second; integrated frame by frame so speed changes ease in instead of jumping the angle.
+    val speed = animateFloatAsState(if (connecting) 330f else if (connected) 40f else 18f,
+        if (motion) tween(800, easing = FastOutSlowInEasing) else snap(), label = "powerSpeed")
+    val angle = remember { mutableFloatStateOf(0f) }
+    if (motion) LaunchedEffect(Unit) {
+        var last = withFrameNanos { it }
+        while (true) withFrameNanos { now ->
+            angle.floatValue = (angle.floatValue + speed.value * (now - last) / 1_000_000_000f) % 360f
+            last = now
         }
-    }.padding(16.dp), contentAlignment = Alignment.Center) {
+    }
+    val ambient = rememberInfiniteTransition(label = "powerAmbient")
+    val breath = if (motion) ambient.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "powerBreath") else remember { mutableFloatStateOf(0f) }
+    val ripple = if (motion) ambient.animateFloat(0f, 1f, infiniteRepeatable(tween(3200, easing = LinearEasing)),
+        label = "powerRipple") else remember { mutableFloatStateOf(0f) }
+    val burst = remember { Animatable(1f) }
+    val pop = remember { Animatable(1f) }
+    val wasConnected = remember { mutableStateOf(connected) }
+    LaunchedEffect(connected) {
+        val fresh = connected && !wasConnected.value
+        wasConnected.value = connected
+        if (fresh && motion) {
+            launch { burst.snapTo(0f); burst.animateTo(1f, tween(950, easing = LinearOutSlowInEasing)) }
+            pop.snapTo(.78f)
+            pop.animateTo(1f, spring(dampingRatio = .36f, stiffness = 240f))
+        }
+    }
+    Box(Modifier.size(216.dp).graphicsLayer { scaleX = scale; scaleY = scale }.drawBehind {
+        val c = center
+        val ring = 92.dp.toPx()
+        val fill = 84.dp.toPx()
+        val l = lit.value
+        val k = comet.value
+        val b = breath.value
+        val brush = Brush.sweepGradient(colors + colors.first(), center = c)
+        rotate(angle.floatValue) {
+            // Ripples radiating out of the ring while connected.
+            if (l > 0f) for (i in 0 until 2) {
+                val p = (ripple.value + i / 2f) % 1f
+                drawCircle(brush, radius = ring + p * 15.dp.toPx(), style = Stroke((1f + (1f - p) * 3f).dp.toPx()),
+                    alpha = (1f - p) * (1f - p) * .55f * l)
+            }
+            drawCircle(brush, radius = ring, style = Stroke(24.dp.toPx()), alpha = glow * (.35f + .35f * l * b))
+        }
+        drawCircle(Brush.linearGradient(listOf(base, end)), radius = fill)
+        // Soft specular highlight, breathing slightly while connected.
+        drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = .12f + .06f * l * b), Color.Transparent),
+            center = Offset(c.x - fill * .35f, c.y - fill * .45f), radius = fill * 1.1f), radius = fill)
+        drawCircle(Color.White.copy(alpha = .07f), radius = fill - 3.dp.toPx(), style = Stroke(1.dp.toPx()))
+        rotate(angle.floatValue) {
+            val dim = 1f - k * .7f
+            drawCircle(brush, radius = ring, style = Stroke(8.dp.toPx()), alpha = glow * dim)
+            drawCircle(brush, radius = ring, style = Stroke(3.5.dp.toPx()), alpha = dim)
+            // Comet chasing around the ring while connecting.
+            if (k > 0f) {
+                val head = androidx.compose.ui.graphics.lerp(colors.last(), Color.White, .4f)
+                val tail = Brush.sweepGradient(0f to Color.Transparent, .5f to colors.first(), .72f to head, center = c)
+                drawArc(tail, 0f, 260f, false, topLeft = Offset(c.x - ring, c.y - ring), size = Size(ring * 2, ring * 2),
+                    style = Stroke(5.dp.toPx(), cap = StrokeCap.Round), alpha = k)
+                val a = Math.toRadians(260.0)
+                val tip = Offset(c.x + ring * kotlin.math.cos(a).toFloat(), c.y + ring * kotlin.math.sin(a).toFloat())
+                drawCircle(head, radius = 12.dp.toPx(), center = tip, alpha = .28f * k)
+                drawCircle(Color.White, radius = 3.5.dp.toPx(), center = tip, alpha = k)
+            }
+        }
+        // One-shot shockwave and flash the moment the tunnel comes up.
+        val q = burst.value
+        if (q < 1f) {
+            drawCircle(Color.White, radius = fill, alpha = (1f - q) * .2f)
+            drawCircle(brush, radius = fill + q * 23.dp.toPx(), style = Stroke((1f - q) * 10.dp.toPx() + 1f), alpha = (1f - q) * .9f)
+        }
+    }.padding(24.dp), contentAlignment = Alignment.Center) {
         FilledIconButton(onClick, modifier = Modifier.fillMaxSize(), shape = CircleShape,
             colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.Transparent, contentColor = Color.White),
-            interactionSource = interaction, content = content)
+            interactionSource = interaction) {
+            Box(Modifier.graphicsLayer { scaleX = pop.value; scaleY = pop.value }) { content() }
+        }
     }
 }
 
