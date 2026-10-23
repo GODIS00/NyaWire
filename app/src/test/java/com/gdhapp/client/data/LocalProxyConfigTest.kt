@@ -15,7 +15,7 @@ class LocalProxyConfigTest {
         val inbounds = json.getAsJsonArray("inbounds")
         assertEquals(1, inbounds.size())
         assertEquals("tun", inbounds[0].asJsonObject.get("protocol").asString)
-        assertTrue(json.getAsJsonObject("routing").getAsJsonArray("rules")[0].asJsonObject.getAsJsonArray("inboundTag").any { it.asString == "gdhapp-tun" })
+        assertTrue(json.getAsJsonObject("routing").getAsJsonArray("rules")[0].asJsonObject.getAsJsonArray("inboundTag").any { it.asString == "nyawire-tun" })
     }
 
     @Test fun xrayCompatibilityBridgeRequiresPassword() {

@@ -83,7 +83,7 @@ class QuickSettingsTileTest {
         delay(1500) // ConnectivityService applies the newly established VPN to shell UID asynchronously.
         var result = ""
         repeat(3) {
-            result = shell("sh /data/local/tmp/gdhapp-vpn-probe.sh 2>&1")
+            result = shell("sh /data/local/tmp/nyawire-vpn-probe.sh 2>&1")
             if (result.contains("NyaWire-TUN-OK")) return
             delay(300)
         }

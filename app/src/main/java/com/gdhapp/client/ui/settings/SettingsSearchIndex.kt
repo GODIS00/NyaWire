@@ -17,6 +17,7 @@ internal val settingsContentKeys = mapOf(
 ).mapValues { (_, ids) -> ids.map { "settings-content:$it" } }
 
 internal val settingsSearchTargets = listOf(
+    SettingsSearchTarget(1, "settings-content:16", R.string.vpn_button_style, listOf(R.string.border_neon, R.string.border_aurora, R.string.border_accent)),
     SettingsSearchTarget(0, "settings-content:27", R.string.kill_switch_hint),
     SettingsSearchTarget(0, "settings-content:28", R.string.hotspot_proxy),
     SettingsSearchTarget(5, "settings-content:29", R.string.mux_title),

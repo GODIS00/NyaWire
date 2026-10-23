@@ -77,7 +77,7 @@ class SubscriptionRefreshConnectionTest {
             GdhappVpnService.start(app, old)
             assertEquals(VpnState.Connected, withTimeout(20000) { app.vpnSession.state.first { it == VpnState.Connected || it is VpnState.Error } })
             delay(1500)
-            assertTrue(shell("sh /data/local/tmp/gdhapp-vpn-probe.sh").contains("NyaWire-TUN-OK"))
+            assertTrue(shell("sh /data/local/tmp/nyawire-vpn-probe.sh").contains("NyaWire-TUN-OK"))
             val startedAt = app.vpnSession.metrics.value.connectedAt
             val snapshot = app.vpnSession.activeNode.value!!
             http.enqueue(MockResponse().setBody(fresh))
@@ -88,7 +88,7 @@ class SubscriptionRefreshConnectionTest {
             assertEquals(port, app.vpnSession.activeNode.value!!.port)
             assertEquals(VpnState.Connected, app.vpnSession.state.value)
             assertEquals(startedAt, app.vpnSession.metrics.value.connectedAt)
-            assertTrue("The original tunnel must still carry traffic after refresh", shell("sh /data/local/tmp/gdhapp-vpn-probe.sh").contains("NyaWire-TUN-OK"))
+            assertTrue("The original tunnel must still carry traffic after refresh", shell("sh /data/local/tmp/nyawire-vpn-probe.sh").contains("NyaWire-TUN-OK"))
             http.enqueue(MockResponse().setResponseCode(500))
             val saved = repository.groups.value
             assertTrue(runCatching { repository.refresh(group.id) }.isFailure)

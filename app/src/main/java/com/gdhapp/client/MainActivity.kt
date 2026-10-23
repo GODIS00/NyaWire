@@ -38,7 +38,7 @@ import com.gdhapp.client.ui.main.MainEvent
 import com.gdhapp.client.ui.main.MainScreen
 import com.gdhapp.client.ui.main.MainViewModel
 import com.gdhapp.client.ui.main.rememberAppUpdateCheck
-import com.gdhapp.client.ui.theme.GdhappTheme
+import com.gdhapp.client.ui.theme.NyaWireTheme
 import com.gdhapp.client.ui.theme.isDarkAppearance
 import com.gdhapp.client.vpn.GdhappVpnService
 import com.journeyapps.barcodescanner.ScanContract
@@ -144,7 +144,7 @@ private fun MainRoute(viewModel: MainViewModel) {
             } } } finally { viewModel.foreground(false) }
         }
     }
-    GdhappTheme(state.settings) {
+    NyaWireTheme(state.settings) {
         val checkAppUpdate = rememberAppUpdateCheck()
         val dark = isDarkAppearance(state.settings)
         SideEffect { (context as? Activity)?.let { activity ->

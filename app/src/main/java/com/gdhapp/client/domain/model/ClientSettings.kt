@@ -33,6 +33,9 @@ enum class AppLanguage(val tag: String) { SYSTEM(""), RUSSIAN("ru"), ENGLISH("en
     val label get() = when (this) { SYSTEM -> AppText.text(R.string.follow_system); RUSSIAN -> AppText.text(R.string.language_russian); ENGLISH -> "English" }
 }
 enum class ProbeConnectionMode(val label: String) { DEFAULT("Default"), DISABLE("Disable"), KEEP_ALIVE("KeepAlive") }
+enum class PowerBorder(val labelRes: Int) { NEON(R.string.border_neon), AURORA(R.string.border_aurora), ACCENT(R.string.border_accent);
+    val label get() = AppText.text(labelRes)
+}
 enum class IpMode(val label: String) { AUTO("Auto"), IPV4("IPv4"), IPV6("IPv6") }
 enum class TunnelMode(val labelRes: Int) { VPN(R.string.mode_vpn), VPN_PROXY(R.string.mode_vpn_proxy), PROXY(R.string.mode_proxy);
     val label get() = AppText.text(labelRes)
@@ -59,6 +62,9 @@ data class ClientSettings(
     val softBlur: Boolean = true,
     val connectionSound: Boolean = true,
     val backgroundPictures: Boolean = true,
+    val backgroundDensity: Int = 9,
+    val backgroundOpacity: Int = 12,
+    val powerBorder: PowerBorder = PowerBorder.NEON,
     val layout: ServerLayout = ServerLayout.COMFORTABLE,
     val sort: ServerSort = ServerSort.ORIGINAL,
     val showFlags: Boolean = true,

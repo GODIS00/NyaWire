@@ -27,10 +27,10 @@ class ShareLinkParserTest {
         assertEquals("mixed", root.getAsJsonArray("inbounds")[0].asJsonObject.get("type").asString)
     }
     @Test fun `native TUN counters get unique tags without changing raw profile`() {
-        val raw = """{"outbounds":[{"protocol":"vless","settings":{"vnext":[]}},{"protocol":"freedom","tag":"gdhapp-out-0"}]}"""
+        val raw = """{"outbounds":[{"protocol":"vless","settings":{"vnext":[]}},{"protocol":"freedom","tag":"nyawire-out-0"}]}"""
         val result = CoreConfigBuilder.build(raw, ClientSettings(), 10808, nativeTun = true)
         val tags = JsonParser.parseString(result.json).asJsonObject.getAsJsonArray("outbounds").map { it.asJsonObject.get("tag").asString }
-        assertEquals(listOf("gdhapp-out-0_", "gdhapp-out-0"), tags)
+        assertEquals(listOf("nyawire-out-0_", "nyawire-out-0"), tags)
         assertFalse(JsonParser.parseString(raw).asJsonObject.getAsJsonArray("outbounds")[0].asJsonObject.has("tag"))
     }
     @Test fun `native TUN retains REALITY Vision and routes both local inbounds`() {
@@ -43,9 +43,9 @@ class ShareLinkParserTest {
         assertEquals(CoreEngine.XRAY, result.engine)
         assertEquals(originalOutbound, root.getAsJsonArray("outbounds"))
         assertEquals(listOf("socks", "tun"), root.getAsJsonArray("inbounds").map { it.asJsonObject.get("protocol").asString })
-        assertEquals(listOf("gdhapp-in", "gdhapp-tun"), root.getAsJsonObject("routing").getAsJsonArray("rules")[0].asJsonObject.getAsJsonArray("inboundTag").map { it.asString })
+        assertEquals(listOf("nyawire-in", "nyawire-tun"), root.getAsJsonObject("routing").getAsJsonArray("rules")[0].asJsonObject.getAsJsonArray("inboundTag").map { it.asString })
         assertEquals(1500, root.getAsJsonArray("inbounds")[1].asJsonObject.getAsJsonObject("settings").get("mtu").asInt)
-        assertFalse(CoreConfigBuilder.build(profile.toString(), ClientSettings(), 10808).json.contains("gdhapp-tun"))
+        assertFalse(CoreConfigBuilder.build(profile.toString(), ClientSettings(), 10808).json.contains("nyawire-tun"))
     }
     @Test fun `VLESS reality xhttp keeps authentication and transport`() {
         val node = parser.parse("vless://11111111-1111-4111-8111-111111111111@nl.example:443?security=reality&pbk=test-key&sid=aabb&sni=example.com&fp=chrome&type=xhttp&path=%2Fedge&mode=auto#%F0%9F%87%B3%F0%9F%87%B1%20Node").servers.single()

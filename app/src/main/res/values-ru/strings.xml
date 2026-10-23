@@ -491,4 +491,10 @@
     <string name="lan_routing_hint">Как направлять локальные адреса. Правила профиля также учитываются.</string>
     <string name="vpn_mode_hint">Трафик приложений идёт через туннель. Локальный прокси выключен.</string>
     <string name="proxy_mode_required">Доступен в режимах «VPN + прокси» и «Только прокси».</string>
+    <string name="border_neon">Неон</string>
+    <string name="border_aurora">Сияние</string>
+    <string name="border_accent">Цвет акцента</string>
+    <string name="vpn_button_style">Кнопка VPN</string>
+    <string name="background_density">Картинок на фоне: %1$d</string>
+    <string name="background_opacity">Яркость картинок: %1$d%%</string>
 </resources>

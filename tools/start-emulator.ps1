@@ -16,7 +16,7 @@ $env:ANDROID_USER_HOME = Join-Path $projectRoot '.tools/android-user'
 $env:ANDROID_EMULATOR_HOME = Join-Path $projectRoot '.tools/emulator-home'
 $env:ANDROID_ADB_SERVER_PORT = '5038'
 if (-not (Test-Path -LiteralPath (Join-Path $env:ANDROID_AVD_HOME 'GDHAPP.ini'))) {
-    throw 'GDHAPP emulator profile is missing.'
+    throw 'NyaWire emulator profile is missing.'
 }
 & $adbExe -P 5038 start-server
 if ($LASTEXITCODE -ne 0) { throw 'Could not start ADB' }

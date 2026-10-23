@@ -76,10 +76,10 @@ class VpnServiceIntegrationTest {
             app.settings.update { it.copy(language = com.gdhapp.client.domain.model.AppLanguage.ENGLISH) }
             delay(1000)
             assertEquals(VpnState.Connected, app.vpnSession.state.value)
-            val descriptor = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("sh /data/local/tmp/gdhapp-vpn-probe.sh")
+            val descriptor = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("sh /data/local/tmp/nyawire-vpn-probe.sh")
             val response = ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use { it.readText() }
             assertTrue("TUN HTTP did not reach host fixture: $response", response.contains("NyaWire-TUN-OK"))
-            val udpDescriptor = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("sh /data/local/tmp/gdhapp-vpn-udp-probe.sh")
+            val udpDescriptor = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("sh /data/local/tmp/nyawire-vpn-udp-probe.sh")
             val udpResponse = ParcelFileDescriptor.AutoCloseInputStream(udpDescriptor).bufferedReader().use { it.readText() }
             assertTrue("TUN UDP did not reach host fixture: $udpResponse", udpResponse.contains("NyaWire-UDP-OK"))
             val metrics = withTimeout(5000) { app.vpnSession.metrics.first { it.uploadBytes > 0 && it.downloadBytes > 0 } }
@@ -109,7 +109,7 @@ class VpnServiceIntegrationTest {
             assertEquals(VpnState.Connected, app.vpnSession.state.value)
             assertEquals(connectedAt, app.vpnSession.metrics.value.connectedAt)
             assertEquals(socksPort, app.vpnSession.metrics.value.localPort)
-            val afterPingDescriptor = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("sh /data/local/tmp/gdhapp-vpn-probe.sh")
+            val afterPingDescriptor = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("sh /data/local/tmp/nyawire-vpn-probe.sh")
             val afterPing = ParcelFileDescriptor.AutoCloseInputStream(afterPingDescriptor).bufferedReader().use { it.readText() }
             assertTrue("Active TUN must keep forwarding after the temporary ping session: $afterPing", afterPing.contains("NyaWire-TUN-OK"))
             if (engine == CoreEngine.XRAY) {

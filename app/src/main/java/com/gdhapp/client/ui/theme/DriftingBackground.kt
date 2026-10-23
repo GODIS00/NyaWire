@@ -33,7 +33,7 @@ private val cats = listOf(
 
 /** Drawing-only transforms: server lists do not recompose for each animation frame. */
 @Composable
-fun DriftingBackground(enabled: Boolean, motionEnabled: Boolean, dark: Boolean, modifier: Modifier = Modifier) {
+fun DriftingBackground(enabled: Boolean, motionEnabled: Boolean, dark: Boolean, modifier: Modifier = Modifier, densityCount: Int = 9, opacity: Int = 12) {
     if (!enabled) return
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -58,7 +58,17 @@ fun DriftingBackground(enabled: Boolean, motionEnabled: Boolean, dark: Boolean, 
         val width = with(density) { maxWidth.toPx() }
         val height = with(density) { maxHeight.toPx() }
         val drift = with(density) { 24.dp.toPx() }
-        cats.forEach { cat ->
+        val decorations = remember(densityCount) {
+            if (densityCount <= 6) cats else cats + listOf(
+                BackgroundCat(R.drawable.background_cat_2, .36f, .04f, 90, 6.6f, 2, -12f),
+                BackgroundCat(R.drawable.background_cat_5, .40f, .42f, 95, 7.7f, 2, 11f),
+                BackgroundCat(R.drawable.background_cat_1, .35f, .80f, 85, 8.8f, 4, -5f),
+                BackgroundCat(R.drawable.background_cat_4, .03f, .55f, 80, 9.9f, 2, 9f),
+                BackgroundCat(R.drawable.background_cat_3, .78f, .32f, 85, 11f, 2, -8f),
+                BackgroundCat(R.drawable.background_cat_6, .40f, .63f, 75, 12.1f, 2, 5f)
+            ).take(densityCount - 6)
+        }
+        decorations.forEach { cat ->
             val bitmap = remember(context.resources, cat.image) {
                 BitmapFactory.decodeResource(context.resources, cat.image, BitmapFactory.Options().apply { inSampleSize = cat.sample }).asImageBitmap()
             }
@@ -70,7 +80,7 @@ fun DriftingBackground(enabled: Boolean, motionEnabled: Boolean, dark: Boolean, 
                 translationX = (width - pixels) * cat.x + sin(t + cat.phase) * drift
                 translationY = (height - pixels) * cat.y + sin(t * .8f + cat.phase) * drift
                 rotationZ = cat.tilt + sin(t * .7f + cat.phase) * 1.5f
-                alpha = if (dark) .085f else .13f
+                alpha = opacity.coerceIn(4, 24) / 100f * (if (dark) 1f else 1.15f)
             })
         }
     }

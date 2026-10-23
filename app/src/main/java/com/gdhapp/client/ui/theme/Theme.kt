@@ -40,7 +40,7 @@ fun isDarkAppearance(settings: ClientSettings): Boolean = when (settings.theme) 
 }
 
 @Composable
-fun GdhappTheme(settings: ClientSettings = ClientSettings(), content: @Composable () -> Unit) {
+fun NyaWireTheme(settings: ClientSettings = ClientSettings(), content: @Composable () -> Unit) {
     val dark = isDarkAppearance(settings)
     val seed = Color(settings.customAccent ?: settings.accent.argb)
     // A dark source color still needs a readable accent tone on dark surfaces.

@@ -33,6 +33,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import com.gdhapp.client.domain.model.PowerBorder
 import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.text.font.FontWeight
@@ -66,34 +69,28 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
     ElevatedCard(shape = MaterialTheme.shapes.large, colors = CardDefaults.elevatedCardColors(containerColor = background),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)) {
         Column(Modifier.fillMaxWidth().then(if (motion) Modifier.animateContentSize() else Modifier).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Surface(shape = CircleShape, color = statusColor) {
-                        Row(Modifier.then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 9.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            val tint = statusTint
-                            val statusIcon = when { connecting -> null; error != null -> Icons.Rounded.ErrorOutline; connected -> Icons.Rounded.VerifiedUser; else -> Icons.Rounded.Shield }
-                            Crossfade(statusIcon, animationSpec = if (motion) tween(200) else snap(), label = "statusIcon") { icon ->
-                                if (icon == null) CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = tint)
-                                else Icon(icon, null, tint = tint, modifier = Modifier.size(13.dp))
-                            }
-                            AnimatedContent(statusText, transitionSpec = {
-                                if (motion) fadeIn(tween(200, delayMillis = 60)) togetherWith fadeOut(tween(100)) else fadeIn(snap()) togetherWith fadeOut(snap())
-                            }, label = "statusText") { text ->
-                                Text(text, fontSize = 10.sp, fontWeight = FontWeight.Medium, color = tint, maxLines = 1)
-                            }
+            Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Surface(shape = CircleShape, color = statusColor) {
+                    Row(Modifier.padding(horizontal = 12.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (connecting) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = statusTint)
+                        else Icon(if (connected) Icons.Rounded.VerifiedUser else Icons.Rounded.Shield, null, tint = statusTint, modifier = Modifier.size(16.dp))
+                        Crossfade(statusText, animationSpec = if (motion) tween(180) else snap(), label = "statusText") { text ->
+                            Text(text, fontSize = 12.sp, color = statusTint, fontWeight = FontWeight.Medium)
                         }
                     }
-                    Text(state.connectionNode?.let { cleanNodeName(it.name) } ?: AppText.text(R.string.your_servers_will_appear_here),
-                        fontSize = 17.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                GradientPowerButton(connecting, onClick = { if (add) onAdd() else onConnect() }) {
-                    Crossfade(add, animationSpec = if (motion) tween(200) else snap(), label = "powerIcon") { adding ->
+                GradientPowerButton(connecting, connected, state.settings.powerBorder, onClick = { if (add) onAdd() else onConnect() }) {
+                    Crossfade(add, animationSpec = if (motion) tween(180) else snap(), label = "powerIcon") { adding ->
                         Icon(if (adding) Icons.Rounded.Add else Icons.Rounded.PowerSettingsNew,
                             AppText.text(if (adding) R.string.add_subscription else if (state.connectionBusy) R.string.disconnect_vpn else R.string.connect_vpn),
-                            modifier = Modifier.size(29.dp))
+                            modifier = Modifier.size(56.dp))
                     }
                 }
+                Text(state.connectionNode?.let { cleanNodeName(it.name) } ?: AppText.text(R.string.your_servers_will_appear_here),
+                    fontSize = 18.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold, maxLines = 2,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center, overflow = TextOverflow.Ellipsis)
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                 Surface(shape = RoundedCornerShape(7.dp), color = scheme.secondaryContainer) {
@@ -124,7 +121,7 @@ fun ConnectionCard(state: MainUiState, onConnect: () -> Unit, onAdd: () -> Unit,
 }
 
 @Composable
-private fun GradientPowerButton(connecting: Boolean, onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun GradientPowerButton(connecting: Boolean, connected: Boolean, border: PowerBorder, onClick: () -> Unit, content: @Composable () -> Unit) {
     val motion = LocalMotionEnabled.current
     val phase = if (motion) rememberInfiniteTransition(label = "powerGradient").animateFloat(0f, 6.283185f,
         infiniteRepeatable(tween(if (connecting) 2400 else 10000, easing = LinearEasing)), label = "gradientAngle") else androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
@@ -132,14 +129,26 @@ private fun GradientPowerButton(connecting: Boolean, onClick: () -> Unit, conten
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed && motion) .92f else 1f,
         if (motion) com.gdhapp.client.ui.theme.IosMotion.value() else snap(), label = "powerPress")
-    // Animate the shader direction only: the rounded outline stays aligned with the button.
-    Box(Modifier.size(64.dp).graphicsLayer { scaleX = scale; scaleY = scale }.drawBehind {
-        val center = Offset(size.width / 2, size.height / 2)
-        val delta = Offset(cos(phase.value) * size.width * .7f, sin(phase.value) * size.height * .7f)
-        drawRoundRect(Brush.linearGradient(listOf(Color(0xFF468CFF), Color(0xFF9759F5)), center - delta, center + delta), cornerRadius = CornerRadius(22.dp.toPx()))
-    }.padding(2.dp), contentAlignment = Alignment.Center) {
-        FilledIconButton(onClick, modifier = Modifier.fillMaxSize(), shape = RoundedCornerShape(20.dp),
-            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF182342).copy(alpha = .76f), contentColor = Color.White),
+    val scheme = MaterialTheme.colorScheme
+    val colors = when (border) {
+        PowerBorder.NEON -> listOf(Color(0xFF538AFF), Color(0xFFBB69FF), Color(0xFF538AFF))
+        PowerBorder.AURORA -> listOf(Color(0xFF42DFBD), Color(0xFF538AFF), Color(0xFFF194D8), Color(0xFF42DFBD))
+        PowerBorder.ACCENT -> listOf(scheme.primary, scheme.tertiary, scheme.primary)
+    }
+    val fill by animateColorAsState(if (connected) scheme.primaryContainer else scheme.surfaceContainerHigh,
+        animationSpec = if (motion) tween(250) else snap(), label = "powerFill")
+    val tint by animateColorAsState(if (connected) scheme.onPrimaryContainer else scheme.onSurface,
+        animationSpec = if (motion) tween(250) else snap(), label = "powerTint")
+    Box(Modifier.size(160.dp).graphicsLayer { scaleX = scale; scaleY = scale }.drawBehind {
+        val brush = Brush.sweepGradient(colors)
+        rotate(phase.value * 180f / kotlin.math.PI.toFloat()) {
+            drawCircle(brush, radius = size.minDimension / 2 - 8.dp.toPx(), style = Stroke(14.dp.toPx()), alpha = .08f)
+            drawCircle(brush, radius = size.minDimension / 2 - 8.dp.toPx(), style = Stroke(6.dp.toPx()), alpha = .18f)
+            drawCircle(brush, radius = size.minDimension / 2 - 8.dp.toPx(), style = Stroke(3.dp.toPx()))
+        }
+    }.padding(14.dp), contentAlignment = Alignment.Center) {
+        FilledIconButton(onClick, modifier = Modifier.fillMaxSize(), shape = CircleShape,
+            colors = IconButtonDefaults.filledIconButtonColors(containerColor = fill, contentColor = tint),
             interactionSource = interaction, content = content)
     }
 }

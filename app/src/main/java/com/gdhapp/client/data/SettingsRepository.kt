@@ -27,6 +27,7 @@ class SettingsRepository(private val context: Context) {
         blockStyle = defaults.blockStyle, customBlockColor = null,
         animations = true, haptics = true, softBlur = true, connectionSound = defaults.connectionSound,
         backgroundPictures = true, layout = defaults.layout, sort = defaults.sort,
+        backgroundDensity = defaults.backgroundDensity, backgroundOpacity = defaults.backgroundOpacity, powerBorder = defaults.powerBorder,
         showFlags = true, showProtocol = true, showAddress = false, cornerRadius = 24, textScale = 1f,
     ) } }
 
@@ -42,6 +43,9 @@ class SettingsRepository(private val context: Context) {
         return value.copy(
             // These effects are now built in. Repair previous disabled preferences on load/update.
             animations = true, softBlur = true, haptics = true,
+            backgroundDensity = value.backgroundDensity.takeIf { it in setOf(6, 9, 12) } ?: defaults.backgroundDensity,
+            backgroundOpacity = value.backgroundOpacity.takeIf { it in 4..24 } ?: defaults.backgroundOpacity,
+            powerBorder = (value.powerBorder as? com.gdhapp.client.domain.model.PowerBorder) ?: defaults.powerBorder,
             connectionMode = (value.connectionMode as? com.gdhapp.client.domain.model.ConnectionMode) ?: defaults.connectionMode,
             routingMode = (value.routingMode as? com.gdhapp.client.domain.model.RoutingMode) ?: defaults.routingMode,
             directDomains = value.directDomains.orEmpty().take(16000), directIps = value.directIps.orEmpty().take(16000),

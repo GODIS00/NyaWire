@@ -71,7 +71,7 @@ import com.gdhapp.client.domain.model.ServerSort
 import com.gdhapp.client.domain.model.SubscriptionGroup
 import com.gdhapp.client.domain.model.VpnState
 import com.gdhapp.client.ui.settings.SettingsScreen
-import com.gdhapp.client.ui.theme.GdhappTheme
+import com.gdhapp.client.ui.theme.NyaWireTheme
 import com.gdhapp.client.ui.theme.IosMotion
 import com.gdhapp.client.ui.theme.LocalMotionEnabled
 
@@ -163,7 +163,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                 } else drawContent()
             }) {
             com.gdhapp.client.ui.theme.DriftingBackground(state.settings.backgroundPictures, state.settings.animations && !scrolling && !state.startupRefreshing,
-                com.gdhapp.client.ui.theme.isDarkAppearance(state.settings), Modifier.matchParentSize())
+                com.gdhapp.client.ui.theme.isDarkAppearance(state.settings), Modifier.matchParentSize(), state.settings.backgroundDensity, state.settings.backgroundOpacity)
             AnimatedContent(tab, Modifier.fillMaxSize().clipToBounds(), transitionSpec = {
                 if (state.settings.animations) IosMotion.page(forward = targetState > initialState) else IosMotion.none
             }, label = "tabContent") { tab -> when (tab) {
@@ -173,7 +173,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                 1 -> ChecksScreen(state, actions, onInfo = { infoNode = it }, listState = pingListState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize().padding(bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 84.dp else 0.dp))
                 else -> LazyColumn(state = listState, modifier = Modifier.widthIn(max = 820.dp).fillMaxSize(),
                     contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 12.dp, bottom = insets.calculateBottomPadding() + if (state.connectionBusy) 104.dp else 20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (listModel.groups.isNotEmpty() || state.connectionBusy) item(key = "connection") { val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
+                    item(key = "connection") { val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
                         Box(itemMotion(state.settings.animations)) { ConnectionCard(state.copy(metrics = currentMetrics), ::connect, { showAdd = true }, { showError = true }) } }
                     if (listModel.groups.isEmpty()) item {
                         EmptyView(Icons.Rounded.TravelExplore, AppText.text(R.string.no_servers_yet),
@@ -499,4 +499,4 @@ private fun AddAction(icon: androidx.compose.ui.graphics.vector.ImageVector, tit
 
 @Preview(widthDp = 393, heightDp = 852)
 @Composable
-private fun EmptyMainPreview() { GdhappTheme { MainScreen(MainUiState(), MainActions(), remember { SnackbarHostState() }) } }
+private fun EmptyMainPreview() { NyaWireTheme { MainScreen(MainUiState(), MainActions(), remember { SnackbarHostState() }) } }

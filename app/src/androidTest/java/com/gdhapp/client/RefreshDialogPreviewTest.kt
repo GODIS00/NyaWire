@@ -9,7 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.gdhapp.client.domain.model.*
 import com.gdhapp.client.ui.main.*
-import com.gdhapp.client.ui.theme.GdhappTheme
+import com.gdhapp.client.ui.theme.NyaWireTheme
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +31,7 @@ class RefreshDialogPreviewTest {
                     val state = MainUiState(settings = previewSettings,
                         groups = listOf(SubscriptionGroup("preview", "Основная подписка", lastUpdated = "", servers = emptyList())),
                         startupRefreshing = true, refreshing = setOf("preview"), refreshTotal = 3, refreshCompleted = 1)
-                    GdhappTheme(state.settings) { MainScreen(state, MainActions(), remember { SnackbarHostState() }) }
+                    NyaWireTheme(state.settings) { MainScreen(state, MainActions(), remember { SnackbarHostState() }) }
                 } }
                 Thread.sleep(3000)
                 val bitmap = instrumentation.uiAutomation.takeScreenshot()

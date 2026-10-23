@@ -31,11 +31,11 @@ class BundledVpnCoreManager(private val context: Context, private val factory: C
             // Xray owns a duplicate of Android's descriptor and dispatches TUN packets directly.
             // Optional public SOCKS is separate from the authenticated internal HEV transport.
             if (proxy.nativeTun || proxyOnly) return@withContext
-            val file = context.cacheDir.resolve("gdhapp-tunnel.yml")
+            val file = context.cacheDir.resolve("nyawire-tunnel.yml")
             tunnelConfig = file
             file.writeText("""
                 tunnel:
-                  name: gdhapp
+                  name: nyawire
                   mtu: ${settings.mtu}
                   ipv4: 10.77.0.2
                   ${if (settings.ipv6) "ipv6: 'fd77:77::2'" else ""}

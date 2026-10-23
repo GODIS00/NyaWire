@@ -59,7 +59,7 @@ object ClientCoreOptions {
         }
         fun tag(out: JsonObject): String {
             out.text("tag")?.takeIf { it.isNotBlank() }?.let { return it }
-            var next = "gdhapp-proxy"
+            var next = "nyawire-proxy"
             while (outbounds.any { it.asJsonObject.text("tag") == next }) next += "_"
             out.addProperty("tag", next); return next
         }
@@ -72,7 +72,7 @@ object ClientCoreOptions {
                     addProperty("type", "field"); addProperty("network", "tcp,udp"); addProperty("outboundTag", proxyTag)
                 }) }) else {
                     if (settings.directIps.isNotBlank() || settings.blockedIps.isNotBlank()) routing.addProperty("domainStrategy", "IPOnDemand")
-                    val directTag = addedTag("gdhapp-direct"); val blockTag = addedTag("gdhapp-block")
+                    val directTag = addedTag("nyawire-direct"); val blockTag = addedTag("nyawire-block")
                     outbounds.add(JsonObject().apply {
                         addProperty("tag", directTag); addProperty("protocol", "freedom")
                         // Only explicit direct rules reach this outbound, including local hostnames.
@@ -97,7 +97,7 @@ object ClientCoreOptions {
                 val route = (root.obj("route") ?: JsonObject()).also { root.add("route", it) }
                 if (settings.routingMode == RoutingMode.GLOBAL) { route.add("rules", JsonArray()); route.addProperty("final", proxyTag) }
                 else {
-                    val directTag = addedTag("gdhapp-direct")
+                    val directTag = addedTag("nyawire-direct")
                     outbounds.add(JsonObject().apply { addProperty("tag", directTag); addProperty("type", "direct") })
                     val rules = JsonArray()
                     if (settings.directDomains.isNotBlank() || settings.blockedDomains.isNotBlank()) rules.add(JsonObject().apply { addProperty("action", "sniff"); addProperty("timeout", "300ms") })
@@ -112,7 +112,7 @@ object ClientCoreOptions {
                         val existing = route.get("default_domain_resolver")?.takeIf { it.isJsonPrimitive }?.asString
                             ?: dns.text("final") ?: servers.firstOrNull()?.takeIf { it.isJsonObject }?.asJsonObject?.text("tag")
                         val resolver = existing ?: run {
-                            var name = "gdhapp-rule-dns"
+                            var name = "nyawire-rule-dns"
                             while (servers.any { it.isJsonObject && it.asJsonObject.text("tag") == name }) name += "_"
                             servers.add(JsonObject().apply { addProperty("type", "local"); addProperty("tag", name) }); name
                         }

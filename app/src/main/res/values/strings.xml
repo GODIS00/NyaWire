@@ -492,4 +492,10 @@
     <string name="lan_routing_hint">Choose how to route local addresses. Profile rules still apply.</string>
     <string name="vpn_mode_hint">Route apps through the tunnel. Local proxy is off.</string>
     <string name="proxy_mode_required">Available in VPN + Proxy or Proxy only mode.</string>
+    <string name="border_neon">Neon</string>
+    <string name="border_aurora">Aurora</string>
+    <string name="border_accent">Accent color</string>
+    <string name="vpn_button_style">VPN button</string>
+    <string name="background_density">Background pictures: %1$d</string>
+    <string name="background_opacity">Picture opacity: %1$d%%</string>
 </resources>

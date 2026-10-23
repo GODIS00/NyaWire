@@ -310,6 +310,14 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                         Text(AppText.text(R.string.text_size, (settings.textScale * 100).roundToInt()), fontSize = 13.sp)
                         Slider(settings.textScale, { actions.updateSettings(settings.copy(textScale = it)) }, valueRange = .85f..1.2f, steps = 6)
                         ToggleSetting(AppText.text(R.string.background_pictures), AppText.text(R.string.background_pictures_hint), settings.backgroundPictures) { actions.updateSettings(settings.copy(backgroundPictures = it)) }
+                        Text(AppText.text(R.string.vpn_button_style), fontSize = 13.sp)
+                        ChoiceChips(PowerBorder.entries, settings.powerBorder, { it.label }) { actions.updateSettings(settings.copy(powerBorder = it)) }
+                        if (settings.backgroundPictures) {
+                            Text(AppText.text(R.string.background_density, settings.backgroundDensity), fontSize = 13.sp)
+                            ChoiceChips(listOf(6, 9, 12), settings.backgroundDensity, { it.toString() }) { actions.updateSettings(settings.copy(backgroundDensity = it)) }
+                            Text(AppText.text(R.string.background_opacity, settings.backgroundOpacity), fontSize = 13.sp)
+                            Slider(settings.backgroundOpacity.toFloat(), { actions.updateSettings(settings.copy(backgroundOpacity = it.roundToInt())) }, valueRange = 4f..24f, steps = 19)
+                        }
                         ToggleSetting(AppText.text(R.string.connection_sound), AppText.text(R.string.connection_sound_hint), settings.connectionSound) { actions.updateSettings(settings.copy(connectionSound = it)) }
                         TextButton(onClick = onPreviewSound, enabled = settings.connectionSound) {
                             Icon(Icons.Rounded.PlayArrow, null, modifier = Modifier.size(18.dp))

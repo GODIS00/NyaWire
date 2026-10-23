@@ -112,7 +112,7 @@ class ThroughputBenchmarkTest {
                         assertEquals(expectedCrc, crc.value)
                         append(report, variant, mtu, "socks", round, count, SystemClock.elapsedRealtime() - started)
                         started = SystemClock.elapsedRealtime()
-                        val command = "sh /data/local/tmp/gdhapp-vpn-bulk-probe.sh $testApk $size $scheme"
+                        val command = "sh /data/local/tmp/nyawire-vpn-bulk-probe.sh $testApk $size $scheme"
                         val result = ParcelFileDescriptor.AutoCloseInputStream(InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)).bufferedReader().use { it.readText() }
                         val fields = Regex("BYTES=(\\d+) MS=(\\d+) CRC=(\\d+)").find(result)?.groupValues ?: error("Invalid transfer result: $result")
                         val transferred = fields[1].toLong()

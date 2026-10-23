@@ -41,7 +41,7 @@ object CoreConfigBuilder {
             val oldTags = root.get("inbounds")?.takeIf { it.isJsonArray }?.asJsonArray?.toList().orEmpty()
                 .mapNotNull { it.takeIf { it.isJsonObject }?.asJsonObject?.text("tag") }.toSet()
             root.add("inbounds", JsonArray().apply { add(JsonObject().apply {
-                addProperty("tag", "gdhapp-in"); addProperty("listen", "127.0.0.1"); addProperty("port", port)
+                addProperty("tag", "nyawire-in"); addProperty("listen", "127.0.0.1"); addProperty("port", port)
                 addProperty("protocol", "socks")
                 add("settings", JsonObject().apply { addProperty("auth", "noauth"); addProperty("udp", true); addProperty("ip", "127.0.0.1") })
                 add("sniffing", JsonObject().apply { addProperty("enabled", true); add("destOverride", arrayOfStrings("http", "tls", "quic")); addProperty("routeOnly", true) })
@@ -53,15 +53,15 @@ object CoreConfigBuilder {
                 }
             }
             if (nativeTun) root.getAsJsonArray("inbounds").add(JsonObject().apply {
-                addProperty("tag", "gdhapp-tun"); addProperty("protocol", "tun")
-                add("settings", JsonObject().apply { addProperty("name", "gdhapp"); addProperty("mtu", settings.mtu) })
+                addProperty("tag", "nyawire-tun"); addProperty("protocol", "tun")
+                add("settings", JsonObject().apply { addProperty("name", "nyawire"); addProperty("mtu", settings.mtu) })
                 add("sniffing", root.getAsJsonArray("inbounds")[0].asJsonObject.get("sniffing").deepCopy())
             })
             root.obj("routing")?.get("rules")?.takeIf { it.isJsonArray }?.asJsonArray?.forEach { rule ->
                 rule.takeIf { it.isJsonObject }?.asJsonObject?.get("inboundTag")?.takeIf { it.isJsonArray }?.asJsonArray?.let { tags ->
-                    if (tags.any { it.isJsonPrimitive && it.asString in oldTags }) rule.asJsonObject.add("inboundTag", arrayOfStrings("gdhapp-in"))
+                    if (tags.any { it.isJsonPrimitive && it.asString in oldTags }) rule.asJsonObject.add("inboundTag", arrayOfStrings("nyawire-in"))
                     val mapped = rule.asJsonObject.getAsJsonArray("inboundTag")
-                    if (nativeTun && mapped.any { it.asString == "gdhapp-in" } && mapped.none { it.asString == "gdhapp-tun" }) mapped.add("gdhapp-tun")
+                    if (nativeTun && mapped.any { it.asString == "nyawire-in" } && mapped.none { it.asString == "nyawire-tun" }) mapped.add("nyawire-tun")
                 }
             }
             if (nativeTun && !includeSocks) root.getAsJsonArray("inbounds").remove(0)
@@ -76,7 +76,7 @@ object CoreConfigBuilder {
                 val used = outbounds.mapNotNull { it.asJsonObject.text("tag") }.toMutableSet()
                 outbounds.forEachIndexed { index, outbound ->
                     if (outbound.asJsonObject.text("tag").isNullOrBlank()) {
-                        var tag = "gdhapp-out-$index"
+                        var tag = "nyawire-out-$index"
                         while (tag in used) tag += "_"
                         used.add(tag); outbound.asJsonObject.addProperty("tag", tag)
                     }
@@ -84,7 +84,7 @@ object CoreConfigBuilder {
             }
         } else {
             root.add("inbounds", JsonArray().apply { add(JsonObject().apply {
-                addProperty("type", "mixed"); addProperty("tag", "gdhapp-in")
+                addProperty("type", "mixed"); addProperty("tag", "nyawire-in")
                 addProperty("listen", "127.0.0.1"); addProperty("listen_port", port)
                 socksCredentials?.let { (user, password) -> add("users", JsonArray().apply {
                     add(JsonObject().apply { addProperty("username", user); addProperty("password", password) })
