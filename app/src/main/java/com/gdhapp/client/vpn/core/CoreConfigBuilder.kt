@@ -102,6 +102,7 @@ object CoreConfigBuilder {
                 addProperty("timestamp", false)
             })
             root.obj("experimental")?.let { it.remove("clash_api"); it.remove("v2ray_api") }
+            ensureSingBoxDns(root, settings)
         }
         ClientCoreOptions.apply(root, engine, settings, geo)
         if (shareProxy && settings.hotspotEnabled) {
@@ -122,6 +123,21 @@ object CoreConfigBuilder {
             })
         }
         return PreparedCoreConfig(engine, root.toString())
+    }
+
+    /** The standalone Android core cannot use Go's /etc/resolv.conf fallback (localhost:53). */
+    private fun ensureSingBoxDns(root: JsonObject, settings: ClientSettings) {
+        val dns = root.obj("dns") ?: JsonObject().also { root.add("dns", it) }
+        val servers = dns.get("servers")?.takeIf { it.isJsonArray }?.asJsonArray
+        if (servers != null && servers.size() > 0) return // Keep the imported profile's DNS policy.
+        require(com.gdhapp.client.vpn.NetworkRoutes.isLiteralAddress(settings.dnsPrimary)) { AppText.text(R.string.primary_dns_must_be_an_ip_address) }
+        val tag = "nyawire-bootstrap-dns"
+        dns.add("servers", JsonArray().apply { add(JsonObject().apply {
+            addProperty("type", "udp"); addProperty("tag", tag); addProperty("server", settings.dnsPrimary)
+        }) })
+        if (!dns.has("final")) dns.addProperty("final", tag)
+        val route = root.obj("route") ?: JsonObject().also { root.add("route", it) }
+        if (!route.has("default_domain_resolver")) route.addProperty("default_domain_resolver", tag)
     }
 
     private val convertibleRuleKeys = setOf("type", "outboundTag", "ruleTag", "inboundTag", "domain", "ip", "port", "network", "protocol")

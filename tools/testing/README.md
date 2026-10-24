@@ -58,6 +58,20 @@ Xray-сервера: профиль Xray, нативный JSON sing-box и от
 данные. До патча этот тест не получал HTTP-ответ; с исправленным ядром проходит.
 `NativeCoreTest` дополнительно проверяет версию `1.14.3-nyawire.1`.
 
+В 2.12.5 `HysteriaConnectionTest` также проверяет обе стороны совместимости с
+Xray-сервером и подключение по `hy2.fixture.test` из JSON и share link. Локальный
+DNS возвращает адрес тестового сервера; его порт непривилегированный. Тест
+сначала генерирует обычный production-конфиг, затем меняет только порт DNS для
+fixture. Внешние DNS-серверы для этих проверок не нужны. `SingBoxDnsTest`
+проверяет настройку DNS, режим IPv4 и сохранение импортированной DNS-политики.
+`VpnServiceIntegrationTest` проверяет и включённую проверку при подключении.
+
+`RemoteCoreDiagnosticTest` запускается только с runtime-параметром `profileFile`
+из `/data/local/tmp/`. Тест сравнивает GET/HEAD и Default/KeepAlive на двух ядрах,
+маскирует данные доступа и не хранит профили в APK. `udpRelayPort` — необязательный
+порт локального диагностического UDP-реле. Данные реального сервера не следует
+добавлять в assets, исходники и source ZIP.
+
 ```powershell
 adb -s emulator-5558 shell am instrument -w -r -e class com.gdhapp.client.RealityConnectionTest,com.gdhapp.client.HysteriaConnectionTest,com.gdhapp.client.NativeCoreTest,com.gdhapp.client.RoutingRulesCoreTest com.gdhapp.client.test/androidx.test.runner.AndroidJUnitRunner
 ```

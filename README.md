@@ -48,7 +48,7 @@ Kill Switch удерживает туннель при сбое ядра. Защ
 
 ## Исходники
 
-[Полный проект 2.12.4](https://github.com/GODIS00/NyaWire/releases/download/v2.12.4/NyaWire-2.12.4-source.zip) — код приложения, встроенные библиотеки и скрипты сборки.
+[Полный проект 2.12.5](https://github.com/GODIS00/NyaWire/releases/download/v2.12.5/NyaWire-2.12.5-source.zip) — код приложения, встроенные библиотеки и скрипты сборки.
 
 Лицензия — [GPL-3.0](LICENSE). Лицензии сторонних компонентов — [THIRD_PARTY.md](THIRD_PARTY.md).
 

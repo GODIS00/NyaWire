@@ -95,7 +95,8 @@ class RoutingPresetsTest {
         assertEquals("secret", outbounds[0].get("password").asString); assertEquals("salamander", outbounds[0].getAsJsonObject("obfs").get("type").asString)
         // sing-box's QUIC clients refuse uTLS, so the panel's fingerprint must not turn it on.
         assertFalse(outbounds[0].getAsJsonObject("tls").has("utls"))
-        assertFalse(root.has("routing")); assertFalse(root.has("dns"))
+        assertFalse(root.has("routing"))
+        assertEquals("udp", root.getAsJsonObject("dns").getAsJsonArray("servers")[0].asJsonObject.get("type").asString)
         val rules = root.getAsJsonObject("route").getAsJsonArray("rules").map { it.asJsonObject }
         assertEquals("sniff", rules[0].get("action").asString)
         assertEquals("[\"bittorrent\"]", rules[1].get("protocol").toString()); assertEquals("reject", rules[1].get("action").asString)

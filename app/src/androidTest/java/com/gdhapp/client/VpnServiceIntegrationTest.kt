@@ -32,10 +32,11 @@ import java.net.ServerSocket
 class VpnServiceIntegrationTest {
     @Test fun xrayForwardsActualTunPacketsAndStopsCleanly() { verifyTun(CoreEngine.XRAY) }
     @Test fun singBoxForwardsActualTunPacketsAndStopsCleanly() { verifyTun(CoreEngine.SING_BOX) }
+    @Test fun singBoxVerifiesConnectionBeforeMarkingConnected() { verifyTun(CoreEngine.SING_BOX, verifyConnection = true) }
 
     @Test fun xrayCompatibilityBridgeForwardsWithoutPublicSocks() { verifyTun(CoreEngine.XRAY, compatibility = true) }
 
-    private fun verifyTun(engine: CoreEngine, compatibility: Boolean = false) = runBlocking {
+    private fun verifyTun(engine: CoreEngine, compatibility: Boolean = false, verifyConnection: Boolean = false) = runBlocking {
         assumeTrue("TUN fixture must only run on an emulator", Build.FINGERPRINT.contains("generic") || Build.MODEL.contains("sdk"))
         val app = ApplicationProvider.getApplicationContext<GdhappApplication>()
         assertNull("Grant ACTIVATE_VPN to the emulator fixture before running", VpnService.prepare(app))
@@ -58,7 +59,7 @@ class VpnServiceIntegrationTest {
         val raw = profile.toString()
         try {
             server.startLoop(serverConfig, 0)
-            app.settings.update { original.copy(coreEngine = engine, xrayCompatibilityMode = compatibility, bypassLan = false, verifyOnConnect = false,
+            app.settings.update { original.copy(coreEngine = engine, xrayCompatibilityMode = compatibility, bypassLan = false, verifyOnConnect = verifyConnection,
                 perAppMode = PerAppMode.ALL, appPackages = emptySet(), localSocksPort = 0, localSocksEnabled = false,
                 probeMethod = ProbeMethod.HTTP_GET, probeConnectionMode = ProbeConnectionMode.KEEP_ALIVE,
                 probeSamples = 2, probeUrl = "http://10.0.2.2:18080/health") }
