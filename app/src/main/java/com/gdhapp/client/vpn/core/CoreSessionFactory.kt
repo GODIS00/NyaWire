@@ -39,9 +39,19 @@ class CoreSessionFactory(private val context: Context) {
     private val routingAssets = BundledRoutingAssets(context, coreDirectory)
     val singboxExecutable get() = File(context.applicationInfo.nativeLibraryDir, "libsingbox_exec.so")
 
+    private val geo = GeoData(coreDirectory)
+    @Volatile private var geoInstalled = false
+
+    /** Bundled geodata, installed once per process; Xray reads the same files from this directory. */
+    @Synchronized
+    fun geoData(): GeoData {
+        if (!geoInstalled || !routingAssets.filesPresent()) { routingAssets.install(); geoInstalled = true }
+        return geo
+    }
+
     @Synchronized
     fun initializeXray() {
-        if (!xrayInitialized || !routingAssets.filesPresent()) routingAssets.install()
+        if (!xrayInitialized || !routingAssets.filesPresent()) { routingAssets.install(); geoInstalled = true }
         if (xrayInitialized) return
         Seq.setContext(context.applicationContext)
         Libv2ray.initCoreEnv(coreDirectory.absolutePath, "")
@@ -64,7 +74,7 @@ class CoreSessionFactory(private val context: Context) {
         val credentials = if (internalOnly) UUID.randomUUID().toString().replace("-", "") to UUID.randomUUID().toString().replace("-", "") else null
         val candidatePort = if (!forProbe && !internalOnly && settings.localSocksPort != 0) settings.localSocksPort
             else if (!forProbe && publicProxy) 10808 else ServerSocket(0).use { it.localPort }
-        val config = CoreConfigBuilder.build(raw, settings, candidatePort, nativeTun = tunFd > 0, includeSocks = !internalOnly, socksCredentials = credentials, shareProxy = !forProbe)
+        val config = CoreConfigBuilder.build(raw, settings, candidatePort, nativeTun = tunFd > 0, includeSocks = !internalOnly, socksCredentials = credentials, shareProxy = !forProbe, geo = geoData())
         val noListener = internalOnly && config.engine == CoreEngine.XRAY && tunFd > 0
         val port = if (noListener) 0 else candidatePort
         var opened: ProxySession? = null

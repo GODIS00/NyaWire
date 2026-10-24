@@ -46,6 +46,31 @@ enum class ConnectionMode { VPN, PROXY;
 enum class RoutingMode { PROFILE, GLOBAL, RULES;
     val label get() = AppText.text(when (this) { PROFILE -> R.string.routing_profile; GLOBAL -> R.string.routing_global; RULES -> R.string.routing_rules })
 }
+enum class RouteTarget { BLOCK, PROXY, DIRECT }
+
+/**
+ * A routing profile imported from a Happ link. Entries keep Xray syntax (`geosite:`, `domain:`, `full:`,
+ * `keyword:`, `regexp:`, plain substrings; `geoip:` and CIDR); categories absent from the bundled data are in [skipped].
+ */
+@androidx.compose.runtime.Immutable
+data class ImportedRouting(
+    val name: String = "",
+    val enabled: Boolean = true,
+    val globalProxy: Boolean = true,
+    val order: List<RouteTarget> = RouteTarget.entries,
+    val domainStrategy: String = "IPIfNonMatch",
+    val directSites: List<String> = emptyList(),
+    val directIps: List<String> = emptyList(),
+    val proxySites: List<String> = emptyList(),
+    val proxyIps: List<String> = emptyList(),
+    val blockSites: List<String> = emptyList(),
+    val blockIps: List<String> = emptyList(),
+    val skipped: List<String> = emptyList(),
+) {
+    val directCount get() = directSites.size + directIps.size
+    val proxyCount get() = proxySites.size + proxyIps.size
+    val blockCount get() = blockSites.size + blockIps.size
+}
 
 @androidx.compose.runtime.Immutable
 data class ClientSettings(
@@ -81,6 +106,9 @@ data class ClientSettings(
     val directIps: String = "",
     val blockedDomains: String = "",
     val blockedIps: String = "",
+    val routeRussiaDirect: Boolean = false,
+    val blockAds: Boolean = false,
+    val importedRouting: ImportedRouting? = null,
     val fragmentEnabled: Boolean = false,
     val fragmentLength: String = "100-200",
     val fragmentInterval: String = "10-20",

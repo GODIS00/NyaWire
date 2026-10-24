@@ -12,7 +12,7 @@ import com.google.gson.JsonParser
 data class PreparedCoreConfig(val engine: CoreEngine, val json: String)
 
 object CoreConfigBuilder {
-    fun build(raw: String, settings: ClientSettings, port: Int, nativeTun: Boolean = false, includeSocks: Boolean = true, socksCredentials: Pair<String, String>? = null, shareProxy: Boolean = false): PreparedCoreConfig {
+    fun build(raw: String, settings: ClientSettings, port: Int, nativeTun: Boolean = false, includeSocks: Boolean = true, socksCredentials: Pair<String, String>? = null, shareProxy: Boolean = false, geo: GeoData? = null): PreparedCoreConfig {
         val root = runCatching { JsonParser.parseString(raw).asJsonObject.deepCopy() }
             .getOrElse { throw IllegalArgumentException(AppText.text(R.string.the_configuration_is_not_a_json_object)) }
         require(root.get("demo")?.asBoolean != true) { AppText.text(R.string.demo_configurations_were_removed_add_your_own) }
@@ -96,7 +96,7 @@ object CoreConfigBuilder {
             })
             root.obj("experimental")?.let { it.remove("clash_api"); it.remove("v2ray_api") }
         }
-        ClientCoreOptions.apply(root, engine, settings)
+        ClientCoreOptions.apply(root, engine, settings, geo)
         if (shareProxy && settings.hotspotEnabled) {
             require(settings.hotspotUser.isNotBlank() && settings.hotspotPassword.length >= 8 && settings.hotspotPort in 1024..65535 && settings.hotspotPort != port) { AppText.text(R.string.hotspot_credentials_error) }
             root.getAsJsonArray("inbounds").add(JsonObject().apply {

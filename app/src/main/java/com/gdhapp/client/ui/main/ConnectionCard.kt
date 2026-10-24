@@ -49,6 +49,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -143,6 +146,10 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
     val ripple = if (motion) ambient.animateFloat(0f, 1f, infiniteRepeatable(tween(3200, easing = LinearEasing)),
         label = "powerRipple") else remember { mutableFloatStateOf(0f) }
     val press = remember { Animatable(1f) }
+    // Lean toward the finger, in degrees around each axis.
+    val tiltX = remember { Animatable(0f) }
+    val tiltY = remember { Animatable(0f) }
+    val dark = com.gdhapp.client.ui.theme.isDarkAppearance(settings)
     val burst = remember { Animatable(1f) }
     val drain = remember { Animatable(1f) }
     val pop = remember { Animatable(1f) }
@@ -159,26 +166,59 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
     }
     // Own press tracking: inside the scrolling list the clickable reports presses late, so a quick tap never showed.
     // The Final pass sees the list's scroll consumption, which releases the button as soon as a drag starts.
+    // How far the key is down, 0..1; the dome and icon sink by up to 4 dp.
+    fun held() = ((1f - press.value) / .05f).coerceIn(0f, 1f)
     val pressInput = if (motion) Modifier.pointerInput(Unit) {
         var release: Job? = null
         awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
+            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
             release?.cancel()
-            val dip = scope.launch { press.animateTo(.9f, tween(110, easing = FastOutSlowInEasing)) }
+            // Like a physical key, the side under the finger goes down first.
+            val dx = (down.position.x / size.width * 2f - 1f).coerceIn(-1f, 1f)
+            val dy = (down.position.y / size.height * 2f - 1f).coerceIn(-1f, 1f)
+            val dip = scope.launch {
+                launch { tiltX.animateTo(-dy * 12f, tween(130, easing = FastOutSlowInEasing)) }
+                launch { tiltY.animateTo(dx * 12f, tween(130, easing = FastOutSlowInEasing)) }
+                press.animateTo(.95f, tween(110, easing = FastOutSlowInEasing))
+            }
             waitForUpOrCancellation(PointerEventPass.Final)
-            release = scope.launch { dip.join(); press.animateTo(1f, spring(dampingRatio = .42f, stiffness = 380f)) }
+            release = scope.launch {
+                dip.join()
+                launch { tiltX.animateTo(0f, spring(dampingRatio = .45f, stiffness = 300f)) }
+                launch { tiltY.animateTo(0f, spring(dampingRatio = .45f, stiffness = 300f)) }
+                press.animateTo(1f, spring(dampingRatio = .42f, stiffness = 380f))
+            }
         }
     } else Modifier
-    Box(Modifier.size(216.dp).graphicsLayer { scaleX = press.value; scaleY = press.value }.drawBehind {
+    Box(Modifier.size(216.dp).graphicsLayer {
+        scaleX = press.value; scaleY = press.value
+        rotationX = tiltX.value; rotationY = tiltY.value; cameraDistance = 14f * density
+    }.drawBehind {
         val c = center
         val ring = 92.dp.toPx()
         val fill = 84.dp.toPx()
+        val bezel = 101.dp.toPx()
         val l = lit.value
         val k = comet.value
         val b = breath.value
-        val held = ((1f - press.value) / .1f).coerceIn(0f, 1f)
+        val held = held()
         val glow = .12f + .18f * l + .08f * k
         val brush = Brush.sweepGradient(colors + colors.first(), center = c)
+        val corner = Offset(c.x - bezel, c.y - bezel)
+        val opposite = Offset(c.x + bezel, c.y + bezel)
+        // Shadow cast on the surface below; it tightens as the key goes down.
+        val ground = Offset(c.x, c.y + 12.dp.toPx() * (1f - .5f * held))
+        drawCircle(Brush.radialGradient(.72f to Color.Black.copy(alpha = if (dark) .55f else .2f), 1f to Color.Transparent,
+            center = ground, radius = bezel + 16.dp.toPx()), radius = bezel + 16.dp.toPx(), center = ground)
+        // Raised bezel lit from the upper left, with a groove cut in for the light ring.
+        val bezelLight = if (dark) Color(0xFF50576F) else Color.White
+        val bezelShade = if (dark) Color(0xFF07080D) else Color(0xFFC2C7D5)
+        drawCircle(Brush.linearGradient(listOf(bezelLight, bezelShade), start = corner, end = opposite), radius = bezel)
+        drawCircle(Brush.linearGradient(listOf(bezelShade, androidx.compose.ui.graphics.lerp(bezelShade, bezelLight, .45f)), start = corner, end = opposite),
+            radius = 97.dp.toPx())
+        // Light catching the outer edge on the upper left.
+        drawCircle(Brush.linearGradient(listOf(Color.White.copy(alpha = if (dark) .32f else .9f), Color.Transparent), start = corner, end = c),
+            radius = bezel - .75.dp.toPx(), style = Stroke(1.5.dp.toPx()))
         rotate(angle.floatValue) {
             // Ripples radiating out of the ring while connected.
             if (l > 0f) for (i in 0 until 2) {
@@ -188,17 +228,35 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
             }
             drawCircle(brush, radius = ring, style = Stroke(24.dp.toPx()), alpha = glow * (.35f + .35f * l * b))
         }
-        val dark = Color(0xFF111522)
-        drawCircle(Brush.linearGradient(listOf(androidx.compose.ui.graphics.lerp(dark, colors.first(), .15f + .21f * l),
-            androidx.compose.ui.graphics.lerp(dark, colors.last(), .32f + .2f * l))), radius = fill)
-        // Core glow that switches on with the tunnel.
-        if (l > 0f) drawCircle(Brush.radialGradient(listOf(colors.last().copy(alpha = .3f * l), Color.Transparent), center = c,
-            radius = fill * .8f), radius = fill)
-        // Soft specular highlight, breathing slightly while connected.
-        drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = .12f + .06f * l * b), Color.Transparent),
-            center = Offset(c.x - fill * .35f, c.y - fill * .45f), radius = fill * 1.1f), radius = fill)
-        if (held > 0f) drawCircle(Color.White, radius = fill, alpha = .08f * held)
-        drawCircle(Color.White.copy(alpha = .07f), radius = fill - 3.dp.toPx(), style = Stroke(1.dp.toPx()))
+        val sink = 4.dp.toPx() * held
+        // The dome's own shadow in the groove, shorter while pressed.
+        val drop = Offset(c.x, c.y + 6.dp.toPx() - sink)
+        drawCircle(Brush.radialGradient(.82f to Color.Black.copy(alpha = .5f), 1f to Color.Transparent, center = drop, radius = fill + 7.dp.toPx()),
+            radius = fill + 7.dp.toPx(), center = drop)
+        translate(top = sink) {
+            val base = Color(0xFF111522)
+            drawCircle(Brush.linearGradient(listOf(androidx.compose.ui.graphics.lerp(base, colors.first(), .15f + .21f * l),
+                androidx.compose.ui.graphics.lerp(base, colors.last(), .32f + .2f * l))), radius = fill)
+            // Core glow that switches on with the tunnel.
+            if (l > 0f) drawCircle(Brush.radialGradient(listOf(colors.last().copy(alpha = .3f * l), Color.Transparent), center = c,
+                radius = fill * .8f), radius = fill)
+            // Sphere shading: light from the upper left falling off to a darker rim.
+            drawCircle(Brush.radialGradient(0f to Color.White.copy(alpha = .14f + .06f * l * b), .5f to Color.Transparent,
+                1f to Color.Black.copy(alpha = .45f - .1f * held), center = Offset(c.x - fill * .32f, c.y - fill * .38f), radius = fill * 1.45f), radius = fill)
+            // Light from the ring reflected along the lower edge, fading out towards the sides.
+            val reflected = androidx.compose.ui.graphics.lerp(colors.last(), Color.White, .35f).copy(alpha = .3f + .4f * l)
+            drawArc(Brush.sweepGradient(.06f to Color.Transparent, .25f to reflected, .44f to Color.Transparent, center = c), 20f, 140f, false,
+                topLeft = Offset(c.x - fill + 2.dp.toPx(), c.y - fill + 2.dp.toPx()), size = Size(fill * 2 - 4.dp.toPx(), fill * 2 - 4.dp.toPx()),
+                style = Stroke(2.5.dp.toPx(), cap = StrokeCap.Round))
+            // Soft reflection of a window on the glossy cap; dimmer while the key is down.
+            val gloss = Offset(c.x, c.y - fill * .56f)
+            scale(1f, .48f, pivot = gloss) {
+                drawCircle(Brush.radialGradient(0f to Color.White.copy(alpha = .2f * (1f - .5f * held)), .55f to Color.White.copy(alpha = .07f * (1f - .5f * held)),
+                    1f to Color.Transparent, center = gloss, radius = fill * .66f), radius = fill * .66f, center = gloss)
+            }
+            if (held > 0f) drawCircle(Color.Black, radius = fill, alpha = .12f * held)
+            drawCircle(Color.White.copy(alpha = .08f), radius = fill - 1.dp.toPx(), style = Stroke(1.dp.toPx()))
+        }
         rotate(angle.floatValue) {
             val dim = 1f - k * .7f
             drawCircle(brush, radius = ring, style = Stroke(8.dp.toPx()), alpha = glow * dim)
@@ -232,7 +290,13 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
             Box(Modifier.fillMaxSize().clip(CircleShape).then(pressInput)
                 .clickable(null, if (motion) null else LocalIndication.current, role = Role.Button, onClick = onClick),
                 contentAlignment = Alignment.Center) {
-                Box(Modifier.graphicsLayer { scaleX = pop.value; scaleY = pop.value }) { content() }
+                Box(Modifier.graphicsLayer { scaleX = pop.value; scaleY = pop.value; translationY = 4.dp.toPx() * held() }) {
+                    // A soft dark copy under the icon makes it look pressed into the dome.
+                    Box(Modifier.offset(y = 1.5.dp).graphicsLayer { alpha = .38f }.clearAndSetSemantics { }) {
+                        CompositionLocalProvider(LocalContentColor provides Color.Black) { content() }
+                    }
+                    content()
+                }
             }
         }
     }

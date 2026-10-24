@@ -36,6 +36,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Routing profiles from providers that publish Happ links. The app asks before applying one. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="happ" android:host="routing" />
+            </intent-filter>
         </activity>
         <activity android:name=".quicksettings.QuickConnectActivity" android:exported="false"
             android:excludeFromRecents="true" android:taskAffinity="" android:theme="@style/Theme.NyaWire.QuickConnect" />

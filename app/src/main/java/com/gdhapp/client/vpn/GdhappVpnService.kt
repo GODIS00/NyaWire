@@ -132,7 +132,7 @@ class GdhappVpnService : VpnService() {
                     require(NetworkRoutes.isLiteralAddress(settings.dnsPrimary)) { AppText.text(R.string.primary_dns_must_be_an_ip_address) }
                     require(settings.dnsSecondary.isBlank() || NetworkRoutes.isLiteralAddress(settings.dnsSecondary)) { AppText.text(R.string.secondary_dns_must_be_an_ip_address) }
                     require(settings.ipv6 || ':' !in (settings.dnsPrimary + settings.dnsSecondary)) { AppText.text(R.string.enable_ipv6_in_vpn_settings_to_use) }
-                    CoreConfigBuilder.build(config, settings, 10808)
+                    CoreConfigBuilder.build(config, settings, 10808, geo = app.coreSessions.geoData())
                     val builder = Builder().setSession("NyaWire").setMtu(settings.mtu)
                         .addAddress("10.77.0.2", 30).addDnsServer(settings.dnsPrimary).setBlocking(false)
                     settings.dnsSecondary.takeIf { it.isNotBlank() }?.let(builder::addDnsServer)

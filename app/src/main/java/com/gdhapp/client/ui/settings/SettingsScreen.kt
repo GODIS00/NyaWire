@@ -213,7 +213,51 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                     item(key = "settings-content:9", contentType = "settings-content") { SettingsSection(AppText.text(R.string.routing_mode), Icons.AutoMirrored.Rounded.AltRoute) {
                         ChoiceChips(RoutingMode.entries, settings.routingMode, { it.label }) { actions.updateSettings(settings.copy(routingMode = it)) }
                         SettingsHint(AppText.text(R.string.routing_rules_hint))
-                        if (settings.routingMode == RoutingMode.RULES) {
+                    } }
+                    item(key = "settings-content:31", contentType = "settings-content") { SettingsSection(AppText.text(R.string.routing_presets), Icons.Rounded.AutoAwesome) {
+                        // A set shows as on only where it applies; turning one on selects client rules.
+                        val rules = settings.routingMode == RoutingMode.RULES
+                        fun preset(on: Boolean, change: (ClientSettings) -> ClientSettings) =
+                            actions.updateSettings(change(settings).let { if (on) it.copy(routingMode = RoutingMode.RULES) else it })
+                        ToggleSetting(AppText.text(R.string.preset_russia_direct), AppText.text(R.string.preset_russia_direct_hint), rules && settings.routeRussiaDirect) { on ->
+                            preset(on) { it.copy(routeRussiaDirect = on) }
+                        }
+                        ToggleSetting(AppText.text(R.string.preset_block_ads), AppText.text(R.string.preset_block_ads_hint), rules && settings.blockAds) { on ->
+                            preset(on) { it.copy(blockAds = on) }
+                        }
+                        SettingsHint(AppText.text(R.string.routing_presets_hint))
+                    } }
+                    item(key = "settings-content:32", contentType = "settings-content") { SettingsSection(AppText.text(R.string.happ_routing), Icons.Rounded.CloudDownload) {
+                        val imported = settings.importedRouting
+                        if (imported == null) SettingsHint(AppText.text(R.string.happ_routing_hint)) else {
+                            Text(imported.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            com.gdhapp.client.ui.main.RoutingSummary(imported)
+                            ToggleSetting(AppText.text(R.string.happ_routing_use), AppText.text(R.string.happ_routing_use_hint),
+                                imported.enabled && settings.routingMode == RoutingMode.RULES) { on ->
+                                actions.updateSettings(settings.copy(importedRouting = imported.copy(enabled = on),
+                                    routingMode = if (on) RoutingMode.RULES else settings.routingMode))
+                            }
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = actions.pasteRouting, modifier = Modifier.weight(1f)) {
+                                Icon(Icons.Rounded.ContentPaste, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp))
+                                Text(AppText.text(R.string.happ_routing_paste), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                            OutlinedButton(onClick = {
+                                editor = TextEditor(AppText.text(R.string.happ_routing_link), "", "happ://routing/add/…", { text ->
+                                    runCatching { com.gdhapp.client.data.HappRoutingParser.parse(text) }.exceptionOrNull()?.message
+                                }, actions.importRouting, multiline = true)
+                            }, modifier = Modifier.weight(1f)) {
+                                Text(AppText.text(if (imported == null) R.string.happ_routing_enter else R.string.happ_routing_replace), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                        if (imported != null) TextButton(onClick = { actions.updateSettings(settings.copy(importedRouting = null)) }) {
+                            Text(AppText.text(R.string.happ_routing_delete), fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
+                        }
+                    } }
+                    item(key = "settings-content:33", contentType = "settings-content") {
+                        SettingsSection(AppText.text(R.string.own_rules), Icons.Rounded.EditNote) {
+                            if (settings.routingMode != RoutingMode.RULES) SettingsHint(AppText.text(R.string.own_rules_hint))
                             fun editRules(title: String, value: String, ip: Boolean, save: (String) -> Unit) {
                                 editor = TextEditor(title, value, if (ip) "192.0.2.0/24\n2001:db8::/32" else "example.com\n*.example.org", { text ->
                                     runCatching { if (ip) com.gdhapp.client.vpn.core.ClientCoreOptions.ips(text) else com.gdhapp.client.vpn.core.ClientCoreOptions.domains(text) }.exceptionOrNull()?.message
@@ -231,7 +275,6 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                             EditSetting(AppText.text(R.string.blocked_ips), AppText.text(R.string.one_rule_per_line), "${com.gdhapp.client.vpn.core.ClientCoreOptions.lines(settings.blockedIps).size}") {
                                 editRules(AppText.text(R.string.blocked_ips), settings.blockedIps, true) { actions.updateSettings(settings.copy(blockedIps = it)) }
                             }
-                        }
                     } }
                     item(key = "settings-content:5", contentType = "settings-content") { SettingsSection(AppText.text(R.string.per_app_vpn), Icons.Rounded.Apps) {
                         ChoiceChips(PerAppMode.entries, settings.perAppMode, { it.label }) { actions.updateSettings(settings.copy(perAppMode = it)) }

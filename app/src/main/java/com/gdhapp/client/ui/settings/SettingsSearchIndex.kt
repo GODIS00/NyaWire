@@ -12,7 +12,7 @@ internal data class SettingsSearchTarget(val category: Int, val key: String, val
 }
 
 internal val settingsContentKeys = mapOf(
-    0 to listOf(1, 2, 6, 27, 24, 28), 5 to listOf(3, 4, 29), 6 to listOf(7), 4 to listOf(30, 9, 5, 10),
+    0 to listOf(1, 2, 6, 27, 24, 28), 5 to listOf(3, 4, 29), 6 to listOf(7), 4 to listOf(30, 9, 31, 32, 33, 5, 10),
     1 to listOf(12, 14, 26, 15, 16), 2 to listOf(17, 18, 19), 3 to listOf(20, 25, 21, 23),
 ).mapValues { (_, ids) -> ids.map { "settings-content:$it" } }
 
@@ -25,6 +25,10 @@ internal val settingsSearchTargets = listOf(
     SettingsSearchTarget(5, "settings-content:29", R.string.keep_awake),
     SettingsSearchTarget(5, "settings-content:4", R.string.ip_type),
     SettingsSearchTarget(4, "settings-content:30", R.string.local_network),
+    SettingsSearchTarget(4, "settings-content:31", R.string.routing_presets, listOf(R.string.preset_russia_direct, R.string.preset_block_ads)),
+    SettingsSearchTarget(4, "settings-content:31", R.string.preset_russia_direct, listOf(R.string.preset_russia_direct_hint)),
+    SettingsSearchTarget(4, "settings-content:31", R.string.preset_block_ads, listOf(R.string.preset_block_ads_hint)),
+    SettingsSearchTarget(4, "settings-content:32", R.string.happ_routing, listOf(R.string.happ_routing_hint, R.string.happ_routing_link)),
     SettingsSearchTarget(1, "settings-content:26", R.string.block_colors, listOf(R.string.block_colors_hint, R.string.custom_color, R.string.graphite)),
     SettingsSearchTarget(3, "settings-content:25", R.string.app_update_check, listOf(R.string.app_update_title)),
     SettingsSearchTarget(1, "settings-content:16", R.string.connection_sound, listOf(R.string.connection_sound_hint)),
@@ -46,10 +50,10 @@ internal val settingsSearchTargets = listOf(
     SettingsSearchTarget(6, "settings-content:7", R.string.auto_update_subscriptions, listOf(R.string.auto_update_subscriptions, R.string.update_when_opened, R.string.uses_the_interval_provided_by_the_subscription, R.string.import_xray_and_sing_box_json_base64, R.string.auto_update_hint, R.string.from_subscription, R.string.hours_interval)),
     SettingsSearchTarget(6, "settings-content:7", R.string.update_when_opened, listOf(R.string.auto_update_subscriptions, R.string.update_when_opened, R.string.uses_the_interval_provided_by_the_subscription, R.string.import_xray_and_sing_box_json_base64, R.string.auto_update_hint, R.string.from_subscription, R.string.hours_interval)),
     SettingsSearchTarget(4, "settings-content:9", R.string.routing_mode, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
-    SettingsSearchTarget(4, "settings-content:9", R.string.direct_domains, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
-    SettingsSearchTarget(4, "settings-content:9", R.string.direct_ips, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
-    SettingsSearchTarget(4, "settings-content:9", R.string.blocked_domains, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
-    SettingsSearchTarget(4, "settings-content:9", R.string.blocked_ips, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
+    SettingsSearchTarget(4, "settings-content:33", R.string.direct_domains, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
+    SettingsSearchTarget(4, "settings-content:33", R.string.direct_ips, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
+    SettingsSearchTarget(4, "settings-content:33", R.string.blocked_domains, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
+    SettingsSearchTarget(4, "settings-content:33", R.string.blocked_ips, listOf(R.string.routing_mode, R.string.routing_rules_hint, R.string.direct_domains, R.string.one_rule_per_line, R.string.direct_ips, R.string.blocked_domains, R.string.blocked_ips)),
     SettingsSearchTarget(4, "settings-content:10", R.string.fragmentation, listOf(R.string.fragmentation, R.string.fragment_hint, R.string.fragment_length, R.string.fragment_range_hint, R.string.invalid_fragment_range, R.string.fragment_interval)),
     SettingsSearchTarget(4, "settings-content:10", R.string.fragment_length, listOf(R.string.fragmentation, R.string.fragment_hint, R.string.fragment_length, R.string.fragment_range_hint, R.string.invalid_fragment_range, R.string.fragment_interval)),
     SettingsSearchTarget(4, "settings-content:10", R.string.fragment_interval, listOf(R.string.fragmentation, R.string.fragment_hint, R.string.fragment_length, R.string.fragment_range_hint, R.string.invalid_fragment_range, R.string.fragment_interval)),

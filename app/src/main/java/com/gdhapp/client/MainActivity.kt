@@ -49,21 +49,31 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 
 class MainActivity : ComponentActivity() {
+    // A happ://routing link that opened the app; the screen consumes it once.
+    private val routingLink = mutableStateOf<String?>(null)
+
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(com.gdhapp.client.i18n.AppText.wrap(newBase))
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (savedInstanceState == null) routingLink.value = routingLinkOf(intent)
         setContent {
             val mainViewModel: MainViewModel = viewModel(factory = MainViewModel.Factory(application as GdhappApplication))
-            MainRoute(mainViewModel)
+            MainRoute(mainViewModel, routingLink)
         }
     }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        routingLinkOf(intent)?.let { routingLink.value = it }
+    }
+    private fun routingLinkOf(intent: Intent?) = intent?.takeIf { it.action == Intent.ACTION_VIEW }?.dataString
+        ?.takeIf(com.gdhapp.client.data.HappRoutingParser::isRoutingLink)
 }
 
 @Composable
-private fun MainRoute(viewModel: MainViewModel) {
+private fun MainRoute(viewModel: MainViewModel, routingLink: MutableState<String?>) {
     val context = LocalContext.current
     val view = LocalView.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -76,6 +86,9 @@ private fun MainRoute(viewModel: MainViewModel) {
             viewModel.checkCoreVersions()
             (context as? Activity)?.recreate()
         }
+    }
+    LaunchedEffect(routingLink.value) {
+        routingLink.value?.let { link -> routingLink.value = null; viewModel.importRouting(link) }
     }
     val snackbar = remember { SnackbarHostState() }
     val pending = remember { mutableStateOf<String?>(null) }
@@ -164,6 +177,13 @@ private fun MainRoute(viewModel: MainViewModel) {
             deleteNode = viewModel::removeNode,
             renameGroup = viewModel::renameGroup,
             importText = viewModel::importText,
+            importRouting = { viewModel.importRouting(it) },
+            pasteRouting = {
+                val clip = (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip
+                viewModel.importRouting(if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(context)?.toString().orEmpty() else "")
+            },
+            confirmRouting = viewModel::confirmRouting,
+            dismissRouting = viewModel::dismissRouting,
             probeGroup = { viewModel.testLatency(groupId = it) },
             probeNode = { viewModel.testLatency(nodeId = it) },
             probeAll = { viewModel.testLatency() },

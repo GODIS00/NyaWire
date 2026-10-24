@@ -249,6 +249,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
             text = { SelectionContainer { Text((state.vpnState as? VpnState.Error)?.message ?: AppText.text(R.string.no_errors)) } },
             confirmButton = { TextButton(onClick = { showError = false; tab = 2 }) { Text(AppText.text(R.string.vpn_settings)) } },
             dismissButton = { TextButton(onClick = { showError = false }) { Text(AppText.text(R.string.close)) } })
+        state.pendingRouting?.let { RoutingImportDialog(it, actions.confirmRouting, actions.dismissRouting) }
     }
 }
 

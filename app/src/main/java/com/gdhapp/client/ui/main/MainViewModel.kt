@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.gdhapp.client.GdhappApplication
+import com.gdhapp.client.data.HappRoutingParser
 import com.gdhapp.client.data.SettingsRepository
 import com.gdhapp.client.domain.model.ClientSettings
 import com.gdhapp.client.domain.model.ProbeMethod
@@ -65,6 +66,7 @@ data class MainUiState(
     val coreVersions: Map<String, String> = emptyMap(),
     val apps: List<AppEntry> = emptyList(),
     val loadingApps: Boolean = false,
+    val pendingRouting: com.gdhapp.client.domain.model.ImportedRouting? = null,
 ) {
     val allNodes get() = groups.flatMap { it.servers }
     val selectedNode get() = groups.firstNotNullOfOrNull { group -> group.servers.firstOrNull { it.isSelected } }
@@ -208,10 +210,23 @@ class MainViewModel(
         runAction { repository.remove(id) }
     }
     fun importText(text: String) {
+        if (HappRoutingParser.isRoutingLink(text)) { importRouting(text); return }
         if (uiState.value.importing) return
         mutableState.update { it.copy(importing = true) }
         runAction(onFinally = { mutableState.update { it.copy(importing = false) } }) { repository.importText(text); message(AppText.text(R.string.subscription_added)) }
     }
+    /** Parses a Happ routing profile and asks for confirmation before it replaces the client rules. */
+    fun importRouting(text: String) = runAction {
+        val routing = withContext(Dispatchers.IO) { HappRoutingParser.available(HappRoutingParser.parse(text), cores.geoData()) }
+        mutableState.update { it.copy(pendingRouting = routing) }
+    }
+    fun confirmRouting() {
+        val routing = uiState.value.pendingRouting ?: return
+        preferences.update { it.copy(importedRouting = routing, routingMode = com.gdhapp.client.domain.model.RoutingMode.RULES) }
+        mutableState.update { it.copy(pendingRouting = null) }
+        message(AppText.text(R.string.happ_routing_imported, routing.name))
+    }
+    fun dismissRouting() { mutableState.update { it.copy(pendingRouting = null) } }
     fun removeNode(id: String) = runAction {
         repository.removeNode(id)?.let { mutableEvents.emit(MainEvent.ServerRemoved(it)) }
     }
