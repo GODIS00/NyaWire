@@ -44,42 +44,42 @@
       "version": "2.19.1"
     },
     {
-      "archiveBinary": "sing-box-1.14.3-android-arm/sing-box",
-      "kind": "tar",
-      "version": "1.14.3",
-      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.3/sing-box-1.14.3-android-arm.tar.gz",
-      "sha256": "0c0df4fbf85656896d5b604e9eb4e556c1a3f68dd615b0ece3f9f6bd5adab5d6",
-      "embeddedSha256": "3748b66bd4e55ecfda8002fbbcc2051fa43bd20b44f0fb60e2102112a7ea4c01",
+      "archiveBinary": "armeabi-v7a/libsingbox_exec.so",
+      "kind": "zip",
+      "version": "1.14.3-nyawire.1",
+      "url": "https://github.com/GODIS00/NyaWire/releases/download/v2.12.4/sing-box-1.14.3-nyawire.1-android.zip",
+      "sha256": "dbef836e021518666b348739a86a3c58c6c3f5b7f9bad5b09d137fbee32dfc3e",
+      "embeddedSha256": "a4d4e0540524a3a3261a91f297f4c1730c575d0d5964d79f16e8e58530d5eef0",
       "name": "sing-box armeabi-v7a",
       "output": "app/src/main/jniLibs/armeabi-v7a/libsingbox_exec.so"
     },
     {
-      "archiveBinary": "sing-box-1.14.3-android-386/sing-box",
-      "kind": "tar",
-      "version": "1.14.3",
-      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.3/sing-box-1.14.3-android-386.tar.gz",
-      "sha256": "5812c457335efa711116cbc0b01a4810a95f0838ef2b1693e88bf06446160161",
-      "embeddedSha256": "c6d8a43a4cae3c6ddf5c7fac0e59de8c9c43e68ff0b3729044c95eca22a1ee56",
+      "archiveBinary": "x86/libsingbox_exec.so",
+      "kind": "zip",
+      "version": "1.14.3-nyawire.1",
+      "url": "https://github.com/GODIS00/NyaWire/releases/download/v2.12.4/sing-box-1.14.3-nyawire.1-android.zip",
+      "sha256": "dbef836e021518666b348739a86a3c58c6c3f5b7f9bad5b09d137fbee32dfc3e",
+      "embeddedSha256": "22d657a368a6e61c73dfe3661e93c7f95b72cb0d858d26a8373fcbf16d28d13b",
       "name": "sing-box x86",
       "output": "app/src/main/jniLibs/x86/libsingbox_exec.so"
     },
     {
-      "archiveBinary": "sing-box-1.14.3-android-arm64/sing-box",
-      "kind": "tar",
-      "version": "1.14.3",
-      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.3/sing-box-1.14.3-android-arm64.tar.gz",
-      "sha256": "149569b5dbf01958e6598beb3a13078d6fc0e353ef06f4aff85f5f28bc23593b",
-      "embeddedSha256": "64324301d1049474f6010b5a015d3143271a8df83bae83ae8814167ac8f74f5a",
+      "archiveBinary": "arm64-v8a/libsingbox_exec.so",
+      "kind": "zip",
+      "version": "1.14.3-nyawire.1",
+      "url": "https://github.com/GODIS00/NyaWire/releases/download/v2.12.4/sing-box-1.14.3-nyawire.1-android.zip",
+      "sha256": "dbef836e021518666b348739a86a3c58c6c3f5b7f9bad5b09d137fbee32dfc3e",
+      "embeddedSha256": "02044edf068d771567f4d9c44d03caf1eb04faccc3c30032f557a2a190dfe263",
       "name": "sing-box arm64-v8a",
       "output": "app/src/main/jniLibs/arm64-v8a/libsingbox_exec.so"
     },
     {
-      "archiveBinary": "sing-box-1.14.3-android-amd64/sing-box",
-      "kind": "tar",
-      "version": "1.14.3",
-      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.3/sing-box-1.14.3-android-amd64.tar.gz",
-      "sha256": "a84a5aea86ad0588b76e23051e9e59405a7ed52358acfb9710cfaa055fe60e4a",
-      "embeddedSha256": "25f975c79ea43cafdcf91edfa423cda6ed6d412bc82ca880d458cd1e60f490c5",
+      "archiveBinary": "x86_64/libsingbox_exec.so",
+      "kind": "zip",
+      "version": "1.14.3-nyawire.1",
+      "url": "https://github.com/GODIS00/NyaWire/releases/download/v2.12.4/sing-box-1.14.3-nyawire.1-android.zip",
+      "sha256": "dbef836e021518666b348739a86a3c58c6c3f5b7f9bad5b09d137fbee32dfc3e",
+      "embeddedSha256": "0a114a0989e39ff8150046a6d70dcf8ab7081b015e48c8f2ab7358d36b987e52",
       "name": "sing-box x86_64",
       "output": "app/src/main/jniLibs/x86_64/libsingbox_exec.so"
     },
@@ -99,5 +99,14 @@
       "sha256": "37c030c086c57da4d0987c6be836f8ae4f8957cd904cfa0bc6bb6036bb61c816",
       "version": "20261019074502"
     }
-  ]
+  ],
+  "singBoxBuild": {
+    "version": "1.14.3-nyawire.1",
+    "upstreamTag": "v1.14.3",
+    "goVersion": "1.27.3",
+    "androidNdk": "28.0.13004108",
+    "patch": "native/patches/sing-box-1.14.3-reality.patch",
+    "patchSha256": "0c15ecca4f437148833d5a8e7d2686640c876d16cf0415d633991a12c6f4d48b",
+    "script": "native/build-singbox.ps1"
+  }
 }

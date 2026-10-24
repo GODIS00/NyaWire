@@ -30,6 +30,15 @@ $universal = Join-Path $artifactDir "NyaWire-$version-universal.apk"
 $arm64 = Join-Path $artifactDir "NyaWire-$version-arm64.apk"
 $source = Join-Path $artifactDir "NyaWire-$version-source.zip"
 $checksums = Join-Path $artifactDir "SHA256SUMS-$version.txt"
+$nativeManifest = Get-Content (Join-Path $projectRoot 'native/artifacts.json') -Raw | ConvertFrom-Json
+$nativeAssets = @($nativeManifest.artifacts | Where-Object { $_.kind -eq 'zip' -and $_.url -like "https://github.com/$Repository/releases/download/v$version/*" } |
+    Group-Object url | ForEach-Object {
+        $entry = $_.Group[0]
+        $file = Join-Path $artifactDir ([IO.Path]::GetFileName(([uri]$entry.url).AbsolutePath))
+        if (-not (Test-Path -LiteralPath $file) -or (Get-FileHash -LiteralPath $file).Hash -ne $entry.sha256) { throw 'Missing or mismatched patched core archive' }
+        $file
+    })
+& (Join-Path $projectRoot 'native/fetch-native.ps1')
 foreach ($target in @($universal, $arm64, $source, $checksums)) {
     if (Test-Path -LiteralPath $target) { throw "Artifact already exists: $target" }
 }
@@ -53,13 +62,14 @@ try {
         }
     }
     & (Join-Path $PSScriptRoot 'package-source.ps1') -OutputName "NyaWire-$version-source.zip"
-    $lines = foreach ($file in @($universal, $arm64, $source)) {
+    $releaseFiles = @($universal, $arm64, $source) + $nativeAssets
+    $lines = foreach ($file in $releaseFiles) {
         $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
         "$hash  $([IO.Path]::GetFileName($file))"
     }
     [IO.File]::WriteAllLines($checksums, $lines, [Text.UTF8Encoding]::new($false))
     if ($Publish) {
-        & gh release create "v$version" $universal $arm64 $source $checksums --repo $Repository --title "NyaWire $version" --notes 'APK: arm64 for modern phones; universal for other architectures. Source and SHA-256 included.' --draft
+        & gh release create "v$version" @releaseFiles $checksums --repo $Repository --title "NyaWire $version" --notes 'APK: arm64 for modern phones; universal for other architectures. Source and SHA-256 included.' --draft
         if ($LASTEXITCODE -ne 0) { throw 'Release upload failed; any draft is left unpublished' }
         & gh release edit "v$version" --repo $Repository --draft=false --latest
         if ($LASTEXITCODE -ne 0) { throw 'Could not publish release' }

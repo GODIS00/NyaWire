@@ -49,6 +49,19 @@ UI-проверка открывает функцию через поиск и �
 После оптимизации обязательны `NativeCoreTest` и реальные TUN-проверки всех
 трёх путей: Xray native, Xray/HEV и sing-box.
 
+## sing-box REALITY (2.12.4)
+
+`RealityConnectionTest` проверяет VLESS + REALITY + Vision против встроенного
+Xray-сервера: профиль Xray, нативный JSON sing-box и отсутствие fingerprint.
+Каждый успешный сценарий передаёт HTTP и два больших HTTPS-ответа по одному
+соединению с проверкой сертификата. Неверный public key не должен пропускать
+данные. До патча этот тест не получал HTTP-ответ; с исправленным ядром проходит.
+`NativeCoreTest` дополнительно проверяет версию `1.14.3-nyawire.1`.
+
+```powershell
+adb -s emulator-5558 shell am instrument -w -r -e class com.gdhapp.client.RealityConnectionTest,com.gdhapp.client.HysteriaConnectionTest,com.gdhapp.client.NativeCoreTest,com.gdhapp.client.RoutingRulesCoreTest com.gdhapp.client.test/androidx.test.runner.AndroidJUnitRunner
+```
+
 Используется только отдельный эмулятор Android 10+; тест не добавляет подписки.
 `NativeCoreTest` и `RepositoryMigrationTest` запускаются без HTTP-сервера на ПК.
 Для `VpnServiceIntegrationTest` нужен Windows-хост и стандартный адрес эмулятора

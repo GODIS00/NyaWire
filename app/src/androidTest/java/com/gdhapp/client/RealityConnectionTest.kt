@@ -15,7 +15,13 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
+import java.net.Proxy
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 
 /** A real VLESS + REALITY + Vision round trip on loopback, with a panel-style Xray profile on both cores. */
 @RunWith(AndroidJUnit4::class)
@@ -25,13 +31,12 @@ class RealityConnectionTest {
 
     @Test fun xrayCarriesPanelRealityProfile() = roundTrip(CoreEngine.XRAY, "Xray")
 
-    /** sing-box 1.14 strips the X25519MLKEM768 share that current REALITY servers require; say so instead of failing later. */
-    @Test fun singBoxRefusesRealityWithAClearMessage() {
-        val error = runCatching { roundTrip(CoreEngine.SING_BOX, "sing-box") }.exceptionOrNull()
-        assertTrue(error.toString(), error is IllegalArgumentException && error.message.orEmpty().contains("REALITY"))
-    }
+    @Test fun singBoxCarriesPanelRealityProfile() = roundTrip(CoreEngine.SING_BOX, "sing-box")
+    @Test fun singBoxCarriesNativeRealityProfile() = roundTrip(CoreEngine.SING_BOX, "sing-box", nativeProfile = true)
+    @Test fun singBoxDefaultsMissingRealityFingerprint() = roundTrip(CoreEngine.SING_BOX, "sing-box", fingerprint = false)
+    @Test fun singBoxRejectsWrongRealityKey() = roundTrip(CoreEngine.SING_BOX, "sing-box", wrongKey = true)
 
-    private fun roundTrip(engine: CoreEngine, name: String) = runBlocking {
+    private fun roundTrip(engine: CoreEngine, name: String, nativeProfile: Boolean = false, fingerprint: Boolean = true, wrongKey: Boolean = false) = runBlocking {
         app.coreSessions.initializeXray()
         val assets = InstrumentationRegistry.getInstrumentation().context.assets
         val certificate = app.cacheDir.resolve("reality-cert.pem").apply { writeBytes(assets.open("fixture-cert.pem").use { it.readBytes() }) }
@@ -39,6 +44,10 @@ class RealityConnectionTest {
         val port = ServerSocket(0).use { it.localPort }
         val tlsPort = ServerSocket(0).use { it.localPort }
         val http = ServerSocket(0, 16, InetAddress.getByName("127.0.0.1"))
+        val fixtureTls = com.gdhapp.client.testing.FixtureTls(InstrumentationRegistry.getInstrumentation().context.applicationInfo.sourceDir)
+        val https = MockWebServer().apply { useHttps(fixtureTls.context.socketFactory, false); start(InetAddress.getByName("127.0.0.1"), 0) }
+        // TLS application data is large enough to exercise Vision's direct-copy transition.
+        val payload = "NyaWire-REALITY-0123456789\n".repeat(20000)
         thread(isDaemon = true) {
             while (!http.isClosed) runCatching { http.accept().use { client ->
                 client.getInputStream().read(ByteArray(2048))
@@ -61,18 +70,40 @@ class RealityConnectionTest {
         })
         try {
             server.startLoop(serverConfig, 0)
-            val profile = """{"outbounds":[{"tag":"proxy","protocol":"vless","settings":{"vnext":[{"address":"127.0.0.1","port":$port,
+            var profile = """{"outbounds":[{"tag":"proxy","protocol":"vless","settings":{"vnext":[{"address":"127.0.0.1","port":$port,
                 "users":[{"id":"$uuid","encryption":"none","flow":"xtls-rprx-vision"}]}]},
                 "streamSettings":{"network":"tcp","security":"reality","realitySettings":{"serverName":"localhost","fingerprint":"chrome",
                   "publicKey":"lAhm6lcHaQQZleFXYt4W8-zdDo5FYBoqIBPxtpLJTAs","shortId":"aabb","spiderX":"/"}}},
                 {"tag":"direct","protocol":"freedom"},{"tag":"block","protocol":"blackhole"}],
                 "routing":{"domainStrategy":"IPIfNonMatch","rules":[{"type":"field","protocol":["bittorrent"],"outboundTag":"block"}]}}"""
+            if (!fingerprint) profile = profile.replace("\"fingerprint\":\"chrome\",", "")
+            if (nativeProfile) profile = """{"outbounds":[{"type":"vless","tag":"proxy","server":"127.0.0.1","server_port":$port,
+                "uuid":"$uuid","flow":"xtls-rprx-vision","tls":{"enabled":true,"server_name":"localhost",
+                "utls":{"enabled":true,"fingerprint":"chrome"},"reality":{"enabled":true,
+                "public_key":"lAhm6lcHaQQZleFXYt4W8-zdDo5FYBoqIBPxtpLJTAs","short_id":"aabb"}}}]}"""
+            // A valid X25519 public key (the base point), belonging to a different private key.
+            if (wrongKey) profile = profile.replace("lAhm6lcHaQQZleFXYt4W8-zdDo5FYBoqIBPxtpLJTAs", "CQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
             app.coreSessions.open(profile, ClientSettings(coreEngine = engine), forProbe = true).use { session ->
                 assertEquals(name, session.engineName)
                 val body = fetch(session.port, http.localPort)
+                if (wrongKey) {
+                    assertNull("Wrong REALITY key must not reach the destination", body)
+                    return@use
+                }
                 assertEquals("$name through REALITY; core: ${session.errorDetail}", "ok", body)
+                val client = OkHttpClient.Builder().proxy(Proxy(Proxy.Type.SOCKS, InetSocketAddress("127.0.0.1", session.port)))
+                    .sslSocketFactory(fixtureTls.context.socketFactory, fixtureTls.trust).callTimeout(15, TimeUnit.SECONDS).build()
+                try {
+                    repeat(2) {
+                        https.enqueue(MockResponse().setBody(payload))
+                        client.newCall(Request.Builder().url(https.url("/vision-transfer").newBuilder().host("localhost").build()).build())
+                            .execute().use { response -> assertEquals(200, response.code); assertEquals(payload, response.body!!.string()) }
+                    }
+                    assertEquals(0, https.takeRequest(2, TimeUnit.SECONDS)!!.sequenceNumber)
+                    assertEquals(1, https.takeRequest(2, TimeUnit.SECONDS)!!.sequenceNumber)
+                } finally { client.connectionPool.evictAll(); client.dispatcher.executorService.shutdown() }
             }
-        } finally { runCatching { server.stopLoop() }; http.close(); certificate.delete(); key.delete() }
+        } finally { runCatching { server.stopLoop() }; http.close(); https.shutdown(); certificate.delete(); key.delete() }
     }
 
     private fun fetch(socks: Int, target: Int): String? = runCatching {

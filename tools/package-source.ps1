@@ -9,7 +9,7 @@ $output = Join-Path $projectRoot ('artifacts/' + $OutputName)
 New-Item -ItemType Directory -Path (Join-Path $projectRoot 'artifacts') -Force | Out-Null
 if (Test-Path -LiteralPath $output) { throw "Archive already exists: $output" }
 $files = [Collections.Generic.List[IO.FileInfo]]::new()
-foreach ($name in @('README.md','THIRD_PARTY.md','LICENSE','.gitignore','build.gradle.kts','settings.gradle.kts','gradle.properties','gradlew','gradlew.bat','Start-NyaWire.bat','app/build.gradle.kts','app/proguard-rules.pro')) {
+foreach ($name in @('README.md','THIRD_PARTY.md','LICENSE','.gitignore','.gitattributes','build.gradle.kts','settings.gradle.kts','gradle.properties','gradlew','gradlew.bat','Start-NyaWire.bat','app/build.gradle.kts','app/proguard-rules.pro')) {
     $files.Add((Get-Item -LiteralPath (Join-Path $projectRoot $name)))
 }
 foreach ($directory in @('app/src','app/libs','gradle','native','tools','assets')) {

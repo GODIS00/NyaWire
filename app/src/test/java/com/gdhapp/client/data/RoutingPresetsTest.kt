@@ -107,12 +107,19 @@ class RoutingPresetsTest {
         assertEquals(5, rules.size)
     }
 
-    @Test fun realityStaysOnXray() {
+    @Test fun realityUsesXrayByDefaultAndCanRunOnSingBox() {
         val reality = """{"outbounds":[{"tag":"proxy","protocol":"vless","settings":{"vnext":[{"address":"192.0.2.1","port":443,
             "users":[{"id":"11111111-1111-4111-8111-111111111111","flow":"xtls-rprx-vision"}]}]},
             "streamSettings":{"network":"tcp","security":"reality","realitySettings":{"serverName":"example.com","fingerprint":"chrome","publicKey":"fixture","shortId":"aabb"}}}]}"""
         assertEquals(CoreEngine.XRAY, CoreConfigBuilder.build(reality, ClientSettings(), 10808, geo = geo).engine)
-        assertTrue(runCatching { CoreConfigBuilder.build(reality, ClientSettings(coreEngine = CoreEngine.SING_BOX), 10808, geo = geo) }.isFailure)
+        val converted = CoreConfigBuilder.build(reality, ClientSettings(coreEngine = CoreEngine.SING_BOX), 10808, geo = geo)
+        assertEquals(CoreEngine.SING_BOX, converted.engine)
+        val outbound = JsonParser.parseString(converted.json).asJsonObject.getAsJsonArray("outbounds")[0].asJsonObject
+        assertEquals("xtls-rprx-vision", outbound.get("flow").asString)
+        assertEquals("fixture", outbound.getAsJsonObject("tls").getAsJsonObject("reality").get("public_key").asString)
+        val noFingerprint = CoreConfigBuilder.build(reality.replace("\"fingerprint\":\"chrome\",", ""), ClientSettings(coreEngine = CoreEngine.SING_BOX), 10808, geo = geo)
+        val tls = JsonParser.parseString(noFingerprint.json).asJsonObject.getAsJsonArray("outbounds")[0].asJsonObject.getAsJsonObject("tls")
+        assertEquals("chrome", tls.getAsJsonObject("utls").get("fingerprint").asString)
     }
 
     @Test fun singBoxNeedsGeodataForCategories() {

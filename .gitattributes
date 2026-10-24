@@ -1,0 +1,2 @@
+native/patches/*.patch text eol=lf -whitespace
+tools/testing/*.sh text eol=lf

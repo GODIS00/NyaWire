@@ -31,7 +31,7 @@ class NativeCoreTest {
         val versions = app.coreSessions.versions()
         assertFalse(versions.toString(), versions.values.any { it.contains("Ошибка", true) || it.contains("error", true) })
         assertTrue(versions["Xray"].orEmpty().contains("Xray"))
-        assertTrue(versions["sing-box"].orEmpty().contains("1.14.3"))
+        assertTrue(versions["sing-box"].orEmpty().contains("1.14.3-nyawire.1"))
     }
 
     @Test fun xrayCanAuthenticateAndForwardHttpGetAndHead() = verifyProxy(CoreEngine.XRAY)

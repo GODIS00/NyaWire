@@ -421,7 +421,6 @@
     <string name="this_is_a_sing_box_profile_select">Выберите ядро «Авто» или sing-box.</string>
     <string name="invalid_outbound">Некорректный outbound</string>
     <string name="this_profile_requires_xray">Для этого профиля требуется Xray</string>
-    <string name="reality_requires_xray">Актуальные серверы REALITY не принимают sing-box. Выберите «Авто» или Xray.</string>
     <string name="xhttp_requires_xray_select_auto_or_xray">XHTTP работает через Xray. Выберите «Авто» или Xray.</string>
     <string name="this_profile_uses_certificate_pinning_and_requires">Профиль с закреплением сертификата требует Xray</string>
     <string name="xray_error">Ошибка Xray: %1$s</string>
