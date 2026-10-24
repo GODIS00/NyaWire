@@ -217,7 +217,9 @@ object CoreConfigBuilder {
                     (tls.text("serverName") ?: tls.text("server_name"))?.let { addProperty("server_name", it) }
                     addProperty("insecure", tls.get("allowInsecure")?.asBoolean ?: tls.get("insecure")?.asBoolean ?: false)
                     tls.get("alpn")?.let { add("alpn", it.deepCopy()) }
-                    tls.text("fingerprint")?.let { add("utls", JsonObject().apply { addProperty("enabled", true); addProperty("fingerprint", it) }) }
+                    // uTLS only shapes TCP handshakes; sing-box's QUIC clients reject a uTLS config outright.
+                    if (protocol !in setOf("hysteria", "hysteria2", "hy2", "tuic"))
+                        tls.text("fingerprint")?.let { add("utls", JsonObject().apply { addProperty("enabled", true); addProperty("fingerprint", it) }) }
                     if (security == "reality") add("reality", JsonObject().apply {
                         addProperty("enabled", true); addProperty("public_key", tls.text("publicKey") ?: tls.text("password"))
                         addProperty("short_id", tls.text("shortId").orEmpty())

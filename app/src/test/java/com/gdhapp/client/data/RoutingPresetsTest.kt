@@ -74,7 +74,7 @@ class RoutingPresetsTest {
     @Test fun xrayPanelHysteriaProfileRunsOnSingBox() {
         val panel = """{"dns":{"servers":["1.1.1.1"]},"inbounds":[{"tag":"socks","port":10808,"protocol":"socks"}],
             "outbounds":[{"tag":"proxy","protocol":"hysteria","settings":{"version":2,"address":"hy.example.com","port":443},
-              "streamSettings":{"network":"hysteria","security":"tls","tlsSettings":{"serverName":"hy.example.com","alpn":["h3"]},
+              "streamSettings":{"network":"hysteria","security":"tls","tlsSettings":{"serverName":"hy.example.com","fingerprint":"chrome","alpn":["h3"]},
                 "hysteriaSettings":{"version":2,"auth":"secret"},"finalmask":{"udp":[{"type":"salamander","settings":{"password":"obfs"}}]}}},
               {"tag":"direct","protocol":"freedom"},{"tag":"block","protocol":"blackhole"},{"tag":"dns-out","protocol":"dns"}],
             "routing":{"domainStrategy":"IPIfNonMatch","rules":[
@@ -93,6 +93,8 @@ class RoutingPresetsTest {
         val outbounds = root.getAsJsonArray("outbounds").map { it.asJsonObject }
         assertEquals(listOf("hysteria2", "direct"), outbounds.map { it.get("type").asString })
         assertEquals("secret", outbounds[0].get("password").asString); assertEquals("salamander", outbounds[0].getAsJsonObject("obfs").get("type").asString)
+        // sing-box's QUIC clients refuse uTLS, so the panel's fingerprint must not turn it on.
+        assertFalse(outbounds[0].getAsJsonObject("tls").has("utls"))
         assertFalse(root.has("routing")); assertFalse(root.has("dns"))
         val rules = root.getAsJsonObject("route").getAsJsonArray("rules").map { it.asJsonObject }
         assertEquals("sniff", rules[0].get("action").asString)
