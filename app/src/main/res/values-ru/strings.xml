@@ -418,7 +418,6 @@
     <string name="demo_configurations_were_removed_add_your_own">Добавьте свою подписку.</string>
     <string name="the_configuration_has_no_outbounds">В конфигурации нет outbounds</string>
     <string name="the_configuration_has_no_proxy_outbound">В конфигурации нет прокси outbound</string>
-    <string name="this_profile_uses_xray_routing_rules_select">Для правил этого профиля нужен Xray.</string>
     <string name="this_is_a_sing_box_profile_select">Выберите ядро «Авто» или sing-box.</string>
     <string name="invalid_outbound">Некорректный outbound</string>
     <string name="this_profile_requires_xray">Для этого профиля требуется Xray</string>

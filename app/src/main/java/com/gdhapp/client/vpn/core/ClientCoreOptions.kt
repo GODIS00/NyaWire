@@ -169,18 +169,20 @@ object ClientCoreOptions {
         val strategy = when {
             // Hand-written IP lists keep their original on-demand lookup.
             settings.directIps.isNotBlank() || settings.blockedIps.isNotBlank() -> "IPOnDemand"
-            // Category IP rules only need a lookup when no domain rule matched.
-            groups.any { it.ips.isNotEmpty() } -> imported?.domainStrategy ?: "IPIfNonMatch"
+            // An imported profile brings its own lookup strategy for its IP rules.
+            imported != null && (imported.directIps + imported.proxyIps + imported.blockIps).isNotEmpty() -> imported.domainStrategy
+            // Preset IP rules match the connection's own address, which tunnelled traffic always has. A lookup for
+            // every unmatched name would add latency and trust the ISP's resolver, which may answer with a stub.
             else -> null
         }
         return RulePlan(groups, imported?.globalProxy == false, strategy)
     }
 
-    private fun geoData(geo: GeoData?) = geo ?: throw IllegalArgumentException(AppText.text(R.string.routing_data_unavailable))
+    internal fun geoData(geo: GeoData?) = geo ?: throw IllegalArgumentException(AppText.text(R.string.routing_data_unavailable))
     private fun strings(values: Collection<String>) = JsonArray().apply { values.forEach(::add) }
 
     /** One sing-box rule matching any of the domain entries, or null when there are none. */
-    private fun singBoxDomains(entries: List<String>, geo: GeoData?): JsonObject? {
+    internal fun singBoxDomains(entries: List<String>, geo: GeoData?): JsonObject? {
         if (entries.isEmpty()) return null
         val full = linkedSetOf<String>(); val suffix = linkedSetOf<String>(); val keyword = linkedSetOf<String>(); val regex = linkedSetOf<String>()
         for (entry in entries) {
@@ -191,8 +193,8 @@ object ClientCoreOptions {
                 "full" -> full += value
                 "keyword" -> keyword += value
                 "regexp" -> regex += value
-                // Xray matches an unprefixed entry as a substring.
-                else -> keyword += entry
+                // Xray matches an unprefixed entry as a substring; other prefixes (ext: files) have no equivalent.
+                else -> if (':' !in entry) keyword += entry
             }
         }
         return JsonObject().apply {
@@ -202,7 +204,7 @@ object ClientCoreOptions {
     }
 
     /** sing-box rules for the IP entries: address lists and private ranges, each also in an inverted (`geoip:!…`) form. */
-    private fun singBoxIps(entries: List<String>, geo: GeoData?): List<JsonObject> {
+    internal fun singBoxIps(entries: List<String>, geo: GeoData?): List<JsonObject> {
         val cidrs = mapOf(false to linkedSetOf<String>(), true to linkedSetOf())
         val private = mutableSetOf<Boolean>()
         for (entry in entries) {

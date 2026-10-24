@@ -419,7 +419,6 @@
     <string name="demo_configurations_were_removed_add_your_own">Add your subscription.</string>
     <string name="the_configuration_has_no_outbounds">The configuration has no outbounds</string>
     <string name="the_configuration_has_no_proxy_outbound">The configuration has no proxy outbound</string>
-    <string name="this_profile_uses_xray_routing_rules_select">This profile needs Xray routing.</string>
     <string name="this_is_a_sing_box_profile_select">Select Auto or sing-box.</string>
     <string name="invalid_outbound">Invalid outbound</string>
     <string name="this_profile_requires_xray">This profile requires Xray</string>

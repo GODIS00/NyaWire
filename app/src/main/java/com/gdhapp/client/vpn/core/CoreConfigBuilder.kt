@@ -29,11 +29,18 @@ object CoreConfigBuilder {
         val autoEngine = if (xrayFormat && (!quic || nativeXrayHy2)) CoreEngine.XRAY else CoreEngine.SING_BOX
         val engine = if (settings.coreEngine == CoreEngine.AUTO) autoEngine else settings.coreEngine
         if (engine == CoreEngine.SING_BOX && xrayFormat) {
-            root.add("outbounds", JsonArray().apply { outbounds.forEach { add(xrayToSingBox(it.asJsonObject)) } })
-            require(!root.has("routing") || root.obj("routing")?.get("rules")?.asJsonArray?.size() in listOf(null, 0)) {
-                AppText.text(R.string.this_profile_uses_xray_routing_rules_select)
-            }
+            // Panel profiles carry blackhole/dns helpers; in sing-box these are rule actions, not outbounds.
+            val actions = mutableMapOf<String, String>()
+            root.add("outbounds", JsonArray().apply { outbounds.forEach { item ->
+                val outbound = item.asJsonObject
+                val protocol = outbound.text("protocol")
+                if (protocol == "blackhole" || protocol == "dns") outbound.text("tag")?.let { actions[it] = protocol }
+                else add(xrayToSingBox(outbound))
+            } })
+            val tags = root.getAsJsonArray("outbounds").mapNotNull { it.asJsonObject.text("tag") }.toSet()
+            val rules = xrayRulesToSingBox(root.obj("routing"), actions, tags, geo)
             root.remove("routing"); root.remove("dns"); root.remove("policy"); root.remove("stats"); root.remove("api")
+            if (rules.size() > 0) root.add("route", JsonObject().apply { add("rules", rules) })
         } else if (engine == CoreEngine.XRAY && !xrayFormat) {
             throw IllegalArgumentException(AppText.text(R.string.this_is_a_sing_box_profile_select))
         }
@@ -115,6 +122,54 @@ object CoreConfigBuilder {
             })
         }
         return PreparedCoreConfig(engine, root.toString())
+    }
+
+    private val convertibleRuleKeys = setOf("type", "outboundTag", "ruleTag", "inboundTag", "domain", "ip", "port", "network", "protocol")
+
+    /**
+     * Xray routing rules as sing-box rules. Rules on things NyaWire's single inbound cannot tell apart
+     * (users, sources, balancers) are left out rather than guessed; inboundTag is ignored for the same reason.
+     */
+    private fun xrayRulesToSingBox(routing: JsonObject?, actions: Map<String, String>, outbounds: Set<String>, geo: GeoData?): JsonArray {
+        val result = JsonArray()
+        val rules = routing?.get("rules")?.takeIf { it.isJsonArray }?.asJsonArray ?: return result
+        var sniff = false
+        for (element in rules) {
+            val rule = element.takeIf { it.isJsonObject }?.asJsonObject ?: continue
+            if (rule.keySet().any { it !in convertibleRuleKeys }) continue
+            val tag = rule.text("outboundTag") ?: continue
+            if (actions[tag] == null && tag !in outbounds) continue
+            val conditions = JsonObject()
+            rule.get("network")?.takeIf { it.isJsonPrimitive }?.asString?.split(',')?.map { it.trim() }?.filter { it in setOf("tcp", "udp") }
+                ?.takeIf { it.isNotEmpty() }?.let { conditions.add("network", arrayOfStrings(*it.toTypedArray())) }
+            rule.get("protocol")?.takeIf { it.isJsonArray }?.asJsonArray?.map { it.asString }?.takeIf { it.isNotEmpty() }
+                ?.let { conditions.add("protocol", arrayOfStrings(*it.toTypedArray())); sniff = true }
+            rule.get("port")?.let { value ->
+                val parts = (if (value.isJsonPrimitive) value.asString else "").split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                val single = parts.mapNotNull { it.toIntOrNull() }
+                val ranges = parts.filter { '-' in it }.map { it.replace('-', ':') }
+                if (single.isNotEmpty()) conditions.add("port", JsonArray().apply { single.forEach(::add) })
+                if (ranges.isNotEmpty()) conditions.add("port_range", arrayOfStrings(*ranges.toTypedArray()))
+            }
+            fun list(key: String) = rule.get(key)?.takeIf { it.isJsonArray }?.asJsonArray?.mapNotNull { it.takeIf { item -> item.isJsonPrimitive }?.asString }.orEmpty()
+            // Categories missing from the bundled geodata cannot match anything; drop just those entries.
+            val domains = list("domain").filter { !it.startsWith("geosite:") || ClientCoreOptions.geoData(geo).hasSite(it.removePrefix("geosite:")) }
+            val ips = list("ip").filter { !it.startsWith("geoip:") || ClientCoreOptions.geoData(geo).hasIp(it.removePrefix("geoip:")) }
+            if ((rule.has("domain") && domains.isEmpty()) || (rule.has("ip") && ips.isEmpty())) continue
+            val matchers = listOfNotNull(ClientCoreOptions.singBoxDomains(domains, geo)?.also { sniff = true }) + ClientCoreOptions.singBoxIps(ips, geo)
+            for (matcher in matchers.ifEmpty { listOf(JsonObject()) }) {
+                conditions.entrySet().forEach { (key, value) -> matcher.add(key, value.deepCopy()) }
+                when (actions[tag]) {
+                    "blackhole" -> matcher.addProperty("action", "reject")
+                    "dns" -> matcher.addProperty("action", "hijack-dns")
+                    else -> { matcher.addProperty("action", "route"); matcher.addProperty("outbound", tag) }
+                }
+                result.add(matcher)
+            }
+        }
+        // Domain and protocol conditions need the sniffed name or protocol first.
+        if (!sniff) return result
+        return JsonArray().apply { add(JsonObject().apply { addProperty("action", "sniff") }); result.forEach(::add) }
     }
 
     private fun xrayToSingBox(source: JsonObject): JsonObject {

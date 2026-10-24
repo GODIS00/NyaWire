@@ -27,7 +27,8 @@ class RoutingPresetsTest {
         assertEquals("freedom", tags[rules[1].get("outboundTag").asString]); assertEquals("[\"geosite:category-ru\",\"geosite:tld-ru\"]", rules[1].get("domain").toString())
         assertEquals("[\"geoip:ru\"]", rules[2].get("ip").toString())
         assertTrue(rules[3].toString().contains("existing.example"))
-        assertEquals(4, rules.size); assertEquals("IPIfNonMatch", routing.get("domainStrategy").asString)
+        // geoip:ru matches the tunnelled connection's own address; no extra lookups through the ISP resolver.
+        assertEquals(4, rules.size); assertFalse(routing.has("domainStrategy"))
     }
 
     @Test fun presetsDoNothingOutsideClientRules() {
@@ -68,6 +69,40 @@ class RoutingPresetsTest {
         val russianIps = rules[7]
         assertEquals(direct.get("outbound"), russianIps.get("outbound")); assertTrue(russianIps.getAsJsonArray("ip_cidr").size() > 1000)
         assertEquals(8, rules.size)
+    }
+
+    @Test fun xrayPanelHysteriaProfileRunsOnSingBox() {
+        val panel = """{"dns":{"servers":["1.1.1.1"]},"inbounds":[{"tag":"socks","port":10808,"protocol":"socks"}],
+            "outbounds":[{"tag":"proxy","protocol":"hysteria","settings":{"version":2,"address":"hy.example.com","port":443},
+              "streamSettings":{"network":"hysteria","security":"tls","tlsSettings":{"serverName":"hy.example.com","alpn":["h3"]},
+                "hysteriaSettings":{"version":2,"auth":"secret"},"finalmask":{"udp":[{"type":"salamander","settings":{"password":"obfs"}}]}}},
+              {"tag":"direct","protocol":"freedom"},{"tag":"block","protocol":"blackhole"},{"tag":"dns-out","protocol":"dns"}],
+            "routing":{"domainStrategy":"IPIfNonMatch","rules":[
+              {"type":"field","protocol":["bittorrent"],"outboundTag":"block"},
+              {"type":"field","ip":["geoip:private"],"outboundTag":"direct"},
+              {"type":"field","domain":["geosite:category-ads-all","geosite:not-bundled"],"outboundTag":"block"},
+              {"type":"field","domain":["geosite:not-bundled"],"outboundTag":"direct"},
+              {"type":"field","port":"53,5353-5354","network":"udp","outboundTag":"dns-out"},
+              {"type":"field","inboundTag":["socks"],"balancerTag":"auto"},
+              {"type":"field","user":["someone"],"outboundTag":"direct"}]}}"""
+        // Auto keeps native Xray Hysteria2; sing-box now accepts the same profile instead of asking for Xray.
+        assertEquals(CoreEngine.XRAY, CoreConfigBuilder.build(panel, ClientSettings(), 10808, geo = geo).engine)
+        val built = CoreConfigBuilder.build(panel, ClientSettings(coreEngine = CoreEngine.SING_BOX), 10808, geo = geo)
+        assertEquals(CoreEngine.SING_BOX, built.engine)
+        val root = JsonParser.parseString(built.json).asJsonObject
+        val outbounds = root.getAsJsonArray("outbounds").map { it.asJsonObject }
+        assertEquals(listOf("hysteria2", "direct"), outbounds.map { it.get("type").asString })
+        assertEquals("secret", outbounds[0].get("password").asString); assertEquals("salamander", outbounds[0].getAsJsonObject("obfs").get("type").asString)
+        assertFalse(root.has("routing")); assertFalse(root.has("dns"))
+        val rules = root.getAsJsonObject("route").getAsJsonArray("rules").map { it.asJsonObject }
+        assertEquals("sniff", rules[0].get("action").asString)
+        assertEquals("[\"bittorrent\"]", rules[1].get("protocol").toString()); assertEquals("reject", rules[1].get("action").asString)
+        assertTrue(rules[2].get("ip_is_private").asBoolean); assertEquals("direct", rules[2].get("outbound").asString)
+        assertEquals("reject", rules[3].get("action").asString); assertTrue(rules[3].getAsJsonArray("domain_suffix").size() > 100)
+        assertEquals("hijack-dns", rules[4].get("action").asString); assertEquals("[53]", rules[4].get("port").toString())
+        assertEquals("[\"5353:5354\"]", rules[4].get("port_range").toString()); assertEquals("[\"udp\"]", rules[4].get("network").toString())
+        // A rule left with only unknown categories, a balancer and a per-user rule are not guessed at.
+        assertEquals(5, rules.size)
     }
 
     @Test fun singBoxNeedsGeodataForCategories() {
