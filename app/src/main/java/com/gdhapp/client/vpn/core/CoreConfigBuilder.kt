@@ -184,6 +184,9 @@ object CoreConfigBuilder {
         val hysteria2 = protocol in setOf("hysteria2", "hy2") || (protocol == "hysteria" &&
             (settings.get("version")?.asInt == 2 || stream.obj("hysteriaSettings")?.get("version")?.asInt == 2))
         require(network !in setOf("xhttp", "splithttp")) { AppText.text(R.string.xhttp_requires_xray_select_auto_or_xray) }
+        // Current REALITY servers (xtls/reality, Oct 2026) drop a ClientHello without an X25519MLKEM768 key share,
+        // and sing-box 1.14 removes that share: the server would hand it to the decoy site instead.
+        require(stream.text("security") != "reality") { AppText.text(R.string.reality_requires_xray) }
         return JsonObject().apply {
             addProperty("type", if (hysteria2) "hysteria2" else protocol)
             addProperty("tag", source.text("tag") ?: "proxy")

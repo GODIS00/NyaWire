@@ -422,6 +422,7 @@
     <string name="this_is_a_sing_box_profile_select">Select Auto or sing-box.</string>
     <string name="invalid_outbound">Invalid outbound</string>
     <string name="this_profile_requires_xray">This profile requires Xray</string>
+    <string name="reality_requires_xray">Current REALITY servers reject sing-box. Select Auto or Xray.</string>
     <string name="xhttp_requires_xray_select_auto_or_xray">XHTTP requires Xray. Select Auto or Xray.</string>
     <string name="this_profile_uses_certificate_pinning_and_requires">This profile uses certificate pinning and requires Xray</string>
     <string name="xray_error">Xray error: %1$s</string>

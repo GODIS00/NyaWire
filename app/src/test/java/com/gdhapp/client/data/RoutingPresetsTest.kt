@@ -107,6 +107,14 @@ class RoutingPresetsTest {
         assertEquals(5, rules.size)
     }
 
+    @Test fun realityStaysOnXray() {
+        val reality = """{"outbounds":[{"tag":"proxy","protocol":"vless","settings":{"vnext":[{"address":"192.0.2.1","port":443,
+            "users":[{"id":"11111111-1111-4111-8111-111111111111","flow":"xtls-rprx-vision"}]}]},
+            "streamSettings":{"network":"tcp","security":"reality","realitySettings":{"serverName":"example.com","fingerprint":"chrome","publicKey":"fixture","shortId":"aabb"}}}]}"""
+        assertEquals(CoreEngine.XRAY, CoreConfigBuilder.build(reality, ClientSettings(), 10808, geo = geo).engine)
+        assertTrue(runCatching { CoreConfigBuilder.build(reality, ClientSettings(coreEngine = CoreEngine.SING_BOX), 10808, geo = geo) }.isFailure)
+    }
+
     @Test fun singBoxNeedsGeodataForCategories() {
         val settings = ClientSettings(routingMode = RoutingMode.RULES, blockAds = true)
         assertTrue(runCatching { CoreConfigBuilder.build(singBoxProfile, settings, 10808) }.isFailure)
