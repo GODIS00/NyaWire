@@ -36,6 +36,10 @@ enum class ProbeConnectionMode(val label: String) { DEFAULT("Default"), DISABLE(
 enum class PowerBorder(val labelRes: Int) { NEON(R.string.border_neon), AURORA(R.string.border_aurora), ACCENT(R.string.border_accent), SUNSET(R.string.border_sunset), CUSTOM(R.string.custom_color);
     val label get() = AppText.text(labelRes)
 }
+enum class BackgroundScene(val labelRes: Int) { CATS(R.string.scene_cats), AURORA(R.string.scene_aurora), SUNSET(R.string.scene_sunset),
+    SPACE(R.string.scene_space), SAKURA(R.string.scene_sakura), NEON(R.string.scene_neon);
+    val label get() = AppText.text(labelRes)
+}
 enum class IpMode(val label: String) { AUTO("Auto"), IPV4("IPv4"), IPV6("IPv6") }
 enum class TunnelMode(val labelRes: Int) { VPN(R.string.mode_vpn), VPN_PROXY(R.string.mode_vpn_proxy), PROXY(R.string.mode_proxy);
     val label get() = AppText.text(labelRes)
@@ -89,6 +93,7 @@ data class ClientSettings(
     val backgroundPictures: Boolean = true,
     val backgroundDensity: Int = 9,
     val backgroundOpacity: Int = 12,
+    val backgroundScene: BackgroundScene = BackgroundScene.CATS,
     val powerBorder: PowerBorder = PowerBorder.NEON,
     val powerGradientStart: Long = 0xFF538AFF,
     val powerGradientEnd: Long = 0xFFBB69FF,

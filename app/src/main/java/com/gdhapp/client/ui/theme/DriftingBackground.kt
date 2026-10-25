@@ -31,11 +31,9 @@ private val cats = listOf(
     BackgroundCat(R.drawable.background_cat_6, .66f, .85f, 135, 5.5f),
 )
 
-/** Drawing-only transforms: server lists do not recompose for each animation frame. */
+/** Seconds of background motion. It stands still while paused, hidden or with system animations off. */
 @Composable
-fun DriftingBackground(enabled: Boolean, motionEnabled: Boolean, dark: Boolean, modifier: Modifier = Modifier, densityCount: Int = 9, opacity: Int = 12) {
-    if (!enabled) return
-    val context = LocalContext.current
+internal fun rememberBackgroundClock(motionEnabled: Boolean): FloatState {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val time = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(lifecycle, motionEnabled) {
@@ -53,11 +51,21 @@ fun DriftingBackground(enabled: Boolean, motionEnabled: Boolean, dark: Boolean, 
             }
         }
     }
+    return time
+}
+
+/** Drawing-only transforms: server lists do not recompose for each animation frame. */
+@Composable
+fun DriftingBackground(enabled: Boolean, motionEnabled: Boolean, dark: Boolean, modifier: Modifier = Modifier, densityCount: Int = 9, opacity: Int = 12) {
+    if (!enabled) return
+    val context = LocalContext.current
+    val time = rememberBackgroundClock(motionEnabled)
     BoxWithConstraints(modifier.clipToBounds()) {
         val density = LocalDensity.current
         val width = with(density) { maxWidth.toPx() }
         val height = with(density) { maxHeight.toPx() }
-        val drift = with(density) { 24.dp.toPx() }
+        // Small previews drift proportionally less, so the cats stay inside the tile.
+        val drift = with(density) { minOf(24.dp, maxWidth * .07f).toPx() }
         val decorations = remember(densityCount) {
             if (densityCount <= 6) cats else cats + listOf(
                 BackgroundCat(R.drawable.background_cat_2, .36f, .04f, 90, 6.6f, 2, -12f),

@@ -182,8 +182,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                         drawLayer(backdrop)
                     } else drawContent()
                 }) {
-                com.gdhapp.client.ui.theme.DriftingBackground(state.settings.backgroundPictures, state.settings.animations && !scrolling && !state.startupRefreshing,
-                    com.gdhapp.client.ui.theme.isDarkAppearance(state.settings), Modifier.matchParentSize(), state.settings.backgroundDensity, state.settings.backgroundOpacity)
+                com.gdhapp.client.ui.theme.AppBackground(state.settings, state.settings.animations && !scrolling && !state.startupRefreshing, Modifier.matchParentSize())
                 AnimatedContent(tab, Modifier.fillMaxSize().clipToBounds(), transitionSpec = {
                     if (state.settings.animations) IosMotion.page(forward = targetState > initialState) else IosMotion.none
                 }, label = "tabContent") { tab -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) { when (tab) {

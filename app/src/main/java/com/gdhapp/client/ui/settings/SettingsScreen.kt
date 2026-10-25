@@ -37,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.graphics.Color
@@ -354,6 +355,16 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                         Text(AppText.text(R.string.text_size, (settings.textScale * 100).roundToInt()), fontSize = 13.sp)
                         Slider(settings.textScale, { actions.updateSettings(settings.copy(textScale = it)) }, valueRange = .85f..1.2f, steps = 6)
                         ToggleSetting(AppText.text(R.string.background_pictures), AppText.text(R.string.background_pictures_hint), settings.backgroundPictures) { actions.updateSettings(settings.copy(backgroundPictures = it)) }
+                        if (settings.backgroundPictures) {
+                            Text(AppText.text(R.string.background_scene), fontSize = 13.sp)
+                            BackgroundScenePicker(settings) { actions.updateSettings(settings.copy(backgroundScene = it)) }
+                            if (settings.backgroundScene == BackgroundScene.CATS) {
+                                Text(AppText.text(R.string.background_density, settings.backgroundDensity), fontSize = 13.sp)
+                                ChoiceChips(listOf(6, 9, 12), settings.backgroundDensity, { it.toString() }) { actions.updateSettings(settings.copy(backgroundDensity = it)) }
+                                Text(AppText.text(R.string.background_opacity, settings.backgroundOpacity), fontSize = 13.sp)
+                                Slider(settings.backgroundOpacity.toFloat(), { actions.updateSettings(settings.copy(backgroundOpacity = it.roundToInt())) }, valueRange = 4f..24f, steps = 19)
+                            }
+                        }
                         Text(AppText.text(R.string.vpn_button_style), fontSize = 13.sp)
                         ChoiceChips(PowerBorder.entries, settings.powerBorder, { it.label }) { actions.updateSettings(settings.copy(powerBorder = it)) }
                         Box(Modifier.fillMaxWidth().height(12.dp).background(
@@ -361,13 +372,6 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                         if (settings.powerBorder == PowerBorder.CUSTOM) {
                             EditSetting(AppText.text(R.string.gradient_start), "", "#%06X".format(settings.powerGradientStart and 0xFFFFFF)) { gradientColor = 1 }
                             EditSetting(AppText.text(R.string.gradient_end), "", "#%06X".format(settings.powerGradientEnd and 0xFFFFFF)) { gradientColor = 2 }
-                        }
-
-                        if (settings.backgroundPictures) {
-                            Text(AppText.text(R.string.background_density, settings.backgroundDensity), fontSize = 13.sp)
-                            ChoiceChips(listOf(6, 9, 12), settings.backgroundDensity, { it.toString() }) { actions.updateSettings(settings.copy(backgroundDensity = it)) }
-                            Text(AppText.text(R.string.background_opacity, settings.backgroundOpacity), fontSize = 13.sp)
-                            Slider(settings.backgroundOpacity.toFloat(), { actions.updateSettings(settings.copy(backgroundOpacity = it.roundToInt())) }, valueRange = 4f..24f, steps = 19)
                         }
                         ToggleSetting(AppText.text(R.string.connection_sound), AppText.text(R.string.connection_sound_hint), settings.connectionSound) { actions.updateSettings(settings.copy(connectionSound = it)) }
                         TextButton(onClick = onPreviewSound, enabled = settings.connectionSound) {
@@ -486,6 +490,29 @@ private fun SettingsIntro(title: String, subtitle: String, showTitle: Boolean = 
     if (showTitle) Text(title, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 } }
+
+/** Still previews of every background, drawn by the same code as the real one. */
+@Composable
+private fun BackgroundScenePicker(settings: ClientSettings, onSelect: (BackgroundScene) -> Unit) {
+    val dark = com.gdhapp.client.ui.theme.isDarkAppearance(settings)
+    val still = remember { mutableFloatStateOf(14f) }
+    val scheme = MaterialTheme.colorScheme
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        BackgroundScene.entries.forEach { scene ->
+            val selected = settings.backgroundScene == scene
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Surface(onClick = { onSelect(scene) }, shape = MaterialTheme.shapes.medium, color = scheme.background,
+                    border = BorderStroke(if (selected) 2.5.dp else 1.dp, if (selected) scheme.primary else scheme.outlineVariant),
+                    modifier = Modifier.size(64.dp, 104.dp).semantics { this.selected = selected }) {
+                    if (scene == BackgroundScene.CATS) com.gdhapp.client.ui.theme.DriftingBackground(true, false, dark, Modifier.fillMaxSize(), 6, 24)
+                    else com.gdhapp.client.ui.theme.SceneBackground(scene, still, dark, dark && settings.amoled, Modifier.fillMaxSize(), fadeTop = false)
+                }
+                Text(scene.label, fontSize = 10.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (selected) scheme.primary else scheme.onSurface, modifier = Modifier.padding(top = 5.dp))
+            }
+        }
+    }
+}
 
 @Composable
 private fun SettingsSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) = com.gdhapp.client.ui.theme.BlockColors {

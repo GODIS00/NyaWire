@@ -75,8 +75,8 @@
     <string name="auto_update_hint">Обновлять по расписанию, в том числе при работающем VPN.</string>
     <string name="from_subscription">Из подписки</string>
     <string name="hours_interval">%1$d ч</string>
-    <string name="background_pictures">Картинки на фоне</string>
-    <string name="background_pictures_hint">Картинки на фоне. Движение зависит от настройки анимаций.</string>
+    <string name="background_pictures">Фон приложения</string>
+    <string name="background_pictures_hint">Анимированная сцена или котики за списками. Движение зависит от настройки анимаций.</string>
     <string name="xray_compatibility_mode">Режим совместимости Xray</string>
     <string name="xray_compatibility_hint">Включите, если обычный режим Xray не работает.</string>
     <string name="notification_ping_action">Пинг</string>
@@ -526,6 +526,13 @@
     <string name="background_density">Картинок на фоне: %1$d</string>
     <string name="background_opacity">Яркость картинок: %1$d%%</string>
     <string name="border_sunset">Закат</string>
+    <string name="background_scene">Сцена</string>
+    <string name="scene_cats">Котики</string>
+    <string name="scene_aurora">Сияние</string>
+    <string name="scene_sunset">Закат</string>
+    <string name="scene_space">Космос</string>
+    <string name="scene_sakura">Сакура</string>
+    <string name="scene_neon">Неон</string>
     <string name="gradient_start">Первый цвет</string>
     <string name="gradient_end">Второй цвет</string>
     <string name="refresh_all_subscriptions">Обновить все подписки</string>

@@ -75,8 +75,8 @@
     <string name="auto_update_hint">Update on schedule, including while VPN is on.</string>
     <string name="from_subscription">From subscription</string>
     <string name="hours_interval">%1$d h</string>
-    <string name="background_pictures">Background pictures</string>
-    <string name="background_pictures_hint">Background pictures. Turn off animations to keep them still.</string>
+    <string name="background_pictures">App background</string>
+    <string name="background_pictures_hint">An animated scene or cats behind the lists. Turn off animations to keep it still.</string>
     <string name="xray_compatibility_mode">Xray compatibility mode</string>
     <string name="xray_compatibility_hint">Try this if the normal Xray mode fails.</string>
     <string name="notification_ping_action">Ping</string>
@@ -527,6 +527,13 @@
     <string name="background_density">Background pictures: %1$d</string>
     <string name="background_opacity">Picture opacity: %1$d%%</string>
     <string name="border_sunset">Sunset</string>
+    <string name="background_scene">Background scene</string>
+    <string name="scene_cats">Cats</string>
+    <string name="scene_aurora">Aurora</string>
+    <string name="scene_sunset">Sunset</string>
+    <string name="scene_space">Space</string>
+    <string name="scene_sakura">Sakura</string>
+    <string name="scene_neon">Neon</string>
     <string name="gradient_start">First color</string>
     <string name="gradient_end">Second color</string>
     <string name="refresh_all_subscriptions">Refresh all subscriptions</string>

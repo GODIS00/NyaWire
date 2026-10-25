@@ -27,8 +27,8 @@ class SettingsRepository(private val context: Context) {
         blockStyle = defaults.blockStyle, customBlockColor = null,
         animations = true, haptics = true, softBlur = true, connectionSound = defaults.connectionSound,
         backgroundPictures = true, layout = defaults.layout, sort = defaults.sort,
-        backgroundDensity = defaults.backgroundDensity, backgroundOpacity = defaults.backgroundOpacity, powerBorder = defaults.powerBorder,
-        powerGradientStart = defaults.powerGradientStart, powerGradientEnd = defaults.powerGradientEnd,
+        backgroundDensity = defaults.backgroundDensity, backgroundOpacity = defaults.backgroundOpacity, backgroundScene = defaults.backgroundScene,
+        powerBorder = defaults.powerBorder, powerGradientStart = defaults.powerGradientStart, powerGradientEnd = defaults.powerGradientEnd,
         showFlags = true, showProtocol = true, showAddress = false, cornerRadius = 24, textScale = 1f,
     ) } }
 
@@ -46,6 +46,7 @@ class SettingsRepository(private val context: Context) {
             animations = true, softBlur = true, haptics = true,
             backgroundDensity = value.backgroundDensity.takeIf { it in setOf(6, 9, 12) } ?: defaults.backgroundDensity,
             backgroundOpacity = value.backgroundOpacity.takeIf { it in 4..24 } ?: defaults.backgroundOpacity,
+            backgroundScene = (value.backgroundScene as? com.gdhapp.client.domain.model.BackgroundScene) ?: defaults.backgroundScene,
             powerBorder = (value.powerBorder as? com.gdhapp.client.domain.model.PowerBorder) ?: defaults.powerBorder,
             powerGradientStart = value.powerGradientStart.takeIf { it in 0xFF000000L..0xFFFFFFFFL } ?: defaults.powerGradientStart,
             powerGradientEnd = value.powerGradientEnd.takeIf { it in 0xFF000000L..0xFFFFFFFFL } ?: defaults.powerGradientEnd,
