@@ -123,6 +123,23 @@ class RoutingPresetsTest {
         assertEquals("chrome", tls.getAsJsonObject("utls").get("fingerprint").asString)
     }
 
+    @Test fun probesSendEverythingThroughTheTestedServer() {
+        // The test URL must never leave through a direct rule: then every profile would "answer", working or not.
+        val panel = """{"outbounds":[{"protocol":"vless","tag":"proxy","settings":{"vnext":[{"address":"192.0.2.1","port":443,"users":[{"id":"11111111-1111-4111-8111-111111111111"}]}]}},
+            {"protocol":"freedom","tag":"direct"}],"routing":{"rules":[{"type":"field","domain":["domain:gstatic.com"],"outboundTag":"direct"}]}}"""
+        val whitelist = ClientSettings(routingMode = RoutingMode.RULES, routeRussiaDirect = true, importedRouting = imported.copy(globalProxy = false))
+        for ((raw, settings) in listOf(panel to ClientSettings(), xrayProfile to whitelist)) {
+            val root = JsonParser.parseString(CoreConfigBuilder.build(raw, settings, 10808, geo = geo, forProbe = true).json).asJsonObject
+            val rules = root.getAsJsonObject("routing").getAsJsonArray("rules").map { it.asJsonObject }
+            assertEquals(1, rules.size); assertEquals("tcp,udp", rules[0].get("network").asString)
+            assertEquals("proxy", rules[0].get("outboundTag").asString)
+        }
+        val box = JsonParser.parseString(CoreConfigBuilder.build(singBoxProfile, whitelist, 10808, geo = geo, forProbe = true).json).asJsonObject
+        assertEquals(0, box.getAsJsonObject("route").getAsJsonArray("rules").size()); assertEquals("proxy", box.getAsJsonObject("route").get("final").asString)
+        // The connection itself keeps the rules.
+        assertEquals("direct", build(panel, ClientSettings()).getAsJsonObject("routing").getAsJsonArray("rules")[0].asJsonObject.get("outboundTag").asString)
+    }
+
     @Test fun singBoxNeedsGeodataForCategories() {
         val settings = ClientSettings(routingMode = RoutingMode.RULES, blockAds = true)
         assertTrue(runCatching { CoreConfigBuilder.build(singBoxProfile, settings, 10808) }.isFailure)

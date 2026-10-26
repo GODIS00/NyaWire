@@ -74,7 +74,7 @@ class CoreSessionFactory(private val context: Context) {
         val credentials = if (internalOnly) UUID.randomUUID().toString().replace("-", "") to UUID.randomUUID().toString().replace("-", "") else null
         val candidatePort = if (!forProbe && !internalOnly && settings.localSocksPort != 0) settings.localSocksPort
             else if (!forProbe && publicProxy) 10808 else ServerSocket(0).use { it.localPort }
-        val config = CoreConfigBuilder.build(raw, settings, candidatePort, nativeTun = tunFd > 0, includeSocks = !internalOnly, socksCredentials = credentials, shareProxy = !forProbe, geo = geoData())
+        val config = CoreConfigBuilder.build(raw, settings, candidatePort, nativeTun = tunFd > 0, includeSocks = !internalOnly, socksCredentials = credentials, shareProxy = !forProbe, geo = geoData(), forProbe = forProbe)
         val noListener = internalOnly && config.engine == CoreEngine.XRAY && tunFd > 0
         val port = if (noListener) 0 else candidatePort
         var opened: ProxySession? = null
@@ -117,7 +117,9 @@ class CoreSessionFactory(private val context: Context) {
             override fun shutdown(): Long = 0
             override fun onEmitStatus(code: Long, status: String?): Long { if (code < 0) detail = status.orEmpty(); return 0 }
         })
-        try { controller.startLoop(config, tunFd) } catch (error: Throwable) { runCatching { controller.stopLoop() }; throw error }
+        // libv2ray hands the TUN descriptor over in a process-wide variable (xray.tun.fd) that the TUN inbound
+        // reads while starting. A probe starting meanwhile would overwrite it with 0, so starts take turns.
+        try { synchronized(xrayStart) { controller.startLoop(config, tunFd) } } catch (error: Throwable) { runCatching { controller.stopLoop() }; throw error }
         return object : ProxySession {
             private var upload = 0L
             private var download = 0L
@@ -161,6 +163,11 @@ class CoreSessionFactory(private val context: Context) {
                 runCatching { output.join(150) }; file.delete(); directory.delete()
             }
         }
+    }
+
+    private companion object {
+        /** Guards libv2ray's process-wide TUN descriptor variable; see openXray. */
+        val xrayStart = Any()
     }
 
     private fun socksReady(port: Int, credentials: Pair<String, String>? = null): Boolean = runCatching {

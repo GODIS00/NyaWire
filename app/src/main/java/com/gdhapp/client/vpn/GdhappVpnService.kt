@@ -58,6 +58,8 @@ class GdhappVpnService : VpnService() {
     private var probeJob: Job? = null
     private var stopping = false
     private var proxyOnly = false
+    // The routing the running core was started with; settings may change while it runs.
+    private var liveRouting = com.gdhapp.client.domain.model.RoutingMode.PROFILE
     private var wakeLock: android.os.PowerManager.WakeLock? = null
 
     override fun onCreate() {
@@ -162,8 +164,9 @@ class GdhappVpnService : VpnService() {
                     runCatching { previousTunnel?.close() }
                     }
                     withTimeout(25_000) { core.start(config, tunnel?.fd ?: 0, settings) }
+                    liveRouting = settings.routingMode
                     if (settings.verifyOnConnect) withContext(Dispatchers.IO) {
-                        if (core.publicSocksAvailable) NetworkLatencyTester.httpViaProxy(core.localPort, ProbeMethod.HTTP_GET, settings)
+                        if (liveCoreReachesServer()) NetworkLatencyTester.httpViaProxy(core.localPort, ProbeMethod.HTTP_GET, settings)
                         else app.coreSessions.open(config, settings, forProbe = true).use { probe ->
                             NetworkLatencyTester.httpViaProxy(probe.port, ProbeMethod.HTTP_GET, settings)
                         }
@@ -277,6 +280,12 @@ class GdhappVpnService : VpnService() {
             getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification(AppText.text(R.string.vpn_connected)))
     }
 
+    /**
+     * The running core follows the routing rules, so a test URL matching a direct rule would skip the server.
+     * Only global routing sends its SOCKS requests through the server; otherwise a separate probe core checks it.
+     */
+    private fun liveCoreReachesServer() = core.publicSocksAvailable && liveRouting == com.gdhapp.client.domain.model.RoutingMode.GLOBAL
+
     private fun probeActiveConnection() {
         if (probeJob?.isActive == true) return
         val node = activeNode ?: return
@@ -289,7 +298,7 @@ class GdhappVpnService : VpnService() {
             kotlinx.coroutines.yield()
             refreshNotification()
             try {
-                val result = if (method.usesProxy && (core.publicSocksAvailable)) app.latencyTester.testViaProxy(port, method, settings)
+                val result = if (method.usesProxy && liveCoreReachesServer()) app.latencyTester.testViaProxy(port, method, settings)
                     else app.latencyTester.test(node, method, settings)
                 if (app.vpnSession.isCurrent(attempt) && !stopping && app.vpnSession.state.value == VpnState.Connected) {
                     notificationProbe = result

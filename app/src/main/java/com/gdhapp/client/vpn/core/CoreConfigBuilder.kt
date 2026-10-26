@@ -12,7 +12,12 @@ import com.google.gson.JsonParser
 data class PreparedCoreConfig(val engine: CoreEngine, val json: String)
 
 object CoreConfigBuilder {
-    fun build(raw: String, settings: ClientSettings, port: Int, nativeTun: Boolean = false, includeSocks: Boolean = true, socksCredentials: Pair<String, String>? = null, shareProxy: Boolean = false, geo: GeoData? = null): PreparedCoreConfig {
+    /**
+     * `forProbe` builds a latency check: every request goes through the tested server. With the profile's or the
+     * client's rules a test URL that matches a direct rule (or an imported profile's direct default) would leave
+     * without the server, and every profile would answer, working or not.
+     */
+    fun build(raw: String, settings: ClientSettings, port: Int, nativeTun: Boolean = false, includeSocks: Boolean = true, socksCredentials: Pair<String, String>? = null, shareProxy: Boolean = false, geo: GeoData? = null, forProbe: Boolean = false): PreparedCoreConfig {
         val root = runCatching { JsonParser.parseString(raw).asJsonObject.deepCopy() }
             .getOrElse { throw IllegalArgumentException(AppText.text(R.string.the_configuration_is_not_a_json_object)) }
         require(root.get("demo")?.asBoolean != true) { AppText.text(R.string.demo_configurations_were_removed_add_your_own) }
@@ -104,7 +109,7 @@ object CoreConfigBuilder {
             root.obj("experimental")?.let { it.remove("clash_api"); it.remove("v2ray_api") }
             ensureSingBoxDns(root, settings)
         }
-        ClientCoreOptions.apply(root, engine, settings, geo)
+        ClientCoreOptions.apply(root, engine, if (forProbe) settings.copy(routingMode = com.gdhapp.client.domain.model.RoutingMode.GLOBAL) else settings, geo)
         if (shareProxy && settings.hotspotEnabled) {
             require(settings.hotspotUser.isNotBlank() && settings.hotspotPassword.length >= 8 && settings.hotspotPort in 1024..65535 && settings.hotspotPort != port) { AppText.text(R.string.hotspot_credentials_error) }
             root.getAsJsonArray("inbounds").add(JsonObject().apply {
