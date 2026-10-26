@@ -36,12 +36,30 @@ class RainReleaseSmokeTest {
             }
             return pixels
         }
+        fun awaitHome(scenario: ActivityScenario<MainActivity>) {
+            fun hasTitle(node: android.view.accessibility.AccessibilityNodeInfo?): Boolean {
+                if (node == null) return false
+                if (node.text?.toString() == "NyaWire") return true
+                for (i in 0 until node.childCount) if (hasTitle(node.getChild(i))) return true
+                return false
+            }
+            val deadline = android.os.SystemClock.elapsedRealtime() + 12000L
+            while (!hasTitle(instrumentation.uiAutomation.rootInActiveWindow) && android.os.SystemClock.elapsedRealtime() < deadline) Thread.sleep(100)
+            assertTrue("Home did not become visible", hasTitle(instrumentation.uiAutomation.rootInActiveWindow))
+            val frame = java.util.concurrent.CountDownLatch(1)
+            scenario.onActivity { activity ->
+                activity.window.decorView.viewTreeObserver.registerFrameCommitCallback { frame.countDown() }
+                activity.window.decorView.postInvalidateOnAnimation()
+            }
+            assertTrue("Home did not commit a rendered frame", frame.await(10, java.util.concurrent.TimeUnit.SECONDS))
+            Thread.sleep(100)
+        }
         try {
             shell("settings put global animator_duration_scale 1")
             app.settings.update { it.copy(backgroundScene = BackgroundScene.RAIN, backgroundPictures = true,
                 theme = ThemeMode.DARK, amoled = false, refreshOnOpen = false, connectOnOpen = false) }
             ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-                Thread.sleep(1000)
+                awaitHome(scenario)
                 val first = screenshot("rain-release-moving-a")
                 Thread.sleep(600)
                 val second = screenshot("rain-release-moving-b")
@@ -56,7 +74,7 @@ class RainReleaseSmokeTest {
                 scenario.moveToState(Lifecycle.State.CREATED)
                 Thread.sleep(300)
                 scenario.moveToState(Lifecycle.State.RESUMED)
-                Thread.sleep(700)
+                awaitHome(scenario)
                 val stillA = screenshot("rain-release-still-a")
                 Thread.sleep(500)
                 val stillB = screenshot("rain-release-still-b")
