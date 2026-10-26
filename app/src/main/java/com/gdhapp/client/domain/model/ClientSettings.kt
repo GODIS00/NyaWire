@@ -37,7 +37,7 @@ enum class PowerBorder(val labelRes: Int) { NEON(R.string.border_neon), AURORA(R
     val label get() = AppText.text(labelRes)
 }
 enum class BackgroundScene(val labelRes: Int) { CATS(R.string.scene_cats), AURORA(R.string.scene_aurora), SUNSET(R.string.scene_sunset),
-    SPACE(R.string.scene_space), SAKURA(R.string.scene_sakura), NEON(R.string.scene_neon);
+    SPACE(R.string.scene_space), SAKURA(R.string.scene_sakura), NEON(R.string.scene_neon), RAIN(R.string.scene_rain);
     val label get() = AppText.text(labelRes)
 }
 enum class IpMode(val label: String) { AUTO("Auto"), IPV4("IPv4"), IPV6("IPv6") }

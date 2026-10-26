@@ -70,6 +70,7 @@ internal fun SceneBackground(scene: BackgroundScene, time: FloatState, dark: Boo
             BackgroundScene.SPACE -> Space(time, dark, amoled)
             BackgroundScene.SAKURA -> Sakura(time, dark, amoled)
             BackgroundScene.NEON -> Neon(time, dark, amoled)
+            BackgroundScene.RAIN -> Rain(time, dark, amoled)
             BackgroundScene.CATS -> Unit
         }
         // The top bar keeps the plain theme color, so the scene fades in below it instead of starting at a seam.
@@ -665,6 +666,122 @@ private fun BoxScope.Neon(time: FloatState, dark: Boolean, amoled: Boolean) {
                 val fade = ((y - horizon) / depth).pow(.6f)
                 drawLine(line, Offset(0f, y), Offset(w, y), wide, alpha = .12f * fade)
                 drawLine(line, Offset(0f, y), Offset(w, y), thin, alpha = .75f * fade)
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- rain
+
+private data class RainColors(val sky: List<Color>, val tower: Color, val warm: Color, val cold: Color, val haze: Color, val bokeh: List<Color>,
+    val bokehAlpha: Float, val streak: Color, val lamp: Color, val shine: Color, val edge: Color, val trail: Color)
+
+// A rainy night window over a city out of focus, after the promo's rain cut; an overcast day in the light theme.
+private val rainNight = RainColors(listOf(Color(0xFF04060B), Color(0xFF0A101C), Color(0xFF0F1622), Color(0xFF18120D)), Color(0xFF070A12), Color(0xFFFFCF8A),
+    Color(0xFFBFE3FF), Color(0x400F1622), listOf(Color(0xFFFFB35C), Color(0xFFFFD38A), Color(0xFF4FD1C5), Color(0xFFFF6B9A), Color(0xFFCFE3FF)), .55f,
+    Color(0x24CFE3FF), Color(0x38FFAA5A), Color(0xBFFFFFFF), Color(0x590A0F18), Color(0x1FDBE8FF))
+private val rainDay = RainColors(listOf(Color(0xFFE9EEF3), Color(0xFFDDE4EC), Color(0xFFD0D9E3), Color(0xFFC6CFD9)), Color(0xFFC4CDD7), Color(0xFFFFF3DD),
+    Color(0xFFFFFFFF), Color(0x73E9EEF3), listOf(Color(0xFFFFFFFF), Color(0xFFFFD9A8), Color(0xFFCFE3FF), Color(0xFFFFB8C4)), .5f,
+    Color(0x407E8C9C), Color.Transparent, Color(0xD9FFFFFF), Color(0x40718096), Color(0x2E8A9BB0))
+
+// Towers as (x, width, top) in fractions of the screen.
+private val towers = floatArrayOf(-.02f, .18f, .51f, .14f, .13f, .58f, .25f, .19f, .45f, .435f, .15f, .54f, .565f, .21f, .48f, .76f, .14f, .56f, .88f, .16f, .47f)
+
+@Composable
+private fun BoxScope.Rain(time: FloatState, dark: Boolean, amoled: Boolean) {
+    val c = when {
+        amoled -> rainNight.copy(sky = listOf(Color.Black, Color(0xFF020308), Color(0xFF05080F), Color(0xFF0A0806)), tower = Color(0xFF020306), bokehAlpha = .42f,
+            lamp = Color(0x24FFAA5A))
+        dark -> rainNight
+        else -> rainDay
+    }
+    // A drop on the glass: a bright spot up left and a dark rim, unit-sized and scaled into place.
+    val drop = Brush.radialGradient(0f to c.shine, .35f to c.shine.copy(alpha = .18f), .85f to c.edge, 1f to c.shine.copy(alpha = .3f),
+        center = Offset(-.2f, -.3f), radius = 1.25f)
+    Still {
+        val w = size.width
+        val h = size.height
+        val sky = Brush.verticalGradient(0f to c.sky[0], .4f to c.sky[1], .7f to c.sky[2], 1f to c.sky[3])
+        // The windows are soft spots rather than squares, so the city reads as out of focus without a blur.
+        val glow = 4.5.dp.toPx()
+        val warm = Brush.radialGradient(listOf(c.warm, c.warm.copy(alpha = 0f)), center = Offset.Zero, radius = 1f)
+        val cold = Brush.radialGradient(listOf(c.cold, c.cold.copy(alpha = 0f)), center = Offset.Zero, radius = 1f)
+        val lit = mutableListOf<Pair<Offset, Brush>>()
+        for (k in 0 until towers.size / 3) {
+            val left = towers[k * 3] * w
+            val columns = (towers[k * 3 + 1] * w / 12.dp.toPx()).toInt()
+            var row = 0
+            var y = towers[k * 3 + 2] * h + 12.dp.toPx()
+            while (y < h) {
+                for (col in 0 until columns) {
+                    val i = k * 4000 + row * 50 + col
+                    if (rand(i, 911) > (if (dark) .7f else .86f)) lit += Offset(left + 8.dp.toPx() + col * 12.dp.toPx(), y) to if (dark && rand(i, 912) > .25f) warm else cold
+                }
+                row++
+                y += 17.dp.toPx()
+            }
+        }
+        // Out of focus: soft discs with a slightly brighter rim, one unit-sized brush per color.
+        val bokehBrushes = c.bokeh.map { color ->
+            Brush.radialGradient(0f to color.copy(alpha = .75f), .55f to color.copy(alpha = .35f), .72f to color.copy(alpha = .05f), .74f to Color.Transparent,
+                center = Offset.Zero, radius = 1f)
+        }
+        val count = (w * h / (density * density) / 4500f).roundToInt().coerceIn(24, 64)
+        val lamp = Brush.radialGradient(listOf(c.lamp, Color.Transparent), center = Offset(w * .1f, h * .98f), radius = w * .9f)
+        val haze = Brush.verticalGradient(listOf(Color.Transparent, c.haze), startY = h * .44f, endY = h)
+        onDrawBehind {
+            drawRect(sky)
+            for (k in 0 until towers.size / 3) drawRect(c.tower, Offset(towers[k * 3] * w, towers[k * 3 + 2] * h), Size(towers[k * 3 + 1] * w, h))
+            lit.forEach { (at, brush) ->
+                withTransform({ translate(at.x, at.y); scale(glow, glow, Offset.Zero) }) { drawCircle(brush, 1f, Offset.Zero, if (dark) .55f else .45f) }
+            }
+            drawRect(haze)
+            for (i in 0 until count) {
+                val radius = (10f + rand(i, 903).pow(2) * 36f).dp.toPx()
+                val center = Offset(rand(i, 901) * w * 1.1f - w * .05f, h * (.33f + rand(i, 902).pow(.7f) * .65f))
+                withTransform({ translate(center.x, center.y); scale(radius, radius, Offset.Zero) }) {
+                    drawCircle(bokehBrushes[i % bokehBrushes.size], 1f, Offset.Zero, c.bokehAlpha * (.6f + .4f * rand(i, 904)))
+                }
+            }
+            if (c.lamp.alpha > 0f) drawCircle(lamp, w * .9f, Offset(w * .1f, h * .98f))
+        }
+    }
+    Moving {
+        val w = size.width
+        val h = size.height
+        val streaks = (w * h / (density * density) / 2900f).roundToInt().coerceIn(30, 120)
+        val runners = (w * h / (density * density) / 22000f).roundToInt().coerceIn(6, 16)
+        val thin = .6.dp.toPx()
+        onDrawBehind {
+            val t = time.floatValue
+            // Rain falling outside, slanting a little.
+            for (i in 0 until streaks) {
+                val length = (14f + rand(i, 923) * 26f).dp.toPx()
+                val y = (rand(i, 922) * h * 1.15f + t * (.55f + rand(i, 924) * .35f) * h).wrap(h * 1.15f) - h * .07f
+                val x = rand(i, 921) * w * 1.2f - w * .1f - y * .12f
+                drawLine(c.streak, Offset(x, y), Offset(x - length * .12f, y + length), thin)
+            }
+            // Drops running down the glass stick and slide: the speed swells and eases but never turns back.
+            for (i in 0 until runners) {
+                val radius = (3.5f + rand(i, 944) * 3f).dp.toPx()
+                val speed = (.05f + rand(i, 943) * .08f) * h
+                val pulse = 1.3f + rand(i, 946)
+                val phase = rand(i, 945) * 6.3f
+                val y = (rand(i, 942) * h * 1.25f + speed * t + .6f * speed / pulse * (1f - cos(t * pulse + phase))).wrap(h * 1.25f) - h * .12f
+                val x = (.04f + rand(i, 941) * .92f) * w + sin(y / 45.dp.toPx() + phase) * 3.dp.toPx()
+                drawLine(c.trail, Offset(x, y - h * .07f), Offset(x, y - radius), radius * .5f, StrokeCap.Round)
+                withTransform({ translate(x, y); scale(radius, radius * 1.15f, Offset.Zero) }) { drawCircle(drop, 1f, Offset.Zero) }
+            }
+        }
+    }
+    Still {
+        val w = size.width
+        val h = size.height
+        val count = (w * h / (density * density) / 1500f).roundToInt().coerceIn(60, 220)
+        onDrawBehind {
+            for (i in 0 until count) {
+                val radius = (.7f + rand(i, 933).pow(2.5f) * 3.6f).dp.toPx()
+                withTransform({ translate(rand(i, 931) * w, rand(i, 932) * h); scale(radius, radius, Offset.Zero) }) { drawCircle(drop, 1f, Offset.Zero) }
             }
         }
     }

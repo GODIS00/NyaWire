@@ -534,6 +534,7 @@
     <string name="scene_space">Space</string>
     <string name="scene_sakura">Sakura</string>
     <string name="scene_neon">Neon</string>
+    <string name="scene_rain">Rain</string>
     <string name="gradient_start">First color</string>
     <string name="gradient_end">Second color</string>
     <string name="refresh_all_subscriptions">Refresh all subscriptions</string>
