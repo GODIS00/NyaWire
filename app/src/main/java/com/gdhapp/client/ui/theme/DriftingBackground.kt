@@ -17,7 +17,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.gdhapp.client.R
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.math.sin
 
@@ -33,21 +32,25 @@ private val cats = listOf(
 
 /** Seconds of background motion. It stands still while paused, hidden or with system animations off. */
 @Composable
-internal fun rememberBackgroundClock(motionEnabled: Boolean): FloatState {
+internal fun rememberBackgroundClock(motionEnabled: Boolean, framesPerSecond: Int = 30): FloatState {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val time = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(lifecycle, motionEnabled) {
+    LaunchedEffect(lifecycle, motionEnabled, framesPerSecond) {
         if (!motionEnabled) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             if (!ValueAnimator.areAnimatorsEnabled()) return@repeatOnLifecycle
             var previous = 0L
+            var pending = 0L
+            val interval = 1_000_000_000L / framesPerSecond.coerceIn(15, 60)
             while (isActive) {
                 withFrameNanos { now ->
-                    if (previous != 0L) time.floatValue += ((now - previous) / 1_000_000_000.0).toFloat()
+                    if (previous != 0L) pending += (now - previous).coerceAtMost(100_000_000L)
                     previous = now
+                    if (pending >= interval - 1_000_000L) {
+                        time.floatValue += (pending / 1_000_000_000.0).toFloat()
+                        pending = 0L
+                    }
                 }
-                // This very slow decoration needs at most 30 updates/sec, only while visible.
-                delay(32)
             }
         }
     }

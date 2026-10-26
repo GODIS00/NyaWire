@@ -25,7 +25,7 @@ class BackgroundScenePreviewTest {
         val app = ApplicationProvider.getApplicationContext<GdhappApplication>()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val original = app.settings.settings.value
-        app.settings.update { it.copy(language = AppLanguage.RUSSIAN, refreshOnOpen = false, connectOnOpen = false) }
+        app.settings.update { it.copy(language = AppLanguage.RUSSIAN, refreshOnOpen = false, connectOnOpen = false, backgroundPictures = false) }
         fun capture(name: String) {
             val bitmap = instrumentation.uiAutomation.takeScreenshot()
             app.externalCacheDir!!.resolve("$name.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }

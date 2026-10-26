@@ -34,11 +34,11 @@ class RoutingRulesCoreTest {
             {"type":"field","ip":["geoip:private"],"outboundTag":"$privateTarget"}]}}"""
         val settings = ClientSettings(coreEngine = CoreEngine.SING_BOX)
         withLocalServer { port ->
-            app.coreSessions.open(panel("direct"), settings, forProbe = true).use { session ->
+            app.coreSessions.open(panel("direct"), settings).use { session ->
                 assertEquals("sing-box", session.engineName)
                 assertEquals("profile rule geoip:private → direct", "ok", fetch(session.port, port))
             }
-            app.coreSessions.open(panel("block"), settings, forProbe = true).use { session ->
+            app.coreSessions.open(panel("block"), settings).use { session ->
                 assertNotEquals("profile rule geoip:private → block", "ok", fetch(session.port, port))
             }
         }
@@ -48,12 +48,12 @@ class RoutingRulesCoreTest {
         withLocalServer { port ->
             val presets = ClientSettings(routingMode = RoutingMode.RULES, routeRussiaDirect = true, blockAds = true)
             val direct = presets.copy(importedRouting = ImportedRouting(name = "test", directIps = listOf("geoip:private"), proxySites = listOf("geosite:youtube")))
-            app.coreSessions.open(raw, direct, forProbe = true).use { session ->
+            app.coreSessions.open(raw, direct).use { session ->
                 assertEquals(engine, session.engineName)
                 assertEquals("$engine: geoip:private should go direct", "ok", fetch(session.port, port))
             }
             val blocked = presets.copy(importedRouting = ImportedRouting(name = "test", blockIps = listOf("geoip:private")))
-            app.coreSessions.open(raw, blocked, forProbe = true).use { session ->
+            app.coreSessions.open(raw, blocked).use { session ->
                 assertNotEquals("$engine: geoip:private should be blocked", "ok", fetch(session.port, port))
             }
         }
