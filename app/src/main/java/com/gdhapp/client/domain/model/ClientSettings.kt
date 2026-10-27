@@ -144,6 +144,8 @@ data class ClientSettings(
     val localSocksPort: Int = 0,
     val verifyOnConnect: Boolean = true,
     val reconnectOnSelect: Boolean = true,
+    val failoverEnabled: Boolean = false,
+    val backupServerId: String? = null,
     val logLevel: String = "warning",
     val probeMethod: ProbeMethod = ProbeMethod.HTTP_GET,
     val probeUrl: String = "https://www.gstatic.com/generate_204",

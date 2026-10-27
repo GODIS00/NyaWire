@@ -50,6 +50,7 @@ class GdhappVpnService : VpnService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var operation: Job? = null
     private var monitor: Job? = null
+    private var healthMonitor: Job? = null
     private var tunnel: ParcelFileDescriptor? = null
     private lateinit var core: VpnCoreManager
     private var lease = 0L
@@ -180,6 +181,7 @@ class GdhappVpnService : VpnService() {
                     app.vpnSession.update(VpnState.Connected)
                     promoteToForeground(AppText.text(R.string.vpn_connected_097, core.name))
                     startMonitoring(attempt, connectedAt)
+                    startHealthMonitoring(attempt)
                 } catch (_: TimeoutCancellationException) {
                     failAfterCleanup(attempt, AppText.text(R.string.the_core_did_not_start_within_25))
                 } catch (cancelled: CancellationException) {
@@ -199,9 +201,8 @@ class GdhappVpnService : VpnService() {
             while (app.vpnSession.isCurrent(attempt)) {
                 delay(1000)
                 if (!core.isRunning) {
-                    app.vpnSession.update(VpnState.Error(AppText.text(R.string.the_core_process_or_tun_bridge_stopped, core.name)))
                     val reason = AppText.text(R.string.the_core_process_or_tun_bridge_stopped, core.name)
-                    scope.launch { app.vpnSession.coreMutex.withLock { failAfterCleanup(attempt, reason) } }
+                    operation = scope.launch { app.vpnSession.coreMutex.withLock { failAfterCleanup(attempt, reason) } }
                     return@launch
                 }
                 val totals = withContext(Dispatchers.IO) { core.trafficTotals() }
@@ -221,7 +222,7 @@ class GdhappVpnService : VpnService() {
 
     fun stopVpn(preserveError: Boolean = false) {
         stopping = true
-        monitor?.cancel(); operation?.cancel()
+        monitor?.cancel(); healthMonitor?.cancel(); operation?.cancel()
         operation = scope.launch {
             app.vpnSession.coreMutex.withLock {
                 releaseResources()
@@ -237,6 +238,20 @@ class GdhappVpnService : VpnService() {
     private suspend fun failAfterCleanup(attempt: Long, message: String) {
         val hold = app.settings.settings.value.killSwitch && !proxyOnly && tunnel != null
         releaseResources(keepTunnel = hold)
+        // Startup/process errors count as the first failure. Recheck before changing the user's server.
+        val failedNode = activeNode
+        if (failedNode != null && backupCandidate() != null && underlyingNetwork() != null && app.vpnSession.isCurrent(attempt)) {
+            app.vpnSession.update(VpnState.Connecting)
+            val network = underlyingNetwork()
+            var confirmed = true
+            repeat(2) {
+                if (confirmed) {
+                    delay(5_000)
+                    confirmed = network != null && underlyingNetwork() == network && backupCandidate() != null && !serverHealthy(failedNode, live = false)
+                }
+            }
+            if (confirmed && switchToBackup(attempt)) return
+        }
         stopping = !hold
         if (app.vpnSession.isCurrent(attempt)) { app.vpnSession.update(VpnState.Error(message)); app.vpnSession.updateMetrics(VpnMetrics()) }
         if (hold) promoteToForeground(AppText.text(R.string.kill_switch_blocked)) else finishService()
@@ -244,6 +259,7 @@ class GdhappVpnService : VpnService() {
 
     private suspend fun releaseResources(keepTunnel: Boolean = false) = withContext(NonCancellable + Dispatchers.IO) {
         monitor?.cancel(); monitor = null
+        healthMonitor?.cancel(); healthMonitor = null
         probeJob?.cancel(); probeJob = null; notificationProbe = null
         wakeLock?.let { runCatching { if (it.isHeld) it.release() } }; wakeLock = null
         try { core.stop() } finally { if (!keepTunnel) { runCatching { tunnel?.close() }; tunnel = null } }
@@ -262,7 +278,7 @@ class GdhappVpnService : VpnService() {
     override fun onRevoke() { scope.launch { stopVpn() } }
     override fun onDestroy() {
         stopping = true
-        operation?.cancel(); monitor?.cancel()
+        operation?.cancel(); monitor?.cancel(); healthMonitor?.cancel()
         scope.launch {
             app.vpnSession.coreMutex.withLock {
                 releaseResources()
@@ -285,6 +301,61 @@ class GdhappVpnService : VpnService() {
      * Only global routing sends its SOCKS requests through the server; otherwise a separate probe core checks it.
      */
     private fun liveCoreReachesServer() = core.publicSocksAvailable && liveRouting == com.gdhapp.client.domain.model.RoutingMode.GLOBAL
+
+    private fun backupCandidate(): ServerNode? {
+        val settings = app.settings.settings.value
+        if (!settings.failoverEnabled) return null
+        return app.subscriptions.groups.value.asSequence().flatMap { it.servers.asSequence() }
+            .firstOrNull { it.id == settings.backupServerId && it.id != activeNode?.id && it.rawConfigJson != activeNode?.rawConfigJson }
+    }
+
+    private fun underlyingNetwork(): String? {
+        val connectivity = getSystemService(android.net.ConnectivityManager::class.java)
+        return connectivity.allNetworks.filter { network -> connectivity.getNetworkCapabilities(network)?.let {
+            it.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) && !it.hasTransport(android.net.NetworkCapabilities.TRANSPORT_VPN)
+        } == true }.map { it.networkHandle }.sorted().takeIf { it.isNotEmpty() }?.joinToString()
+    }
+
+    private suspend fun serverHealthy(node: ServerNode, live: Boolean): Boolean {
+        val settings = app.settings.settings.value.copy(probeTimeoutSeconds = 5, probeSamples = 1,
+            routingMode = com.gdhapp.client.domain.model.RoutingMode.GLOBAL)
+        // A second independent destination avoids switching just because one check site is unavailable.
+        for (url in listOf("https://www.gstatic.com/generate_204", "https://cp.cloudflare.com/generate_204")) {
+            val check = settings.copy(probeUrl = url)
+            val result = if (live && liveCoreReachesServer()) app.latencyTester.testViaProxy(core.localPort, ProbeMethod.HTTP_GET, check)
+                else app.latencyTester.test(node, ProbeMethod.HTTP_GET, check)
+            if (result.isSuccess) return true
+        }
+        return false
+    }
+
+    private fun startHealthMonitoring(attempt: Long) {
+        healthMonitor?.cancel()
+        healthMonitor = scope.launch {
+            val failures = FailoverTracker()
+            while (app.vpnSession.isCurrent(attempt)) {
+                delay(15_000)
+                val node = activeNode ?: continue
+                if (stopping || app.vpnSession.state.value != VpnState.Connected || backupCandidate() == null) { failures.reset(); continue }
+                val network = underlyingNetwork()
+                if (!failures.ready(network, SystemClock.elapsedRealtime())) continue
+                val healthy = serverHealthy(node, live = true)
+                if (underlyingNetwork() != network) { failures.reset(); continue }
+                if (failures.record(healthy) && switchToBackup(attempt)) return@launch
+            }
+        }
+    }
+
+    private fun switchToBackup(attempt: Long): Boolean {
+        if (!app.vpnSession.isCurrent(attempt) || underlyingNetwork() == null) return false
+        val backup = backupCandidate() ?: return false
+        activeNode = backup
+        app.vpnSession.setActiveNode(backup)
+        app.vpnSession.updateMetrics(VpnMetrics())
+        // The saved primary stays selected. A manual connection tries it again; no automatic bouncing back.
+        startVpn(backup.rawConfigJson)
+        return true
+    }
 
     private fun probeActiveConnection() {
         if (probeJob?.isActive == true) return
@@ -332,6 +403,7 @@ class GdhappVpnService : VpnService() {
         private const val NOTIFICATION_ID = 77
         fun start(context: Context, config: String, waitForNetwork: Boolean = false) {
             val app = context.applicationContext as GdhappApplication
+            if (app.vpnSession.restoringBackup) return
             if (app.vpnSession.state.value == VpnState.Connected || app.vpnSession.state.value == VpnState.Connecting) return
             app.vpnSession.pendingConfig = config
             app.vpnSession.setActiveNode(app.subscriptions.groups.value.flatMap { it.servers }.firstOrNull { it.rawConfigJson == config && it.isSelected })

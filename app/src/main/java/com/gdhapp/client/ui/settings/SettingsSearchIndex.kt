@@ -12,11 +12,13 @@ internal data class SettingsSearchTarget(val category: Int, val key: String, val
 }
 
 internal val settingsContentKeys = mapOf(
-    0 to listOf(1, 2, 6, 27, 24, 28), 5 to listOf(3, 4, 29), 6 to listOf(7), 4 to listOf(30, 9, 31, 32, 33, 5, 10),
+    0 to listOf(1, 2, 6, 34, 27, 24, 28), 5 to listOf(3, 4, 29), 6 to listOf(7, 35), 4 to listOf(30, 9, 31, 32, 33, 5, 10),
     1 to listOf(12, 14, 26, 15, 16), 2 to listOf(17, 18, 19), 3 to listOf(20, 25, 21, 23),
 ).mapValues { (_, ids) -> ids.map { "settings-content:$it" } }
 
 internal val settingsSearchTargets = listOf(
+    SettingsSearchTarget(0, "settings-content:34", R.string.backup_server, listOf(R.string.failover_auto)),
+    SettingsSearchTarget(6, "settings-content:35", R.string.backup_title, listOf(R.string.backup_create, R.string.backup_restore, R.string.backup_password)),
     SettingsSearchTarget(1, "settings-content:16", R.string.vpn_button_style, listOf(R.string.border_neon, R.string.border_aurora, R.string.border_accent)),
     SettingsSearchTarget(0, "settings-content:27", R.string.kill_switch_hint),
     SettingsSearchTarget(0, "settings-content:28", R.string.hotspot_proxy),

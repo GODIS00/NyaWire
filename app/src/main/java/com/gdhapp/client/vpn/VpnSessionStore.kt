@@ -19,6 +19,7 @@ class VpnSessionStore {
     private val generation = AtomicLong()
     val coreMutex = Mutex()
     @Volatile var pendingConfig: String? = null
+    @Volatile var restoringBackup: Boolean = false
     fun update(state: VpnState) {
         mutableState.value = state
         if (state == VpnState.Disconnected || state is VpnState.Error) mutableActiveNode.value = null

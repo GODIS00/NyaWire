@@ -17,6 +17,7 @@ class GdhappApplication : Application() {
     }
     val subscriptions by lazy { LocalSubscriptionRepository(this, sendHwid = { settings.settings.value.sendHwid }) }
     val settings by lazy { SettingsRepository(this) }
+    val backups by lazy { com.gdhapp.client.data.backup.BackupManager(this) }
     val coreSessions by lazy { CoreSessionFactory(this) }
     val latencyTester by lazy { NetworkLatencyTester(coreSessions) }
     val vpnSession = VpnSessionStore()

@@ -32,6 +32,16 @@ class SettingsRepository(private val context: Context) {
         showFlags = true, showProtocol = true, showAddress = false, cornerRadius = 24, textScale = 1f,
     ) } }
 
+    /** Restore publishes only after the durable write succeeds. */
+    @Synchronized
+    fun restore(value: ClientSettings) {
+        val next = normalize(value)
+        check(preferences.edit().putString("settings", gson.toJson(next)).commit()) { "Settings write failed" }
+        com.gdhapp.client.i18n.AppText.setLanguage(next.language)
+        mutableSettings.value = next
+        runCatching { com.gdhapp.client.background.SubscriptionUpdater.schedule(context, next.autoUpdateSubscriptions) }
+    }
+
     private fun load(): ClientSettings = runCatching {
         preferences.getString("settings", null)?.let {
             normalize(gson.fromJson(it, ClientSettings::class.java))
@@ -95,6 +105,7 @@ class SettingsRepository(private val context: Context) {
             dnsSecondary = (value.dnsSecondary as String?).orEmpty(),
             probeUrl = (value.probeUrl as String?).orEmpty().ifBlank { defaults.probeUrl },
             logLevel = value.logLevel.takeIf { it in setOf("error", "warning", "info", "debug") } ?: "warning",
+            backupServerId = value.backupServerId?.takeIf { it.isNotBlank() && it.length <= 500 },
         )
     }
 }

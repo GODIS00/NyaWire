@@ -173,19 +173,31 @@ class LocalSubscriptionRepository(context: Context,
         change { current -> current.map { if (it.id == id) it.copy(title = title.trim().take(100)) else it } }
     }
 
+    /** Excludes in-flight refreshes; roll back the list if the settings write fails. */
+    suspend fun restore(groups: List<SubscriptionGroup>, writeSettings: () -> Unit) = withContext(Dispatchers.IO) {
+        refreshMutex.withLock { mutex.withLock {
+            val previous = mutableGroups.value
+            val next = LocalProfiles.combine(groups)
+            persist(next)
+            try { writeSettings() } catch (error: Exception) { persist(previous); throw error }
+            mutableGroups.value = next
+        } }
+    }
+
+    private fun persist(groups: List<SubscriptionGroup>) {
+        val stream = file.startWrite()
+        try {
+            stream.write(gson.toJson(groups).toByteArray(Charsets.UTF_8))
+            file.finishWrite(stream)
+        } catch (exception: Exception) { file.failWrite(stream); throw exception }
+    }
+
     private suspend fun change(transform: (List<SubscriptionGroup>) -> List<SubscriptionGroup>) {
         withContext(Dispatchers.IO) {
             mutex.withLock {
                 val next = LocalProfiles.combine(transform(mutableGroups.value))
-                val stream = file.startWrite()
-                try {
-                    stream.write(gson.toJson(next).toByteArray(Charsets.UTF_8))
-                    file.finishWrite(stream)
-                    mutableGroups.value = next
-                } catch (exception: Exception) {
-                    file.failWrite(stream)
-                    throw exception
-                }
+                persist(next)
+                mutableGroups.value = next
             }
         }
     }

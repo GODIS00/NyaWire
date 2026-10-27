@@ -116,7 +116,7 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
         }, label = "settingsPage") { shown ->
         if (shown == -1) SettingsOverview(categories,
             listOf("${settings.connectionMode.label} · ${settings.coreEngine.label}", "${settings.theme.label} · ${if (settings.dynamicColors) AppText.text(R.string.android_wallpaper_colors) else if (settings.customAccent != null) AppText.text(R.string.custom_color) else settings.accent.label}",
-                settings.probeMethod.label, "NyaWire ${BuildConfig.VERSION_NAME}", settings.routingMode.label, "${settings.coreEngine.label} · MTU ${settings.mtu}", AppText.text(R.string.auto_update_subscriptions)), icons, Modifier.fillMaxSize()) { openCategory(it) }
+                settings.probeMethod.label, "NyaWire ${BuildConfig.VERSION_NAME}", settings.routingMode.label, "${settings.coreEngine.label} · MTU ${settings.mtu}", AppText.text(R.string.subscriptions_data_hint)), icons, Modifier.fillMaxSize()) { openCategory(it) }
         // Only the current page drives the shared scroll state; a leaving page keeps a copy of its position.
         else LazyColumn(state = if (shown == page) listState else androidx.compose.foundation.lazy.rememberLazyListState(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset),
             modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -145,6 +145,7 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                             Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.width(8.dp)); Text(AppText.text(R.string.android_vpn_settings), fontSize = 12.sp)
                         }
                     } }
+                    item(key = "settings-content:34", contentType = "settings-content") { FailoverSettings(state, actions) }
                     item(key = "settings-content:27", contentType = "settings-content") { SettingsSection("Kill Switch", Icons.Rounded.Security) {
                         ToggleSetting("Kill Switch", AppText.text(R.string.kill_switch_hint), settings.killSwitch, enabled = settings.connectionMode == ConnectionMode.VPN) { actions.updateSettings(settings.copy(killSwitch = it)) }
                     } }
@@ -205,6 +206,7 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                         ToggleSetting(AppText.text(R.string.auto_update_subscriptions), AppText.text(R.string.auto_update_hint), settings.autoUpdateSubscriptions) { actions.updateSettings(settings.copy(autoUpdateSubscriptions = it)) }
                         ChoiceChips(listOf(0, 1, 3, 6, 12, 24), settings.subscriptionUpdateHours, { if (it == 0) AppText.text(R.string.from_subscription) else AppText.text(R.string.hours_interval, it) }) { actions.updateSettings(settings.copy(subscriptionUpdateHours = it)) }
                     } }
+                    item(key = "settings-content:35", contentType = "settings-content") { BackupSettings() }
                 }
                 4 -> {
                     item(key = "settings-content:30", contentType = "settings-content") { SettingsSection(AppText.text(R.string.local_network), Icons.Rounded.Lan) {
@@ -515,7 +517,7 @@ private fun BackgroundScenePicker(settings: ClientSettings, onSelect: (Backgroun
 }
 
 @Composable
-private fun SettingsSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) = com.gdhapp.client.ui.theme.BlockColors {
+internal fun SettingsSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) = com.gdhapp.client.ui.theme.BlockColors {
     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.then(if (LocalMotionEnabled.current) Modifier.animateContentSize(IosMotion.size) else Modifier).padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 2.dp)) {
@@ -536,7 +538,7 @@ private fun <T> ChoiceChips(values: List<T>, selected: T, label: (T) -> String, 
 }
 
 @Composable
-private fun ToggleSetting(title: String, description: String, checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
+internal fun ToggleSetting(title: String, description: String, checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().clickable(enabled = enabled) { onChange(!checked) }.heightIn(min = 48.dp).padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).padding(end = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
@@ -547,11 +549,11 @@ private fun ToggleSetting(title: String, description: String, checked: Boolean, 
 }
 
 @Composable
-private fun EditSetting(title: String, subtitle: String, value: String, onClick: () -> Unit) {
+internal fun EditSetting(title: String, subtitle: String?, value: String, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 48.dp).padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).padding(end = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-            Text(subtitle, fontSize = 10.sp, lineHeight = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (!subtitle.isNullOrBlank()) Text(subtitle, fontSize = 10.sp, lineHeight = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Text(value, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 128.dp))
         Icon(Icons.Rounded.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp).padding(start = 4.dp))
@@ -559,6 +561,6 @@ private fun EditSetting(title: String, subtitle: String, value: String, onClick:
 }
 
 @Composable
-private fun SettingsHint(text: String) { Text(text, fontSize = 11.sp, lineHeight = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 4.dp)) }
+internal fun SettingsHint(text: String) { Text(text, fontSize = 11.sp, lineHeight = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 4.dp)) }
 
 

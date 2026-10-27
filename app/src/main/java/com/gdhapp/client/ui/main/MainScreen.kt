@@ -110,7 +110,6 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
         val backdrop = rememberGraphicsLayer().apply { clip = true }
         var backdropOrigin by remember { mutableStateOf(Offset.Zero) }
         val showMini = state.connectionBusy && tab != 2 && (tab == 1 || (!twoPane && connectionCardScrolled))
-        val scrolling by remember { derivedStateOf { if (tab == 1) pingListState.isScrollInProgress else listState.isScrollInProgress } }
         val blurPanel = !state.startupRefreshing && state.settings.softBlur && Build.VERSION.SDK_INT >= 31
         val captureBackdrop = blurPanel
 
@@ -185,7 +184,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                         drawLayer(backdrop)
                     } else drawContent()
                 }) {
-                com.gdhapp.client.ui.theme.AppBackground(state.settings, state.settings.animations && !scrolling && !state.startupRefreshing, Modifier.matchParentSize())
+                com.gdhapp.client.ui.theme.AppBackground(state.settings, state.settings.animations && !state.startupRefreshing, Modifier.matchParentSize())
                 AnimatedContent(tab, Modifier.fillMaxSize().clipToBounds(), transitionSpec = {
                     if (state.settings.animations) IosMotion.page(forward = targetState > initialState) else IosMotion.none
                 }, label = "tabContent") { tab -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) { when (tab) {

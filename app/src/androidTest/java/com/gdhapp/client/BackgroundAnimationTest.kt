@@ -25,9 +25,56 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Verifies the actual frame clock: scrolling/visibility pauses do not restart or fast-forward the rain. */
+/** Verifies background motion during scrolling and clock continuity across visibility pauses. */
 @RunWith(AndroidJUnit4::class)
 class BackgroundAnimationTest {
+    @Test fun rainKeepsMovingDuringAnActualServerListDrag() {
+        assumeTrue("Uses only the dedicated test emulator", Build.MODEL.contains("sdk"))
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<GdhappApplication>()
+        val original = app.settings.settings.value
+        app.settings.update { it.copy(backgroundPictures = false, refreshOnOpen = false, connectOnOpen = false) }
+        val settings = ClientSettings(theme = ThemeMode.DARK, backgroundScene = BackgroundScene.RAIN)
+        val nodes = List(100) { index -> com.gdhapp.client.domain.model.ServerNode("scroll-$index", "Server $index",
+            protocolSummary = "VLESS · TCP", rawConfigJson = "{}", isSelected = index == 0) }
+        val group = com.gdhapp.client.domain.model.SubscriptionGroup("scroll-fixture", "Servers", lastUpdated = "", servers = nodes)
+        var before: android.graphics.Bitmap? = null
+        var after: android.graphics.Bitmap? = null
+        try { ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { activity -> activity.setContent {
+                NyaWireTheme(settings) { com.gdhapp.client.ui.main.MainScreen(
+                    com.gdhapp.client.ui.main.MainUiState(groups = listOf(group), settings = settings),
+                    com.gdhapp.client.ui.main.MainActions(), androidx.compose.runtime.remember { androidx.compose.material3.SnackbarHostState() }) }
+            } }
+            Thread.sleep(800)
+            val width = app.resources.displayMetrics.widthPixels.toFloat()
+            val height = app.resources.displayMetrics.heightPixels.toFloat()
+            val down = android.os.SystemClock.uptimeMillis()
+            fun touch(action: Int, y: Float) {
+                val event = android.view.MotionEvent.obtain(down, android.os.SystemClock.uptimeMillis(), action, width * .55f, y, 0)
+                try { instrumentation.sendPointerSync(event) } finally { event.recycle() }
+            }
+            touch(android.view.MotionEvent.ACTION_DOWN, height * .75f)
+            try {
+                for (step in 1..40) {
+                    touch(android.view.MotionEvent.ACTION_MOVE, height * .75f - step * 7f)
+                    Thread.sleep(40)
+                    if (step == 20) before = instrumentation.uiAutomation.takeScreenshot()
+                    if (step == 35) after = instrumentation.uiAutomation.takeScreenshot()
+                }
+            } finally { touch(android.view.MotionEvent.ACTION_UP, height * .75f - 280f) }
+            val a = checkNotNull(before); val b = checkNotNull(after)
+            val density = app.resources.displayMetrics.density
+            var changed = 0
+            // The outer list gutter contains only the fixed background, never moving server cards.
+            for (edge in listOf(0, 1)) for (offset in (2 * density).toInt()..(9 * density).toInt()) {
+                val x = if (edge == 0) offset else a.width - 1 - offset
+                for (y in a.height / 3 until a.height * 4 / 5) if (a.getPixel(x, y) != b.getPixel(x, y)) changed++
+            }
+            assertTrue("The background froze while the finger was dragging the list: $changed changed pixels", changed > 20)
+        } } finally { before?.recycle(); after?.recycle(); app.settings.update { original } }
+    }
+
     @Test fun captureRainDetails() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         assumeTrue("Opt-in visual review", InstrumentationRegistry.getArguments().getString("captureRain") == "true")
@@ -67,6 +114,7 @@ class BackgroundAnimationTest {
         app.settings.update { it.copy(backgroundPictures = false, refreshOnOpen = false, connectOnOpen = false) }
         var running by mutableStateOf(true)
         lateinit var clock: FloatState
+        val clockReady = java.util.concurrent.CountDownLatch(1)
         fun awaitNextFrame(previous: Float, label: String) {
             val deadline = android.os.SystemClock.elapsedRealtime() + 3000L
             while (clock.floatValue <= previous && android.os.SystemClock.elapsedRealtime() < deadline) Thread.sleep(16)
@@ -78,11 +126,13 @@ class BackgroundAnimationTest {
             scenario.onActivity { activity -> activity.setContent {
                 NyaWireTheme(settings) {
                     clock = rememberBackgroundClock(running, 60)
+                    androidx.compose.runtime.SideEffect { clockReady.countDown() }
                     Box(Modifier.fillMaxSize()) { SceneBackground(BackgroundScene.RAIN, clock, true, false, Modifier.fillMaxSize()) }
                 }
             } }
             instrumentation.waitForIdleSync()
-            awaitNextFrame(0f, "Initial visible scene")
+            assertTrue("The scene did not compose", clockReady.await(10, java.util.concurrent.TimeUnit.SECONDS))
+            awaitNextFrame(clock.floatValue, "Initial visible scene")
             scenario.onActivity { running = false }
             instrumentation.waitForIdleSync()
             Thread.sleep(150)
