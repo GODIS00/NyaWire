@@ -534,6 +534,9 @@
     <string name="scene_sakura">Сакура</string>
     <string name="scene_neon">Неон</string>
     <string name="scene_rain">Дождь</string>
+    <string name="scene_ocean">Океан</string>
+    <string name="scene_fireflies">Светлячки</string>
+    <string name="scene_snow">Снег</string>
     <string name="gradient_start">Первый цвет</string>
     <string name="gradient_end">Второй цвет</string>
     <string name="refresh_all_subscriptions">Обновить все подписки</string>

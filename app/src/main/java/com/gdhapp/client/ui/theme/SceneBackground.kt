@@ -71,6 +71,9 @@ internal fun SceneBackground(scene: BackgroundScene, time: FloatState, dark: Boo
             BackgroundScene.SAKURA -> Sakura(time, dark, amoled)
             BackgroundScene.NEON -> Neon(time, dark, amoled)
             BackgroundScene.RAIN -> RainBackground(time, dark, amoled)
+            BackgroundScene.OCEAN -> OceanBackground(time, dark, amoled)
+            BackgroundScene.FIREFLIES -> FirefliesBackground(time, dark, amoled)
+            BackgroundScene.SNOW -> SnowBackground(time, dark, amoled)
             BackgroundScene.CATS -> Unit
         }
         // The top bar keeps the plain theme color, so the scene fades in below it instead of starting at a seam.
@@ -89,19 +92,19 @@ internal fun BoxScope.Still(draw: CacheDrawScope.() -> DrawResult) = Spacer(Modi
 internal fun BoxScope.Moving(draw: CacheDrawScope.() -> DrawResult) = Spacer(Modifier.matchParentSize().graphicsLayer().drawWithCache(draw))
 
 /** Repeatable pseudo-random numbers in [0, 1): every launch draws the same sky. */
-private fun rand(i: Int, salt: Int): Float {
+internal fun rand(i: Int, salt: Int): Float {
     val x = sin(i * 127.1 + salt * 311.7) * 43758.5453
     return (x - floor(x)).toFloat()
 }
 
-private fun Float.wrap(span: Float) = (this % span + span) % span
+internal fun Float.wrap(span: Float) = (this % span + span) % span
 
-private const val DEGREES = .017453292f
+internal const val DEGREES = .017453292f
 
-private class Star(val x: Float, val y: Float, val radius: Float, val phase: Float, val speed: Float)
+internal class Star(val x: Float, val y: Float, val radius: Float, val phase: Float, val speed: Float)
 
 /** Stars between [top] and [bottom] (fractions of the height); the count follows the area, so tablets are not sparse. */
-private fun CacheDrawScope.starField(salt: Int, top: Float, bottom: Float, perDp: Float, max: Int): List<Star> {
+internal fun CacheDrawScope.starField(salt: Int, top: Float, bottom: Float, perDp: Float, max: Int): List<Star> {
     val count = (size.width * size.height / (density * density) * perDp).roundToInt().coerceIn(8, max)
     return List(count) { i ->
         Star(rand(i, salt) * size.width, (top + rand(i, salt + 1) * (bottom - top)) * size.height,
@@ -110,7 +113,7 @@ private fun CacheDrawScope.starField(salt: Int, top: Float, bottom: Float, perDp
 }
 
 /** [fall] moves bigger, nearer stars faster: pixels per second for each pixel of radius. */
-private fun DrawScope.twinkle(stars: List<Star>, color: Color, t: Float, strength: Float = 1f, fall: Float = 0f) {
+internal fun DrawScope.twinkle(stars: List<Star>, color: Color, t: Float, strength: Float = 1f, fall: Float = 0f) {
     for (star in stars) {
         val y = if (fall == 0f) star.y else (star.y + t * fall * star.radius).wrap(size.height)
         drawCircle(color, star.radius, Offset(star.x, y), strength * (.35f + .65f * (.5f + .5f * sin(t * star.speed + star.phase))))
@@ -118,7 +121,7 @@ private fun DrawScope.twinkle(stars: List<Star>, color: Color, t: Float, strengt
 }
 
 /** Four-pointed glints from unit-sized brushes scaled into place, so frames allocate nothing. */
-private class Sparkle(color: Color) {
+internal class Sparkle(color: Color) {
     private val ray = Brush.horizontalGradient(listOf(color.copy(alpha = 0f), color, color.copy(alpha = 0f)), startX = -1f, endX = 1f)
     private val core = Brush.radialGradient(listOf(color, color.copy(alpha = 0f)), center = Offset.Zero, radius = 1f)
 
