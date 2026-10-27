@@ -10,13 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,10 +22,10 @@ import com.gdhapp.client.domain.model.VpnState
 
 /** A fixed overlay: showing the panel never resizes or reanchors the server list. */
 @Composable
-fun FrostedConnectionBar(state: MainUiState, onStop: () -> Unit, backdrop: GraphicsLayer, blur: Boolean, bottomInset: androidx.compose.ui.unit.Dp = 0.dp, refresh: Boolean = true) {
+fun FrostedConnectionBar(state: MainUiState, onStop: () -> Unit, backdrop: GraphicsLayer, blur: Boolean, sourceOrigin: Offset = Offset.Zero) {
     val scheme = MaterialTheme.colorScheme
     Box(Modifier.fillMaxWidth().height(76.dp).clip(MaterialTheme.shapes.large)) {
-        CachedBackdrop(backdrop, blur, refresh, Modifier.matchParentSize(), leftOffset = (-8).dp, bottomOffset = bottomInset + 8.dp, radius = 26.dp)
+        CachedBackdrop(backdrop, blur, Modifier.matchParentSize(), sourceOrigin, radius = 22.dp)
         Box(Modifier.matchParentSize().background(Brush.linearGradient(listOf(
             scheme.surfaceContainerHigh.copy(alpha = if (blur) .62f else .98f),
             scheme.surfaceContainer.copy(alpha = if (blur) .82f else 1f),

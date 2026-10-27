@@ -74,7 +74,12 @@ fun NyaWireTheme(settings: ClientSettings = ClientSettings(), content: @Composab
             outline = Color(0xFF778495), outlineVariant = Color(0xFFD7DFEB),
         )
     }
-    val colors = blockColorScheme(baseColors, settings, dark)
+    val colors = blockColorScheme(baseColors, settings, dark).let { blocks ->
+        if (!settings.backgroundPictures) blocks else blocks.copy(
+            // Keep mid-tone custom colours opaque: their text contrast has little headroom.
+            surfaceContainerLow = blocks.surfaceContainerLow.copy(alpha = if (blocks.surfaceContainerLow.luminance() in .10f.. .30f) 1f else .92f),
+        )
+    }
     val density = LocalDensity.current
     CompositionLocalProvider(
         LocalMotionEnabled provides settings.animations,

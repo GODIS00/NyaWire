@@ -58,6 +58,9 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import com.gdhapp.client.domain.model.VpnMetrics
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalDensity
@@ -105,11 +108,11 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
         val scheme = MaterialTheme.colorScheme
         val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
         val backdrop = rememberGraphicsLayer().apply { clip = true }
+        var backdropOrigin by remember { mutableStateOf(Offset.Zero) }
         val showMini = state.connectionBusy && tab != 2 && (tab == 1 || (!twoPane && connectionCardScrolled))
-        // Keep the glass stable during flings without recording another viewport pass.
         val scrolling by remember { derivedStateOf { if (tab == 1) pingListState.isScrollInProgress else listState.isScrollInProgress } }
         val blurPanel = !state.startupRefreshing && state.settings.softBlur && Build.VERSION.SDK_INT >= 31
-        val captureBackdrop = !scrolling && blurPanel
+        val captureBackdrop = blurPanel
 
         val navIcons = listOf(Icons.Rounded.Dns, Icons.Rounded.NetworkCheck, Icons.Rounded.Tune)
         val navLabels = listOf(AppText.text(R.string.servers_091), AppText.text(R.string.checks), AppText.text(R.string.settings))
@@ -149,7 +152,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
             bottomBar = {
                 if (!useRail) Column {
                     Box {
-                    FrostedNavigationBackground(backdrop, blurPanel, Modifier.matchParentSize(), refresh = captureBackdrop)
+                    FrostedNavigationBackground(backdrop, blurPanel, Modifier.matchParentSize(), sourceOrigin = backdropOrigin)
                     NavigationBar(modifier = Modifier.height((64 * fontScale.coerceAtMost(1.5f)).dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()), containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp) {
                         navLabels.forEachIndexed { index, title -> NavigationBarItem(selected = tab == index, onClick = { tab = index },
                             icon = { Icon(navIcons[index], title) }, label = { Text(title, fontSize = 11.sp) }) }
@@ -170,7 +173,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                     }
                 }
                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.TopCenter) {
-                Box(Modifier.fillMaxSize().drawWithContent {
+                Box(Modifier.fillMaxSize().onGloballyPositioned { backdropOrigin = it.positionInRoot() }.drawWithContent {
                     if (captureBackdrop) {
                         // Retain drawing commands once. The panel clips its blur pass to its own bounds.
                         backdrop.record {
@@ -203,7 +206,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                     enter = if (state.settings.animations) fadeIn() + slideInVertically { it / 3 } else EnterTransition.None,
                     exit = if (state.settings.animations) fadeOut() + slideOutVertically { it / 3 } else ExitTransition.None) {
                     val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
-                    FrostedConnectionBar(state.copy(metrics = currentMetrics), ::connect, backdrop, blurPanel, insets.calculateBottomPadding(), refresh = captureBackdrop)
+                    FrostedConnectionBar(state.copy(metrics = currentMetrics), ::connect, backdrop, blurPanel, sourceOrigin = backdropOrigin)
                 }
             }
             }
@@ -467,7 +470,7 @@ private fun ProbeMethods(state: MainUiState, actions: MainActions) {
 }
 
 @Composable
-private fun ProbeSummary(state: MainUiState, actions: MainActions) {
+private fun ProbeSummary(state: MainUiState, actions: MainActions) = com.gdhapp.client.ui.theme.BlockColors {
     val results = state.allNodes.mapNotNull { it.probeResults[state.settings.probeMethod] }
     Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -506,7 +509,7 @@ private fun CheckCounter(label: String, value: Int) { Column(horizontalAlignment
 } }
 
 @Composable
-private fun PingAllControl(state: MainUiState, actions: MainActions) {
+private fun PingAllControl(state: MainUiState, actions: MainActions) = com.gdhapp.client.ui.theme.BlockColors {
     val scheme = MaterialTheme.colorScheme
     val motion = LocalMotionEnabled.current
     val progress by animateFloatAsState(
