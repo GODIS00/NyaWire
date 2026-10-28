@@ -575,4 +575,16 @@
     <string name="backup_unprotected_hint">Ключи серверов и ссылки подписок будут доступны для чтения в файле.</string>
     <string name="backup_with_password">С паролем</string>
     <string name="backup_without_password">Без пароля</string>
+    <string name="app_icon">Иконка приложения</string>
+    <string name="app_icon_hint">10 вариантов для рабочего стола</string>
+    <string name="app_icon_failed">Не удалось сменить иконку. Попробуйте ещё раз.</string>
+    <string name="icon_original">Оригинал</string>
+    <string name="icon_sakura">Сакура</string>
+    <string name="icon_midnight">Луна</string>
+    <string name="icon_sunset">Закат</string>
+    <string name="icon_frost">Лёд</string>
+    <string name="icon_amoled">AMOLED</string>
+    <string name="subscription_count">Серверов: %1$d</string>
+    <string name="subscription_updated_at">Обновлено %1$s</string>
+    <string name="ping_compact_error">Ошибка</string>
 </resources>

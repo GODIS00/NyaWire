@@ -111,7 +111,7 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
         var backdropOrigin by remember { mutableStateOf(Offset.Zero) }
         val showMini = state.connectionBusy && tab != 2 && (tab == 1 || (!twoPane && connectionCardScrolled))
         val blurPanel = !state.startupRefreshing && state.settings.softBlur && Build.VERSION.SDK_INT >= 31
-        val captureBackdrop = blurPanel
+        val captureBackdrop = blurPanel && (!useRail || showMini)
 
         val navIcons = listOf(Icons.Rounded.Dns, Icons.Rounded.NetworkCheck, Icons.Rounded.Tune)
         val navLabels = listOf(AppText.text(R.string.servers_091), AppText.text(R.string.checks), AppText.text(R.string.settings))
@@ -172,19 +172,20 @@ fun MainScreen(state: MainUiState, actions: MainActions, snackbarHostState: Snac
                     }
                 }
                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.TopCenter) {
-                Box(Modifier.fillMaxSize().onGloballyPositioned { backdropOrigin = it.positionInRoot() }.drawWithContent {
+                Box(Modifier.fillMaxSize()) {
+                // Glass samples the scenery, never a second copy of all lists and controls.
+                // This also prevents scrolling text from ghosting underneath navigation labels.
+                Box(Modifier.matchParentSize().onGloballyPositioned { backdropOrigin = it.positionInRoot() }.drawWithContent {
                     if (captureBackdrop) {
-                        // Retain drawing commands once. The panel clips its blur pass to its own bounds.
                         backdrop.record {
-                            // An opaque retained background prevents sharp content showing through
-                            // transparent pixels of the blurred copy under the navigation strip.
                             drawRect(scheme.background)
                             this@drawWithContent.drawContent()
                         }
                         drawLayer(backdrop)
                     } else drawContent()
                 }) {
-                com.gdhapp.client.ui.theme.AppBackground(state.settings, state.settings.animations && !state.startupRefreshing, Modifier.matchParentSize())
+                    com.gdhapp.client.ui.theme.AppBackground(state.settings, state.settings.animations && !state.startupRefreshing, Modifier.matchParentSize())
+                }
                 AnimatedContent(tab, Modifier.fillMaxSize().clipToBounds(), transitionSpec = {
                     if (state.settings.animations) IosMotion.page(forward = targetState > initialState) else IosMotion.none
                 }, label = "tabContent") { tab -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) { when (tab) {
@@ -288,7 +289,7 @@ private fun ServersScreen(state: MainUiState, actions: MainActions,
             enabled = hasSubscriptions && !state.startupRefreshing, onRefresh = actions.refreshAll)) {
             LazyColumn(state = listState, modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = if (wide) 16.dp else 4.dp,
-                    bottom = if (state.connectionBusy && !wide) 92.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    bottom = if (state.connectionBusy && !wide) 92.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (!wide) item(key = "connection") {
                     val currentMetrics = metrics?.let { it.collectAsStateWithLifecycle().value } ?: state.metrics
                     Box(itemMotion(state.settings.animations)) { ConnectionCard(state.copy(metrics = currentMetrics), onConnect, onAdd, onErrorInfo) }
@@ -326,7 +327,7 @@ private fun ServersScreen(state: MainUiState, actions: MainActions,
                         item(key = "group:${group.id}") { Box(itemMotion(state.settings.animations)) { SubscriptionHeader(group, state, actions, onDelete = { onDeleteGroup(group.id) }, onRename = { onRenameGroup(group.id) }) } }
                         if (group.isExpanded) serverRows(shownNodes.getValue(group.id), state, actions,
                             onSelect = onSelect, onInfo = onInfo, keyPrefix = group.id)
-                        item(key = "space:${group.id}") { Spacer(Modifier.height(2.dp).then(itemMotion(state.settings.animations))) }
+                        item(key = "space:${group.id}") { Spacer(Modifier.height(6.dp).then(itemMotion(state.settings.animations))) }
                     }
                 }
             }
@@ -368,40 +369,41 @@ private fun SortMenu(state: MainUiState, actions: MainActions) {
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, actions: MainActions, onDelete: () -> Unit, onRename: () -> Unit) = com.gdhapp.client.ui.theme.BlockColors {
     var menu by remember { mutableStateOf(false) }
     var info by remember { mutableStateOf(false) }
     var announcementExpanded by rememberSaveable(group.id) { mutableStateOf(false) }
     val scheme = MaterialTheme.colorScheme
     val motion = state.settings.animations
-    // ChevronRight turned a quarter is the ExpandMore glyph, so both resting states look as before.
     val chevron by animateFloatAsState(if (group.isExpanded) 90f else 0f, if (motion) IosMotion.value() else snap(), label = "groupChevron")
-    Surface(shape = MaterialTheme.shapes.large, color = scheme.surfaceContainerLow) {
-        Column(Modifier.padding(10.dp)) {
+    Surface(shape = MaterialTheme.shapes.medium, color = scheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = .3f))) {
+        Column(Modifier.padding(start = 6.dp, end = 6.dp, top = 6.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { actions.toggleGroup(group.id) }, modifier = Modifier.size(34.dp)) {
+                IconButton(onClick = { actions.toggleGroup(group.id) }, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Rounded.ChevronRight, if (group.isExpanded) AppText.text(R.string.collapse_subscription) else AppText.text(R.string.expand_subscription), tint = scheme.primary,
                         modifier = Modifier.rotate(chevron))
                 }
-                Column(Modifier.weight(1f).padding(start = 3.dp)) {
+                Column(Modifier.weight(1f).padding(end = 4.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Text(group.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                        Text(group.title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                         if (group.isPinned) Icon(Icons.Rounded.PushPin, AppText.text(R.string.pinned), tint = scheme.onSurfaceVariant, modifier = Modifier.size(12.dp))
                     }
-                    Text(AppText.text(R.string.servers, group.servers.size, group.lastUpdated), color = scheme.onSurfaceVariant, fontSize = 10.sp, lineHeight = 13.sp, modifier = Modifier.padding(top = 3.dp))
+                    Text(AppText.text(R.string.subscription_count, group.servers.size), color = scheme.onSurfaceVariant, fontSize = 11.sp, lineHeight = 14.sp, modifier = Modifier.padding(top = 2.dp))
                 }
-                IconButton(onClick = { actions.probeGroup(group.id) }, enabled = !state.isTesting && group.servers.isNotEmpty(), modifier = Modifier.size(44.dp)) {
+                IconButton(onClick = { actions.probeGroup(group.id) }, enabled = !state.isTesting && group.servers.isNotEmpty(), modifier = Modifier.size(48.dp)) {
                     if (state.isTesting && group.servers.any { it.id in state.testingNodes }) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     else Icon(Icons.Rounded.NetworkCheck, AppText.text(R.string.ping_subscription_named, group.title), tint = if (state.isTesting) scheme.onSurfaceVariant else scheme.primary, modifier = Modifier.size(22.dp))
                 }
-                IconButton(onClick = { actions.refresh(group.id) }, enabled = group.id !in state.refreshing && group.sourceUrl != null, modifier = Modifier.size(36.dp)) {
+                if (group.sourceUrl != null) IconButton(onClick = { actions.refresh(group.id) }, enabled = group.id !in state.refreshing, modifier = Modifier.size(48.dp)) {
                     Crossfade(group.id in state.refreshing, animationSpec = if (motion) tween(180) else snap(), label = "groupRefresh") { refreshing ->
                         if (refreshing) CircularProgressIndicator(Modifier.size(17.dp), strokeWidth = 2.dp)
                         else Icon(Icons.Rounded.Refresh, AppText.text(R.string.update_subscription), modifier = Modifier.size(20.dp))
                     }
                 }
                 Box {
-                    IconButton(onClick = { menu = true }, modifier = Modifier.size(32.dp)) { Icon(Icons.Rounded.MoreHoriz, AppText.text(R.string.subscription_menu)) }
+                    IconButton(onClick = { menu = true }, modifier = Modifier.size(48.dp)) { Icon(Icons.Rounded.MoreHoriz, AppText.text(R.string.subscription_menu), modifier = Modifier.size(20.dp)) }
                     DropdownMenu(menu, { menu = false }) {
                         DropdownMenuItem(text = { Text(AppText.text(R.string.check_servers)) }, leadingIcon = { Icon(Icons.Rounded.NetworkCheck, null) }, onClick = { menu = false; actions.probeGroup(group.id) })
                         DropdownMenuItem(text = { Text(AppText.text(R.string.information)) }, leadingIcon = { Icon(Icons.Rounded.Info, null) }, onClick = { menu = false; info = true })
@@ -414,15 +416,19 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
             }
             AnimatedVisibility(group.isExpanded, enter = if (motion) fadeIn(IosMotion.fade()) + expandVertically(IosMotion.size) else EnterTransition.None,
                 exit = if (motion) fadeOut(IosMotion.fade()) + shrinkVertically(IosMotion.size) else ExitTransition.None) { Column {
-                if (group.usedTrafficText.replace(" ", "") != "0B" || group.expiryDateText != "—") Row(Modifier.fillMaxWidth().padding(start = 8.dp, top = 9.dp, end = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("${group.usedTrafficText} / ${group.totalTrafficText}", color = scheme.primary, fontSize = 11.sp)
-                    if (group.expiryDateText != "—") Text(AppText.text(R.string.until, group.expiryDateText), color = scheme.onSurfaceVariant, fontSize = 10.sp)
+                if (group.sourceUrl != null && group.lastUpdated.isNotBlank()) Text(AppText.text(R.string.subscription_updated_at, group.lastUpdated),
+                    fontSize = 10.sp, lineHeight = 14.sp, color = scheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 2.dp))
+                if (group.usedTrafficText.replace(" ", "") != "0B" || group.expiryDateText != "—") FlowRow(Modifier.fillMaxWidth().padding(start = 12.dp, top = 6.dp, end = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("${group.usedTrafficText} / ${group.totalTrafficText}", color = scheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    if (group.expiryDateText != "—") Text(AppText.text(R.string.until, group.expiryDateText), color = scheme.onSurfaceVariant, fontSize = 11.sp)
                 }
                 group.trafficFraction?.let { LinearProgressIndicator(progress = { it }, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp).height(3.dp), trackColor = scheme.surfaceContainerHighest) }
                 if (group.announcementText.isNotBlank()) Text(group.announcementText, fontSize = 11.sp, lineHeight = 16.sp,
                     color = scheme.onSurfaceVariant, maxLines = if (announcementExpanded) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth().clickable { announcementExpanded = !announcementExpanded }
-                        .then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 8.dp, vertical = 6.dp))
+                        .then(if (motion) Modifier.animateContentSize() else Modifier).padding(horizontal = 12.dp, vertical = 6.dp))
             } }
         }
     }

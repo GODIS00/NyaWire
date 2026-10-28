@@ -576,4 +576,16 @@
     <string name="backup_unprotected_hint">Server keys and subscription links will be readable in this file.</string>
     <string name="backup_with_password">With password</string>
     <string name="backup_without_password">Without password</string>
+    <string name="app_icon">App icon</string>
+    <string name="app_icon_hint">10 styles for your home screen</string>
+    <string name="app_icon_failed">Could not change the icon. Try again.</string>
+    <string name="icon_original">Original</string>
+    <string name="icon_sakura">Sakura</string>
+    <string name="icon_midnight">Moon</string>
+    <string name="icon_sunset">Sunset</string>
+    <string name="icon_frost">Frost</string>
+    <string name="icon_amoled">AMOLED</string>
+    <string name="subscription_count">Servers: %1$d</string>
+    <string name="subscription_updated_at">Updated %1$s</string>
+    <string name="ping_compact_error">Failed</string>
 </resources>

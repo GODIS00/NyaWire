@@ -211,7 +211,9 @@ private fun MainRoute(viewModel: MainViewModel, routingLink: MutableState<String
                 (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("NyaWire", text))
                 viewModel.message(AppText.text(R.string.copied))
             },
-            scanQr = { scanner.launch(ScanOptions().setDesiredBarcodeFormats(ScanOptions.QR_CODE).setPrompt(AppText.text(R.string.scan_a_link_subscription_or_configuration_qr)).setBeepEnabled(false).setOrientationLocked(false)) },
+            scanQr = { scanner.launch(ScanOptions().setCaptureActivity(com.gdhapp.client.qr.QrCaptureActivity::class.java)
+                .setDesiredBarcodeFormats(ScanOptions.QR_CODE).setPrompt(AppText.text(R.string.scan_a_link_subscription_or_configuration_qr))
+                .setBeepEnabled(false).setOrientationLocked(true)) },
             importFile = { filePicker.launch(arrayOf("*/*")) },
             openSystemVpnSettings = { runCatching { context.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)) }.onFailure { viewModel.message(AppText.text(R.string.vpn_settings_are_unavailable)) } },
         ), snackbar, viewModel.metrics)

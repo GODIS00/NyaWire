@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.FloatState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -32,6 +34,11 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import android.util.LruCache
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private data class RainPalette(
     val sky: List<Color>, val silhouette: Color, val mist: Color, val warm: Color, val cool: Color,
@@ -53,6 +60,12 @@ private val amoledRain = nightRain.copy(
     silhouette = Color(0xFF010509), mist = Color(0xFF0D2028), warm = Color(0xFFBA8B56), cool = Color(0xFF6B9C9C),
 )
 
+private data class RainArtworkKey(val width: Int, val height: Int, val density: Float,
+    val direction: LayoutDirection, val palette: RainPalette)
+private class RainArtwork(val city: ImageBitmap, val lens: RainLens)
+private val rainArtworkCache = LruCache<RainArtworkKey, RainArtwork>(3)
+private val rainArtworkLock = Mutex()
+
 /** A defocused street behind real glass: the city is cached, only weather redraws. */
 @Composable
 internal fun BoxScope.RainBackground(time: FloatState, dark: Boolean, amoled: Boolean) {
@@ -62,9 +75,31 @@ internal fun BoxScope.RainBackground(time: FloatState, dark: Boolean, amoled: Bo
         val w = constraints.maxWidth.toFloat().coerceAtLeast(1f)
         val h = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val palette = when { amoled -> amoledRain; dark -> nightRain; else -> dayRain }
+        // Software drawing and defocus must not block Compose's measure pass on the UI thread.
+        val key = remember(w, h, density, direction, palette) { RainArtworkKey(w.toInt(), h.toInt(), density.density, direction, palette) }
+        val artworkState = remember(key) { mutableStateOf<RainArtwork?>(rainArtworkCache[key]) }
+        LaunchedEffect(key) {
+            if (artworkState.value != null) return@LaunchedEffect
+            val ready = withContext(Dispatchers.Default) {
+                rainArtworkLock.withLock {
+                    rainArtworkCache[key] ?: rainCity(w, h, density, direction, palette).let { city ->
+                        RainArtwork(city, RainLens(city, w, h, palette)).also { rainArtworkCache.put(key, it) }
+                    }
+                }
+            }
+            artworkState.value = ready
+        }
+        val artwork = artworkState.value
+        if (artwork == null) {
+            Still {
+                val sky = Brush.verticalGradient(palette.sky)
+                onDrawBehind { drawRect(sky) }
+            }
+            return@BoxWithConstraints
+        }
         // One bounded texture is shared by the background and every refracting drop.
-        val city = remember(w, h, density, direction, palette) { rainCity(w, h, density, direction, palette) }
-        val lens = remember(city, palette) { RainLens(city, w, h, palette) }
+        val city = artwork.city
+        val lens = artwork.lens
         Still {
             val full = IntSize(w.roundToInt(), h.roundToInt())
             val count = (w * h / (density.density * density.density) / 2200f).roundToInt().coerceIn(12, 190)

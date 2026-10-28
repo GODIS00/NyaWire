@@ -298,6 +298,7 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                     } }
                 }
                 1 -> {
+                    item(key = "settings-content:36", contentType = "settings-content") { AppIconSettings() }
                     item(key = "settings-content:12", contentType = "settings-content") { SettingsSection(AppText.text(R.string.app_language), Icons.Rounded.Language) {
                         ChoiceChips(AppLanguage.entries, settings.language, { it.label }) { actions.updateSettings(settings.copy(language = it)) }
                     } }

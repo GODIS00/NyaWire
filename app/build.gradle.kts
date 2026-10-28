@@ -11,8 +11,8 @@ android {
         applicationId = "com.gdhapp.client"
         minSdk = 29
         targetSdk = 35
-        versionCode = 54
-        versionName = "2.15.2"
+        versionCode = 56
+        versionName = "2.16.1"
         val githubRepository = providers.gradleProperty("githubRepository").getOrElse("")
         require(githubRepository.isEmpty() || githubRepository.matches(Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")))
         buildConfigField("String", "GITHUB_REPOSITORY", "\"$githubRepository\"")
@@ -29,6 +29,13 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        create("benchmark") {
+            initWith(getByName("release"))
+            // Non-debuggable measurements, with test-only Compose entry points left available.
+            isMinifyEnabled = false
+            isShrinkResources = false
+            matchingFallbacks += "release"
         }
     }
     testBuildType = providers.gradleProperty("testBuildType").getOrElse("debug")

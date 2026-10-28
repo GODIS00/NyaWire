@@ -33,7 +33,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
@@ -124,7 +124,7 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
         }
     }
     val litOn = connected && !spinning
-    // Everything below is read only inside drawBehind/graphicsLayer, so the per-frame loop redraws without recomposing.
+    // Animation state stays in cache/draw/layer phases; the list never recomposes for a button frame.
     val lit = animateFloatAsState(if (litOn) 1f else 0f,
         if (motion) tween(if (litOn) 650 else 450, easing = FastOutSlowInEasing) else snap(), label = "powerLit")
     val comet = animateFloatAsState(if (spinning) 1f else 0f,
@@ -193,14 +193,13 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
     Box(Modifier.size(216.dp).graphicsLayer {
         scaleX = press.value; scaleY = press.value
         rotationX = tiltX.value; rotationY = tiltY.value; cameraDistance = 14f * density
-    }.drawBehind {
-        val c = center
+    }.drawWithCache {
+        val c = Offset(size.width / 2f, size.height / 2f)
         val ring = 92.dp.toPx()
         val fill = 84.dp.toPx()
         val bezel = 101.dp.toPx()
         val l = lit.value
         val k = comet.value
-        val b = breath.value
         val held = held()
         val glow = .12f + .18f * l + .08f * k
         val brush = Brush.sweepGradient(colors + colors.first(), center = c)
@@ -208,82 +207,91 @@ private fun GradientPowerButton(connecting: Boolean, connected: Boolean, setting
         val opposite = Offset(c.x + bezel, c.y + bezel)
         // Shadow cast on the surface below; it tightens as the key goes down.
         val ground = Offset(c.x, c.y + 12.dp.toPx() * (1f - .5f * held))
-        drawCircle(Brush.radialGradient(.72f to Color.Black.copy(alpha = if (dark) .55f else .2f), 1f to Color.Transparent,
-            center = ground, radius = bezel + 16.dp.toPx()), radius = bezel + 16.dp.toPx(), center = ground)
+        val shadowBrush = Brush.radialGradient(.72f to Color.Black.copy(alpha = if (dark) .55f else .2f), 1f to Color.Transparent,
+            center = ground, radius = bezel + 16.dp.toPx())
         // Raised bezel lit from the upper left, with a groove cut in for the light ring.
         val bezelLight = if (dark) Color(0xFF50576F) else Color.White
         val bezelShade = if (dark) Color(0xFF07080D) else Color(0xFFC2C7D5)
-        drawCircle(Brush.linearGradient(listOf(bezelLight, bezelShade), start = corner, end = opposite), radius = bezel)
-        drawCircle(Brush.linearGradient(listOf(bezelShade, androidx.compose.ui.graphics.lerp(bezelShade, bezelLight, .45f)), start = corner, end = opposite),
-            radius = 97.dp.toPx())
+        val bezelBrush = Brush.linearGradient(listOf(bezelLight, bezelShade), start = corner, end = opposite)
+        val grooveBrush = Brush.linearGradient(listOf(bezelShade, androidx.compose.ui.graphics.lerp(bezelShade, bezelLight, .45f)), start = corner, end = opposite)
         // Light catching the outer edge on the upper left.
-        drawCircle(Brush.linearGradient(listOf(Color.White.copy(alpha = if (dark) .32f else .9f), Color.Transparent), start = corner, end = c),
-            radius = bezel - .75.dp.toPx(), style = Stroke(1.5.dp.toPx()))
-        rotate(angle.floatValue) {
-            // Ripples radiating out of the ring while connected.
-            if (l > 0f) for (i in 0 until 2) {
-                val p = (ripple.value + i / 2f) % 1f
-                drawCircle(brush, radius = ring + p * 15.dp.toPx(), style = Stroke((1f + (1f - p) * 3f).dp.toPx()),
-                    alpha = (1f - p) * (1f - p) * .55f * l)
-            }
-            drawCircle(brush, radius = ring, style = Stroke(24.dp.toPx()), alpha = glow * (.35f + .35f * l * b))
-        }
+        val edgeBrush = Brush.linearGradient(listOf(Color.White.copy(alpha = if (dark) .32f else .9f), Color.Transparent), start = corner, end = c)
         val sink = 4.dp.toPx() * held
-        // The dome's own shadow in the groove, shorter while pressed.
         val drop = Offset(c.x, c.y + 6.dp.toPx() - sink)
-        drawCircle(Brush.radialGradient(.82f to Color.Black.copy(alpha = .5f), 1f to Color.Transparent, center = drop, radius = fill + 7.dp.toPx()),
-            radius = fill + 7.dp.toPx(), center = drop)
-        translate(top = sink) {
-            val base = Color(0xFF111522)
-            drawCircle(Brush.linearGradient(listOf(androidx.compose.ui.graphics.lerp(base, colors.first(), .15f + .21f * l),
-                androidx.compose.ui.graphics.lerp(base, colors.last(), .32f + .2f * l))), radius = fill)
-            // Core glow that switches on with the tunnel.
-            if (l > 0f) drawCircle(Brush.radialGradient(listOf(colors.last().copy(alpha = .3f * l), Color.Transparent), center = c,
-                radius = fill * .8f), radius = fill)
-            // Sphere shading: light from the upper left falling off to a darker rim.
-            drawCircle(Brush.radialGradient(0f to Color.White.copy(alpha = .14f + .06f * l * b), .5f to Color.Transparent,
-                1f to Color.Black.copy(alpha = .45f - .1f * held), center = Offset(c.x - fill * .32f, c.y - fill * .38f), radius = fill * 1.45f), radius = fill)
-            // Light from the ring reflected along the lower edge, fading out towards the sides.
-            val reflected = androidx.compose.ui.graphics.lerp(colors.last(), Color.White, .35f).copy(alpha = .3f + .4f * l)
-            drawArc(Brush.sweepGradient(.06f to Color.Transparent, .25f to reflected, .44f to Color.Transparent, center = c), 20f, 140f, false,
-                topLeft = Offset(c.x - fill + 2.dp.toPx(), c.y - fill + 2.dp.toPx()), size = Size(fill * 2 - 4.dp.toPx(), fill * 2 - 4.dp.toPx()),
-                style = Stroke(2.5.dp.toPx(), cap = StrokeCap.Round))
-            // Soft reflection of a window on the glossy cap; dimmer while the key is down.
-            val gloss = Offset(c.x, c.y - fill * .56f)
-            scale(1f, .48f, pivot = gloss) {
-                drawCircle(Brush.radialGradient(0f to Color.White.copy(alpha = .2f * (1f - .5f * held)), .55f to Color.White.copy(alpha = .07f * (1f - .5f * held)),
-                    1f to Color.Transparent, center = gloss, radius = fill * .66f), radius = fill * .66f, center = gloss)
+        val domeShadow = Brush.radialGradient(.82f to Color.Black.copy(alpha = .5f), 1f to Color.Transparent, center = drop, radius = fill + 7.dp.toPx())
+        val base = Color(0xFF111522)
+        val domeFill = Brush.linearGradient(listOf(androidx.compose.ui.graphics.lerp(base, colors.first(), .15f + .21f * l),
+            androidx.compose.ui.graphics.lerp(base, colors.last(), .32f + .2f * l)))
+        val coreGlow = Brush.radialGradient(listOf(colors.last().copy(alpha = .3f * l), Color.Transparent), center = c, radius = fill * .8f)
+        val reflected = androidx.compose.ui.graphics.lerp(colors.last(), Color.White, .35f).copy(alpha = .3f + .4f * l)
+        val reflection = Brush.sweepGradient(.06f to Color.Transparent, .25f to reflected, .44f to Color.Transparent, center = c)
+        val gloss = Offset(c.x, c.y - fill * .56f)
+        val glossBrush = Brush.radialGradient(0f to Color.White.copy(alpha = .2f * (1f - .5f * held)), .55f to Color.White.copy(alpha = .07f * (1f - .5f * held)),
+            1f to Color.Transparent, center = gloss, radius = fill * .66f)
+        val sweep = 260f * (.3f + .7f * k)
+        val head = androidx.compose.ui.graphics.lerp(colors.last(), Color.White, .4f)
+        val tail = Brush.sweepGradient(0f to Color.Transparent, sweep / 360f * .7f to colors.first(), sweep / 360f to head, center = c)
+        val a = Math.toRadians(sweep.toDouble())
+        val tip = Offset(c.x + ring * kotlin.math.cos(a).toFloat(), c.y + ring * kotlin.math.sin(a).toFloat())
+        // Reuse native shaders during rotation/breathing. Rebuild only for size, colour or press changes.
+        onDrawBehind {
+            val b = breath.value
+            drawCircle(shadowBrush, radius = bezel + 16.dp.toPx(), center = ground)
+            drawCircle(bezelBrush, radius = bezel)
+            drawCircle(grooveBrush, radius = 97.dp.toPx())
+            drawCircle(edgeBrush, radius = bezel - .75.dp.toPx(), style = Stroke(1.5.dp.toPx()))
+            rotate(angle.floatValue) {
+                // Ripples radiating out of the ring while connected.
+                if (l > 0f) for (i in 0 until 2) {
+                    val p = (ripple.value + i / 2f) % 1f
+                    drawCircle(brush, radius = ring + p * 15.dp.toPx(), style = Stroke((1f + (1f - p) * 3f).dp.toPx()),
+                        alpha = (1f - p) * (1f - p) * .55f * l)
+                }
+                drawCircle(brush, radius = ring, style = Stroke(24.dp.toPx()), alpha = glow * (.35f + .35f * l * b))
             }
-            if (held > 0f) drawCircle(Color.Black, radius = fill, alpha = .12f * held)
-            drawCircle(Color.White.copy(alpha = .08f), radius = fill - 1.dp.toPx(), style = Stroke(1.dp.toPx()))
-        }
-        rotate(angle.floatValue) {
-            val dim = 1f - k * .7f
-            drawCircle(brush, radius = ring, style = Stroke(8.dp.toPx()), alpha = glow * dim)
-            drawCircle(brush, radius = ring, style = Stroke(3.5.dp.toPx()), alpha = dim)
-            // Comet chasing around the ring while connecting; it stretches out as it appears instead of popping in.
-            if (k > 0f) {
-                val sweep = 260f * (.3f + .7f * k)
-                val head = androidx.compose.ui.graphics.lerp(colors.last(), Color.White, .4f)
-                val tail = Brush.sweepGradient(0f to Color.Transparent, sweep / 360f * .7f to colors.first(), sweep / 360f to head, center = c)
-                drawArc(tail, 0f, sweep, false, topLeft = Offset(c.x - ring, c.y - ring), size = Size(ring * 2, ring * 2),
-                    style = Stroke(5.dp.toPx(), cap = StrokeCap.Round), alpha = k)
-                val a = Math.toRadians(sweep.toDouble())
-                val tip = Offset(c.x + ring * kotlin.math.cos(a).toFloat(), c.y + ring * kotlin.math.sin(a).toFloat())
-                drawCircle(head, radius = 12.dp.toPx(), center = tip, alpha = .28f * k)
-                drawCircle(Color.White, radius = 3.5.dp.toPx(), center = tip, alpha = k)
+            // The dome's own shadow in the groove, shorter while pressed.
+            drawCircle(domeShadow, radius = fill + 7.dp.toPx(), center = drop)
+            translate(top = sink) {
+                drawCircle(domeFill, radius = fill)
+                // Core glow that switches on with the tunnel.
+                if (l > 0f) drawCircle(coreGlow, radius = fill)
+                // Sphere shading: light from the upper left falling off to a darker rim.
+                drawCircle(Brush.radialGradient(0f to Color.White.copy(alpha = .14f + .06f * l * b), .5f to Color.Transparent,
+                    1f to Color.Black.copy(alpha = .45f - .1f * held), center = Offset(c.x - fill * .32f, c.y - fill * .38f), radius = fill * 1.45f), radius = fill)
+                // Light from the ring reflected along the lower edge, fading out towards the sides.
+                drawArc(reflection, 20f, 140f, false,
+                    topLeft = Offset(c.x - fill + 2.dp.toPx(), c.y - fill + 2.dp.toPx()), size = Size(fill * 2 - 4.dp.toPx(), fill * 2 - 4.dp.toPx()),
+                    style = Stroke(2.5.dp.toPx(), cap = StrokeCap.Round))
+                // Soft reflection of a window on the glossy cap; dimmer while the key is down.
+                scale(1f, .48f, pivot = gloss) {
+                    drawCircle(glossBrush, radius = fill * .66f, center = gloss)
+                }
+                if (held > 0f) drawCircle(Color.Black, radius = fill, alpha = .12f * held)
+                drawCircle(Color.White.copy(alpha = .08f), radius = fill - 1.dp.toPx(), style = Stroke(1.dp.toPx()))
             }
+            rotate(angle.floatValue) {
+                val dim = 1f - k * .7f
+                drawCircle(brush, radius = ring, style = Stroke(8.dp.toPx()), alpha = glow * dim)
+                drawCircle(brush, radius = ring, style = Stroke(3.5.dp.toPx()), alpha = dim)
+                // Comet chasing around the ring while connecting; it stretches out as it appears instead of popping in.
+                if (k > 0f) {
+                    drawArc(tail, 0f, sweep, false, topLeft = Offset(c.x - ring, c.y - ring), size = Size(ring * 2, ring * 2),
+                        style = Stroke(5.dp.toPx(), cap = StrokeCap.Round), alpha = k)
+                    drawCircle(head, radius = 12.dp.toPx(), center = tip, alpha = .28f * k)
+                    drawCircle(Color.White, radius = 3.5.dp.toPx(), center = tip, alpha = k)
+                }
+            }
+            // One-shot shockwave and soft flash the moment the tunnel comes up.
+            val q = burst.value
+            if (q < 1f) {
+                drawCircle(Color.White, radius = fill, alpha = kotlin.math.sin(q * kotlin.math.PI.toFloat()) * .14f)
+                drawCircle(brush, radius = fill + q * 26.dp.toPx(), style = Stroke((1f - q) * 10.dp.toPx() + 1f), alpha = (1f - q) * .9f)
+            }
+            // On disconnect the light drains inward instead of just fading.
+            val d = drain.value
+            if (d < 1f) drawCircle(brush, radius = ring + (fill * .4f - ring) * d, style = Stroke((2f + (1f - d) * 4f).dp.toPx()),
+                alpha = (1f - d) * (1f - d) * .7f)
         }
-        // One-shot shockwave and soft flash the moment the tunnel comes up.
-        val q = burst.value
-        if (q < 1f) {
-            drawCircle(Color.White, radius = fill, alpha = kotlin.math.sin(q * kotlin.math.PI.toFloat()) * .14f)
-            drawCircle(brush, radius = fill + q * 26.dp.toPx(), style = Stroke((1f - q) * 10.dp.toPx() + 1f), alpha = (1f - q) * .9f)
-        }
-        // On disconnect the light drains inward instead of just fading.
-        val d = drain.value
-        if (d < 1f) drawCircle(brush, radius = ring + (fill * .4f - ring) * d, style = Stroke((2f + (1f - d) * 4f).dp.toPx()),
-            alpha = (1f - d) * (1f - d) * .7f)
     }.padding(24.dp), contentAlignment = Alignment.Center) {
         CompositionLocalProvider(LocalContentColor provides Color.White) {
             // With motion on, the press dip and highlight replace the grey ripple.

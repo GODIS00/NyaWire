@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -86,6 +87,8 @@ fun DriftingBackground(enabled: Boolean, motionEnabled: Boolean, dark: Boolean, 
             val size = minOf(cat.size.dp, maxWidth * .39f)
             val pixels = with(density) { size.toPx() }
             Image(bitmap, contentDescription = null, modifier = Modifier.size(size).graphicsLayer {
+                // One image per layer: alpha can be applied directly, without another texture.
+                compositingStrategy = CompositingStrategy.ModulateAlpha
                 // A full orbit takes about 2.5 minutes, with no jump at direction changes.
                 val t = time.floatValue * .042f
                 translationX = (width - pixels) * cat.x + sin(t + cat.phase) * drift

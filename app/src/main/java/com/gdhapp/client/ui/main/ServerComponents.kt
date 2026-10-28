@@ -4,8 +4,6 @@ import com.gdhapp.client.R
 import com.gdhapp.client.i18n.AppText
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -78,37 +76,38 @@ private fun ServerCardContent(node: ServerNode, settings: ClientSettings, testin
         Box {
             if (marker > 0f) Box(Modifier.align(Alignment.CenterStart).width(2.dp).height(22.dp)
                 .graphicsLayer { alpha = marker; scaleY = marker }.background(scheme.primary, CircleShape))
-            if (grid) Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+            if (grid) Column(Modifier.padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 12.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    if (settings.showFlags) CountryBadge(node.flagResOrCode, Modifier.size(25.dp), small = true)
+                    if (settings.showFlags) CountryBadge(node.flagResOrCode, Modifier.size(28.dp), small = true)
                     if (node.isFavorite) Icon(Icons.Rounded.Star, AppText.text(R.string.favorites), tint = scheme.primary, modifier = Modifier.padding(start = 6.dp).size(12.dp))
                     Spacer(Modifier.weight(1f))
                     ServerActionsMenu(node, onInfo, onFavorite, onCopy, onDelete, onPing)
                 }
-                Text(displayName, fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+                Text(displayName, fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold,
+                    minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
                 Row(Modifier.fillMaxWidth().padding(top = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(if (settings.showProtocol) node.protocolSummary.substringBefore(" /") else settings.probeMethod.label,
-                        fontSize = 9.sp, lineHeight = 12.sp, color = scheme.onSurfaceVariant, modifier = Modifier.weight(1f), maxLines = 1)
+                        fontSize = 11.sp, lineHeight = 14.sp, color = scheme.onSurfaceVariant, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     LatencyChip(node.probeResults[settings.probeMethod], testing, compact = true, flat = true, modifier = Modifier.widthIn(max = 84.dp))
                 }
-            } else Row(Modifier.padding(horizontal = 10.dp, vertical = if (compact) 4.dp else 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (settings.showFlags) { CountryBadge(node.flagResOrCode, Modifier.size(28.dp), small = true); Spacer(Modifier.width(9.dp)) }
+            } else Row(Modifier.heightIn(min = if (compact) 56.dp else 64.dp).padding(start = 12.dp, end = 4.dp,
+                top = if (compact) 4.dp else 6.dp, bottom = if (compact) 4.dp else 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (settings.showFlags) { CountryBadge(node.flagResOrCode, Modifier.size(if (compact) 28.dp else 32.dp), small = true); Spacer(Modifier.width(10.dp)) }
                 Column(Modifier.weight(1f).padding(end = 6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(displayName, fontSize = 13.sp, lineHeight = 17.sp, fontWeight = FontWeight.SemiBold,
+                        Text(displayName, fontSize = if (compact) 13.sp else 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold,
                             maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                         if (node.isFavorite) Icon(Icons.Rounded.Star, AppText.text(R.string.favorites), tint = scheme.primary, modifier = Modifier.size(11.dp))
                     }
                     if (settings.showProtocol) Text(protocol,
-                        fontSize = 9.sp, lineHeight = 12.sp, color = scheme.onSurfaceVariant, maxLines = 1,
+                        fontSize = 11.sp, lineHeight = 14.sp, color = scheme.onSurfaceVariant, maxLines = 1,
                         overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
-                    if (settings.showAddress) Text("${node.host ?: AppText.text(R.string.address_not_found)}:${node.port ?: "?"}", fontSize = 9.sp, lineHeight = 12.sp,
+                    if (settings.showAddress) Text("${node.host ?: AppText.text(R.string.address_not_found)}:${node.port ?: "?"}", fontSize = 10.sp, lineHeight = 13.sp,
                         color = scheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
                 }
-                Column(horizontalAlignment = Alignment.End, modifier = Modifier.widthIn(max = 84.dp)) {
+                Column(horizontalAlignment = Alignment.End, modifier = Modifier.width(72.dp)) {
                     LatencyChip(node.probeResults[settings.probeMethod], testing, compact = true, flat = true)
-                    Text(settings.probeMethod.label, fontSize = 8.sp, lineHeight = 10.sp, color = scheme.onSurfaceVariant, modifier = Modifier.padding(top = 3.dp))
+                    Text(settings.probeMethod.label, fontSize = 9.sp, lineHeight = 12.sp, color = scheme.onSurfaceVariant, modifier = Modifier.padding(top = 3.dp), maxLines = 1)
                 }
                 ServerActionsMenu(node, onInfo, onFavorite, onCopy, onDelete, onPing)
             }
@@ -120,8 +119,8 @@ private fun ServerCardContent(node: ServerNode, settings: ClientSettings, testin
 @Composable
 private fun ServerActionsMenu(node: ServerNode, onInfo: () -> Unit, onFavorite: () -> Unit, onCopy: (() -> Unit)?, onDelete: (() -> Unit)?, onPing: (() -> Unit)?) {
     var expanded by remember(node.id) { mutableStateOf(false) }
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 40.dp) { Box {
-        IconButton(onClick = { expanded = true }, modifier = Modifier.size(32.dp)) {
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 48.dp) { Box {
+        IconButton(onClick = { expanded = true }, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Rounded.MoreVert, "${AppText.text(R.string.server_actions)} · ${cleanNodeName(node.name)}", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
         DropdownMenu(expanded, { expanded = false }) {
@@ -155,11 +154,10 @@ fun LatencyChip(result: ProbeResult?, testing: Boolean, modifier: Modifier = Mod
             if (testing) CircularProgressIndicator(Modifier.size(10.dp), strokeWidth = 1.5.dp, color = color)
             else if (!compact) Icon(when { result == null -> Icons.Rounded.Schedule; result.isSuccess -> Icons.Rounded.NetworkCheck; else -> Icons.Rounded.ErrorOutline },
                 null, tint = color, modifier = Modifier.size(12.dp))
-            val label = when { testing -> AppText.text(R.string.checking); result == null -> if (compact) "—" else AppText.text(R.string.not_checked); result.isSuccess -> AppText.text(R.string.ms, result.latencyMs);
-                else -> probeFailureTitle(result.error) }
-            Crossfade(label, animationSpec = if (motion) tween(200) else snap(), label = "latencyText") { text ->
-                Text(text, color = color, fontSize = if (compact) 10.sp else 11.sp, fontWeight = FontWeight.SemiBold, lineHeight = if (compact) 12.sp else 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+            val label = when { testing -> if (compact) "…" else AppText.text(R.string.checking); result == null -> if (compact) "—" else AppText.text(R.string.not_checked); result.isSuccess -> AppText.text(R.string.ms, result.latencyMs);
+                compact -> AppText.text(R.string.ping_compact_error); else -> probeFailureTitle(result.error) }
+            Text(label, color = color, fontSize = if (compact) 11.sp else 12.sp, fontWeight = FontWeight.SemiBold,
+                lineHeight = if (compact) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
