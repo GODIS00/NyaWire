@@ -402,7 +402,7 @@ fun SettingsScreen(state: MainUiState, actions: MainActions, modifier: Modifier 
                         Text(AppText.text(R.string.samples_median_result), fontSize = 12.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 8.dp))
                         ChoiceChips(listOf(1, 2, 3, 5), settings.probeSamples, { it.toString() }) { actions.updateSettings(settings.copy(probeSamples = it)) }
                         Text(AppText.text(R.string.concurrent_checks), fontSize = 12.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 8.dp))
-                        ChoiceChips(listOf(1, 2, 3, 4), settings.probeConcurrency, { it.toString() }) { actions.updateSettings(settings.copy(probeConcurrency = it)) }
+                        ChoiceChips(listOf(1, 2, 4, 6, 8), settings.probeConcurrency, { it.toString() }) { actions.updateSettings(settings.copy(probeConcurrency = it)) }
                         SettingsHint(AppText.text(R.string.each_http_check_uses_a_separate_core))
                     } }
                 }

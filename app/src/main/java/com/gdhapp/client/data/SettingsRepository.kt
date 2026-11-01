@@ -100,7 +100,7 @@ class SettingsRepository(private val context: Context) {
             textScale = value.textScale.takeIf { it.isFinite() }?.coerceIn(.85f, 1.2f) ?: 1f,
             probeTimeoutSeconds = value.probeTimeoutSeconds.coerceIn(2, 30),
             probeSamples = value.probeSamples.coerceIn(1, 5),
-            probeConcurrency = value.probeConcurrency.coerceIn(1, 4),
+            probeConcurrency = value.probeConcurrency.coerceIn(1, 8),
             dnsPrimary = (value.dnsPrimary as String?).orEmpty().ifBlank { defaults.dnsPrimary },
             dnsSecondary = (value.dnsSecondary as String?).orEmpty(),
             probeUrl = (value.probeUrl as String?).orEmpty().ifBlank { defaults.probeUrl },

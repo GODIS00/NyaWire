@@ -13,6 +13,9 @@ import com.gdhapp.client.vpn.core.safeCoreError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -41,20 +44,24 @@ class NetworkLatencyTester(private val cores: CoreSessionFactory) : LatencyTeste
             val values = mutableListOf<Int>()
             var lastError: Throwable? = null
             var httpStatus: Int? = null
-            repeat(settings.probeSamples) {
-                currentCoroutineContext().ensureActive()
-                try {
-                    val latency = when (method) {
-                        ProbeMethod.TCP -> tcp(node, settings)
-                        ProbeMethod.ICMP -> icmp(node, settings)
-                        ProbeMethod.DNS -> dns(node)
-                        ProbeMethod.TLS -> tls(node, settings)
-                        ProbeMethod.HTTP_GET, ProbeMethod.HTTP_HEAD -> error("HTTP probe requires a proxy session")
+            // Samples are independent socket probes, so take them side by side instead of one after another.
+            val samples = coroutineScope {
+                List(settings.probeSamples) {
+                    async {
+                        try {
+                            Result.success(when (method) {
+                                ProbeMethod.TCP -> tcp(node, settings)
+                                ProbeMethod.ICMP -> icmp(node, settings)
+                                ProbeMethod.DNS -> dns(node)
+                                ProbeMethod.TLS -> tls(node, settings)
+                                ProbeMethod.HTTP_GET, ProbeMethod.HTTP_HEAD -> error("HTTP probe requires a proxy session")
+                            })
+                        } catch (cancelled: CancellationException) { throw cancelled }
+                        catch (error: Exception) { Result.failure(error) }
                     }
-                    values.add(latency)
-                } catch (cancelled: CancellationException) { throw cancelled }
-                catch (error: Exception) { lastError = error }
+                }.awaitAll()
             }
+            for (sample in samples) sample.onSuccess { values.add(it) }.onFailure { lastError = it }
             if (values.isEmpty()) ProbeResult(method, error = explain(lastError ?: IllegalStateException(AppText.text(R.string.no_response)), settings))
             else ProbeResult(method, latencyMs = values.sorted()[values.size / 2], httpStatus = httpStatus, samplesMs = values)
         } catch (cancelled: CancellationException) { throw cancelled }

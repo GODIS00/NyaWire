@@ -282,7 +282,14 @@ class MainViewModel(
         mutableState.update { it.copy(isTesting = true, probeTotal = nodes.size, probeCompleted = 0) }
         probeJob = viewModelScope.launch {
             try {
-                val semaphore = Semaphore(current.settings.probeConcurrency)
+                // Socket-level probes are cheap, so a whole list runs at once; proxy probes each boot a core.
+                val method = current.settings.probeMethod
+                val limit = when {
+                    method.usesProxy -> current.settings.probeConcurrency
+                    method == ProbeMethod.ICMP -> 16
+                    else -> 48
+                }
+                val semaphore = Semaphore(limit)
                 nodes.map { node -> async { semaphore.withPermit {
                     mutableState.update { it.copy(testingNodes = it.testingNodes + node.id) }
                     try { repository.updateProbe(node.id, latencyTester.test(node, current.settings.probeMethod, current.settings)) }
