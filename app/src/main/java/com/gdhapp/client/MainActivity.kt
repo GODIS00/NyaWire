@@ -68,6 +68,10 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         routingLinkOf(intent)?.let { routingLink.value = it }
     }
+    override fun onStop() {
+        (application as GdhappApplication).settings.flushPending()
+        super.onStop()
+    }
     private fun routingLinkOf(intent: Intent?) = intent?.takeIf { it.action == Intent.ACTION_VIEW }?.dataString
         ?.takeIf(com.gdhapp.client.data.HappRoutingParser::isRoutingLink)
 }

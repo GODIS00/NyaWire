@@ -13,6 +13,7 @@ import com.gdhapp.client.data.HappRoutingParser
 import com.gdhapp.client.data.SettingsRepository
 import com.gdhapp.client.domain.model.ClientSettings
 import com.gdhapp.client.domain.model.ProbeMethod
+import com.gdhapp.client.domain.model.ProbeResult
 import com.gdhapp.client.domain.model.ServerNode
 import com.gdhapp.client.domain.model.ServerSort
 import com.gdhapp.client.domain.model.SubscriptionGroup
@@ -25,6 +26,10 @@ import com.gdhapp.client.vpn.core.CoreSessionFactory
 import com.gdhapp.client.vpn.core.safeCoreError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.isActive
+import com.gdhapp.client.data.SubscriptionBatch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -68,7 +73,7 @@ data class MainUiState(
     val loadingApps: Boolean = false,
     val pendingRouting: com.gdhapp.client.domain.model.ImportedRouting? = null,
 ) {
-    val allNodes get() = groups.flatMap { it.servers }
+    val allNodes by lazy(LazyThreadSafetyMode.NONE) { groups.flatMap { it.servers } }
     val selectedNode get() = groups.firstNotNullOfOrNull { group -> group.servers.firstOrNull { it.isSelected } }
     val connectionBusy get() = vpnState == VpnState.Connected || vpnState == VpnState.Connecting
     val connectionNode get() = if (connectionBusy) activeNode ?: selectedNode else selectedNode
@@ -153,7 +158,11 @@ class MainViewModel(
             }
         }
     }
-    suspend fun awaitStartupRefresh() { startupRefresh?.join() }
+    suspend fun awaitStartupRefresh() {
+        repository.awaitLoaded()
+        startupRefresh?.join()
+        mutableState.update { it.copy(groups = repository.groups.value) }
+    }
     fun cancelStartupRefresh() {
         startupRefresh?.cancel()
         val pending = startupRefreshIds
@@ -251,15 +260,12 @@ class MainViewModel(
             var failed = 0
             val pending = ids.toMutableSet()
             try {
-                for (id in ids) {
-                    try {
-                        if (withTimeoutOrNull(20_000) { repository.refresh(id); true } == true) succeeded++ else failed++
-                    } catch (cancelled: CancellationException) { throw cancelled }
-                    catch (_: Exception) { failed++ }
-                    finally {
+                failed = SubscriptionBatch.refresh(ids, { id ->
+                    check(withTimeoutOrNull(20_000) { repository.refresh(id); true } == true) { "Subscription refresh timed out" }
+                }) { id, success ->
+                        if (success) succeeded++
                         pending.remove(id)
                         mutableState.update { it.copy(refreshing = it.refreshing - id) }
-                    }
                 }
                 message(AppText.text(R.string.subscriptions_refresh_result, succeeded, failed))
             } finally {
@@ -281,6 +287,23 @@ class MainViewModel(
         if (nodes.isEmpty()) { message(AppText.text(R.string.no_servers_to_check)); return }
         mutableState.update { it.copy(isTesting = true, probeTotal = nodes.size, probeCompleted = 0) }
         probeJob = viewModelScope.launch {
+            val pending = linkedMapOf<String, ProbeResult>()
+            suspend fun flush() {
+                if (pending.isEmpty()) return
+                val batch = pending.toMap()
+                pending.clear()
+                // A cancelled measurement must still save already completed samples.
+                try { withContext(NonCancellable) { repository.updateProbes(batch) } }
+                catch (error: Exception) {
+                    batch.forEach { (id, result) -> pending.putIfAbsent(id, result) }
+                    throw error
+                }
+            }
+            val writer = launch {
+                try { while (isActive) { delay(150); flush() } }
+                catch (cancelled: CancellationException) { throw cancelled }
+                catch (error: Exception) { message(safeCoreError(error)) }
+            }
             try {
                 // Socket-level probes are cheap, so a whole list runs at once; proxy probes each boot a core.
                 val method = current.settings.probeMethod
@@ -292,12 +315,18 @@ class MainViewModel(
                 val semaphore = Semaphore(limit)
                 nodes.map { node -> async { semaphore.withPermit {
                     mutableState.update { it.copy(testingNodes = it.testingNodes + node.id) }
-                    try { repository.updateProbe(node.id, latencyTester.test(node, current.settings.probeMethod, current.settings)) }
+                    try { pending[node.id] = latencyTester.test(node, current.settings.probeMethod, current.settings) }
                     finally { mutableState.update { it.copy(testingNodes = it.testingNodes - node.id, probeCompleted = it.probeCompleted + 1) } }
                 } } }.awaitAll()
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { message(safeCoreError(error)) }
-            finally { mutableState.update { it.copy(isTesting = false, testingNodes = emptySet()) } }
+            finally {
+                try { withContext(NonCancellable) {
+                    writer.cancelAndJoin()
+                    try { flush() } catch (error: Exception) { message(safeCoreError(error)) }
+                } }
+                finally { mutableState.update { it.copy(isTesting = false, testingNodes = emptySet()) } }
+            }
         }
     }
     fun stopProbes() { probeJob?.cancel() }

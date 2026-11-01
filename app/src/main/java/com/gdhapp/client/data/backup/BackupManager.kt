@@ -18,6 +18,7 @@ class BackupManager(private val app: GdhappApplication) {
     private val gson = Gson()
 
     suspend fun create(password: CharArray? = null): ByteArray = withContext(Dispatchers.Default) {
+        app.subscriptions.awaitLoaded()
         val plain = gson.toJson(BackupSnapshot(settings = app.settings.settings.value, groups = app.subscriptions.groups.value)).toByteArray(Charsets.UTF_8)
         if (plain.size > BackupCipher.MAX_BYTES) { plain.fill(0); password?.fill('\u0000'); throw BackupException(BackupProblem.TOO_LARGE) }
         if (password == null) return@withContext plain

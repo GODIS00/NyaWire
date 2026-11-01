@@ -103,15 +103,16 @@ class ClientFeaturesTest {
     }
 
     @Test fun startupConnectsSelectedProxyOnceAndBootReceiverHonorsItsSwitch(): Unit = runBlocking {
+        app.subscriptions.awaitLoaded()
         val original = app.settings.settings.value
         val selected = app.subscriptions.groups.value.flatMap { it.servers }.firstOrNull { it.isSelected }?.id
-        val oldIds = app.subscriptions.groups.value.map { it.id }.toSet()
+        val oldIds = app.subscriptions.groups.value.flatMap { it.servers }.map { it.id }.toSet()
         var scenario: ActivityScenario<MainActivity>? = null
         var fixtureId: String? = null
         try {
             app.subscriptions.importText(profile(ServerSocket(0).use { it.localPort }))
-            val fixture = app.subscriptions.groups.value.first { it.id !in oldIds }
-            fixtureId = fixture.id; app.subscriptions.selectNode(fixture.servers.first().id)
+            val fixture = app.subscriptions.groups.value.flatMap { it.servers }.first { it.id !in oldIds }
+            fixtureId = fixture.id; app.subscriptions.selectNode(fixture.id)
             app.settings.update { original.copy(connectionMode = ConnectionMode.PROXY, coreEngine = CoreEngine.XRAY, verifyOnConnect = false,
                 fragmentEnabled = false, connectOnOpen = true, connectOnBoot = false, localSocksPort = 0) }
             scenario = ActivityScenario.launch(MainActivity::class.java)
@@ -126,7 +127,7 @@ class ClientFeaturesTest {
             assertEquals(VpnState.Connected, withTimeout(15000) { app.vpnSession.state.first { it == VpnState.Connected || it is VpnState.Error } })
         } finally {
             GdhappVpnService.stop(app); delay(500); app.settings.update { original }
-            fixtureId?.let { app.subscriptions.remove(it) }; selected?.let { app.subscriptions.selectNode(it) }; scenario?.close()
+            fixtureId?.let { app.subscriptions.removeNode(it) }; selected?.let { app.subscriptions.selectNode(it) }; scenario?.close()
         }
     }
 

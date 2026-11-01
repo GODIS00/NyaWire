@@ -101,6 +101,11 @@ class QuickSettingsTileTest {
 
     @Test fun consentAndToggleVpnFromSystemShade(): Unit = runBlocking {
         assumeTrue(android.os.Build.VERSION.SDK_INT >= 33 && android.os.Build.MODEL.contains("sdk"))
+        app.subscriptions.awaitLoaded()
+        if (app.vpnSession.state.value == VpnState.Connected || app.vpnSession.state.value == VpnState.Connecting) {
+            GdhappVpnService.stop(app)
+            withTimeout(10000) { app.vpnSession.state.first { it == VpnState.Disconnected } }
+        }
         val original = app.settings.settings.value
         val originalGroups = app.subscriptions.groups.value
         val tileWasPresent = shell("settings get secure sysui_qs_tiles").contains(component)
@@ -116,7 +121,8 @@ class QuickSettingsTileTest {
         try {
             server.startLoop("""{"log":{"loglevel":"warning"},"inbounds":[{"listen":"127.0.0.1","port":$port,"protocol":"vless","settings":{"clients":[{"id":"$uuid"}],"decryption":"none"}}],"outbounds":[{"protocol":"freedom","settings":{"finalRules":[{"action":"allow","ip":["10.0.2.2/32"]}]}}]}""", 0)
             app.subscriptions.importText(ShareLinkParser.parse("vless://$uuid@127.0.0.1:$port?security=none&type=tcp#QS%20tile%20test").toString())
-            val node = app.subscriptions.groups.value.first { group -> originalGroups.none { it.id == group.id } }.servers.first()
+            val oldIds = originalGroups.flatMap { it.servers }.map { it.id }.toSet()
+            val node = app.subscriptions.groups.value.flatMap { it.servers }.first { it.id !in oldIds }
             app.subscriptions.selectNode(node.id)
             app.settings.update { it.copy(language = AppLanguage.RUSSIAN, coreEngine = CoreEngine.XRAY, connectionMode = ConnectionMode.VPN,
                 xrayCompatibilityMode = false, bypassLan = false, verifyOnConnect = false, localSocksEnabled = false,
@@ -164,7 +170,8 @@ class QuickSettingsTileTest {
             if (!tileWasPresent) shell("cmd statusbar remove-tile $component")
             scenario?.close()
             runCatching { server.stopLoop() }
-            app.subscriptions.groups.value.filter { group -> originalGroups.none { it.id == group.id } }.forEach { app.subscriptions.remove(it.id) }
+            val oldIds = originalGroups.flatMap { it.servers }.map { it.id }.toSet()
+            app.subscriptions.groups.value.flatMap { it.servers }.filter { it.id !in oldIds }.forEach { app.subscriptions.removeNode(it.id) }
             originalGroups.flatMap { it.servers }.firstOrNull { it.isSelected }?.let { app.subscriptions.selectNode(it.id) }
             app.settings.update { original }
             shell("cmd appops set com.gdhapp.client ACTIVATE_VPN allow")

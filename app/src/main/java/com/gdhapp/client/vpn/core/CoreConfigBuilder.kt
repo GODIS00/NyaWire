@@ -33,6 +33,12 @@ object CoreConfigBuilder {
             (leaf.obj("settings")?.get("version")?.asInt == 2 || leaf.obj("streamSettings")?.obj("hysteriaSettings")?.get("version")?.asInt == 2)
         val autoEngine = if (xrayFormat && (!quic || nativeXrayHy2)) CoreEngine.XRAY else CoreEngine.SING_BOX
         val engine = if (settings.coreEngine == CoreEngine.AUTO) autoEngine else settings.coreEngine
+        if (forProbe) {
+            // Probe routing is replaced with one proxy-only rule below. Do not translate
+            // thousands of imported rules or expand geodata only to throw them away.
+            root.remove("routing")
+            root.obj("route")?.remove("rules")
+        }
         if (engine == CoreEngine.SING_BOX && xrayFormat) {
             // Panel profiles carry blackhole/dns helpers; in sing-box these are rule actions, not outbounds.
             val actions = mutableMapOf<String, String>()
@@ -78,11 +84,11 @@ object CoreConfigBuilder {
             }
             if (nativeTun && !includeSocks) root.getAsJsonArray("inbounds").remove(0)
             root.add("log", JsonObject().apply { addProperty("loglevel", settings.logLevel) })
-            root.add("stats", JsonObject())
+            if (!forProbe) root.add("stats", JsonObject()) else root.remove("stats")
             root.remove("api")
             val policy = root.obj("policy") ?: JsonObject().also { root.add("policy", it) }
             val system = policy.obj("system") ?: JsonObject().also { policy.add("system", it) }
-            system.addProperty("statsOutboundUplink", true); system.addProperty("statsOutboundDownlink", true)
+            system.addProperty("statsOutboundUplink", !forProbe); system.addProperty("statsOutboundDownlink", !forProbe)
             // The binding exposes outbound counters. Untagged outbounds otherwise have no counters.
             if (nativeTun || settings.connectionMode == com.gdhapp.client.domain.model.ConnectionMode.PROXY) {
                 val used = outbounds.mapNotNull { it.asJsonObject.text("tag") }.toMutableSet()

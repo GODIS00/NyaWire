@@ -5,20 +5,43 @@ import com.gdhapp.client.domain.model.ClientSettings
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.*
 
 class SettingsRepository(private val context: Context) {
     private val preferences = context.getSharedPreferences("client_settings", Context.MODE_PRIVATE)
     private val gson = Gson()
     private val mutableSettings = MutableStateFlow(load())
     val settings = mutableSettings.asStateFlow()
+    private val saveScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var pendingSave: Job? = null
+
+    /** Serialize off the UI thread. A restore or newer change may supersede this snapshot. */
+    private fun persistLatest() {
+        val snapshot = mutableSettings.value
+        val json = gson.toJson(snapshot)
+        synchronized(this) {
+            if (mutableSettings.value === snapshot) preferences.edit().putString("settings", json).apply()
+        }
+    }
+
+    @Synchronized
+    fun flushPending(): Job {
+        pendingSave?.cancel()
+        return saveScope.launch { persistLatest() }.also { pendingSave = it }
+    }
 
     @Synchronized
     fun update(transform: (ClientSettings) -> ClientSettings) {
         val previousAutoUpdate = mutableSettings.value.autoUpdateSubscriptions
         val next = normalize(transform(mutableSettings.value))
+        if (next == mutableSettings.value) return
         com.gdhapp.client.i18n.AppText.setLanguage(next.language)
         mutableSettings.value = next
-        preferences.edit().putString("settings", gson.toJson(next)).apply()
+        pendingSave?.cancel()
+        pendingSave = saveScope.launch {
+            delay(100) // Coalesce slider events; publish their in-memory values immediately.
+            persistLatest()
+        }
         if (previousAutoUpdate != next.autoUpdateSubscriptions) com.gdhapp.client.background.SubscriptionUpdater.schedule(context, next.autoUpdateSubscriptions)
     }
 

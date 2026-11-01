@@ -7,6 +7,10 @@ import com.gdhapp.client.data.backup.*
 import com.gdhapp.client.domain.model.*
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.flow.first
+import com.gdhapp.client.vpn.GdhappVpnService
+import org.junit.Before
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,6 +18,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class BackupIntegrationTest {
     private val app get() = ApplicationProvider.getApplicationContext<GdhappApplication>()
+    @Before fun awaitDataAndStopPreviousTestConnection() = runBlocking {
+        app.subscriptions.awaitLoaded()
+        if (app.vpnSession.state.value == VpnState.Connected || app.vpnSession.state.value == VpnState.Connecting) {
+            GdhappVpnService.stop(app)
+            withTimeout(10000) { app.vpnSession.state.first { it == VpnState.Disconnected } }
+        }
+    }
     private fun group() = SubscriptionParser().parse("vless://00000000-0000-4000-8000-000000000001@192.0.2.1:443?security=none&type=tcp#Primary\nvless://00000000-0000-4000-8000-000000000002@192.0.2.2:443?security=none&type=tcp#Reserve")
     @Test fun unprotectedCopyRestoresWithoutAskingForAPassword() = runBlocking {
         val oldGroups = app.subscriptions.groups.value
@@ -63,7 +74,9 @@ class BackupIntegrationTest {
             val preview = app.backups.read(bytes, "секрет 123".toCharArray())
             assertTrue(app.subscriptions.groups.value.isEmpty())
             app.backups.restore(preview)
-            val stored = LocalSubscriptionRepository(app).groups.value.single()
+            val reopened = LocalSubscriptionRepository(app)
+            reopened.awaitLoaded()
+            val stored = reopened.groups.value.single()
             assertEquals(group.servers.map { it.id }, stored.servers.map { it.id })
             assertEquals(group.servers.map { it.rawConfigJson }, stored.servers.map { it.rawConfigJson })
             assertTrue(stored.servers[1].isFavorite); assertTrue(stored.servers[0].isSelected)
@@ -92,6 +105,8 @@ class BackupIntegrationTest {
         try { app.subscriptions.restore(listOf(group())) { error("Simulated disk failure") }; fail("No failure") }
         catch (_: IllegalStateException) { }
         assertEquals(before, app.subscriptions.groups.value)
-        assertEquals(before.map { it.id }, LocalSubscriptionRepository(app).groups.value.map { it.id })
+        val reopened = LocalSubscriptionRepository(app)
+        reopened.awaitLoaded()
+        assertEquals(before.map { it.id }, reopened.groups.value.map { it.id })
     }
 }

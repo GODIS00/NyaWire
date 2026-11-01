@@ -12,10 +12,15 @@ import com.gdhapp.client.domain.repository.SubscriptionRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -27,6 +32,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Base64
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 
 class LocalSubscriptionRepository(context: Context,
     private val client: OkHttpClient = OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS)
@@ -38,8 +45,15 @@ class LocalSubscriptionRepository(context: Context,
     private val parser = SubscriptionParser()
     private val mutex = Mutex()
     private val refreshMutex = Mutex()
-    private val mutableGroups = MutableStateFlow(load())
+    private val refreshSlots = Semaphore(3)
+    private val refreshing = ConcurrentHashMap.newKeySet<String>()
+    private val restoreGeneration = AtomicLong()
+    private val mutableGroups = MutableStateFlow<List<SubscriptionGroup>>(emptyList())
     override val groups = mutableGroups.asStateFlow()
+    private val initialLoad = CoroutineScope(SupervisorJob() + Dispatchers.IO).async {
+        mutex.withLock { mutableGroups.value = load() }
+    }
+    override suspend fun awaitLoaded() { initialLoad.await() }
 
     override suspend fun importText(text: String) {
         val trimmed = SubscriptionInput.normalize(text)
@@ -51,35 +65,31 @@ class LocalSubscriptionRepository(context: Context,
         change { current ->
             require(group.sourceUrl == null || current.none { it.sourceUrl == group.sourceUrl }) { AppText.text(R.string.this_subscription_has_already_been_added) }
             val uniqueGroup = group.copy(servers = group.servers.map { it.copy(id = "${group.id}:${it.id}") })
+            val hasSelection = current.any { g -> g.servers.any { it.isSelected } }
             val next = if (group.sourceUrl == null) LocalProfiles.append(current, uniqueGroup) else current + uniqueGroup.copy(servers = uniqueGroup.servers.mapIndexed { index, node ->
-                node.copy(isSelected = current.none { g -> g.servers.any { it.isSelected } } && index == 0)
+                node.copy(isSelected = !hasSelection && index == 0)
             })
             require(next.sumOf { it.servers.size } <= 2000) { AppText.text(R.string.limit_reached_2_000_servers) }
             next
         }
     }
 
-    override suspend fun refresh(id: String) = refreshMutex.withLock {
-        val old = groups.value.firstOrNull { it.id == id } ?: return@withLock
-        val url = old.sourceUrl ?: throw IllegalArgumentException(AppText.text(R.string.this_is_a_local_profile_add_a))
-        val fresh = download(url)
-        change { current -> current.map { group ->
-            // The running core owns a config snapshot. Refresh only the saved server list.
-            if (group.id != id) group else {
-                val selected = group.servers.firstOrNull { it.isSelected }
-                val matching = fresh.servers.indexOfFirst { "${group.id}:${it.id}" == selected?.id }
-                    .takeIf { it >= 0 } ?: fresh.servers.indexOfFirst { it.name == selected?.name }
-                fresh.copy(
-                    id = group.id, isPinned = group.isPinned, isExpanded = group.isExpanded,
-                    title = group.title,
-                    servers = fresh.servers.mapIndexed { index, node -> node.copy(
-                        id = "${group.id}:${node.id}",
-                        isSelected = selected != null && index == if (matching >= 0) matching else 0,
-                        isFavorite = group.servers.firstOrNull { it.name == node.name }?.isFavorite == true,
-                    ) },
-                )
+    override suspend fun refresh(id: String) {
+        awaitLoaded()
+        if (!refreshing.add(id)) return
+        try {
+            val generation = restoreGeneration.get()
+            val old = groups.value.firstOrNull { it.id == id } ?: return
+            val url = old.sourceUrl ?: throw IllegalArgumentException(AppText.text(R.string.this_is_a_local_profile_add_a))
+            val fresh = refreshSlots.withPermit { download(url) }
+            refreshMutex.withLock {
+                // A completed backup restore invalidates downloads that started before it.
+                if (restoreGeneration.get() != generation) return@withLock
+                change { current -> current.map { group ->
+                    if (group.id != id || group.sourceUrl != url) group else LocalProfiles.mergeRemote(group, fresh)
+                } }
             }
-        } }
+        } finally { refreshing.remove(id) }
     }
 
     override suspend fun selectNode(id: String) = change { current ->
@@ -148,11 +158,19 @@ class LocalSubscriptionRepository(context: Context,
         }) else group
     } }
 
-    override suspend fun updateProbe(nodeId: String, result: ProbeResult) = change { current -> current.map { group ->
-        group.copy(servers = group.servers.map { node -> if (node.id == nodeId) node.copy(
-            pingMs = result.latencyMs ?: -1, probeResults = node.probeResults.orEmpty() + (result.method to result),
-        ) else node })
-    } }
+    override suspend fun updateProbe(nodeId: String, result: ProbeResult) = updateProbes(mapOf(nodeId to result))
+
+    override suspend fun updateProbes(results: Map<String, ProbeResult>) {
+        if (results.isEmpty()) return
+        change { current -> current.map { group ->
+            if (group.servers.none { it.id in results }) group else group.copy(servers = group.servers.map { node ->
+                results[node.id]?.let { result -> node.copy(
+                    pingMs = result.latencyMs ?: -1,
+                    probeResults = node.probeResults.orEmpty() + (result.method to result),
+                ) } ?: node
+            })
+        } }
+    }
 
     override suspend fun toggleFavorite(nodeId: String) = change { current -> current.map { group ->
         group.copy(servers = group.servers.map { if (it.id == nodeId) it.copy(isFavorite = !it.isFavorite) else it })
@@ -175,11 +193,13 @@ class LocalSubscriptionRepository(context: Context,
 
     /** Excludes in-flight refreshes; roll back the list if the settings write fails. */
     suspend fun restore(groups: List<SubscriptionGroup>, writeSettings: () -> Unit) = withContext(Dispatchers.IO) {
+        awaitLoaded()
         refreshMutex.withLock { mutex.withLock {
             val previous = mutableGroups.value
             val next = LocalProfiles.combine(groups)
             persist(next)
             try { writeSettings() } catch (error: Exception) { persist(previous); throw error }
+            restoreGeneration.incrementAndGet()
             mutableGroups.value = next
         } }
     }
@@ -193,9 +213,11 @@ class LocalSubscriptionRepository(context: Context,
     }
 
     private suspend fun change(transform: (List<SubscriptionGroup>) -> List<SubscriptionGroup>) {
+        awaitLoaded()
         withContext(Dispatchers.IO) {
             mutex.withLock {
                 val next = LocalProfiles.combine(transform(mutableGroups.value))
+                if (next == mutableGroups.value) return@withLock
                 persist(next)
                 mutableGroups.value = next
             }

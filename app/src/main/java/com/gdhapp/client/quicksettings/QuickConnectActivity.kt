@@ -16,6 +16,8 @@ import com.gdhapp.client.R
 import com.gdhapp.client.domain.model.ConnectionMode
 import com.gdhapp.client.i18n.AppText
 import com.gdhapp.client.vpn.GdhappVpnService
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 /** Only used for Android's first VPN consent; subsequent tile taps start the service directly. */
 class QuickConnectActivity : ComponentActivity() {
@@ -38,13 +40,14 @@ class QuickConnectActivity : ComponentActivity() {
         else startSelected()
     }
 
-    private fun startSelected() {
+    private fun startSelected() { lifecycleScope.launch {
+        app.subscriptions.awaitLoaded()
         val selected = app.subscriptions.groups.value.firstNotNullOfOrNull { it.servers.firstOrNull { node -> node.isSelected } }
-        if (selected != null) GdhappVpnService.start(this, selected.rawConfigJson)
+        if (selected != null) GdhappVpnService.start(this@QuickConnectActivity, selected.rawConfigJson)
         else {
-            Toast.makeText(this, AppText.text(R.string.add_a_subscription_and_select_a_server), Toast.LENGTH_LONG).show()
-            startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            Toast.makeText(this@QuickConnectActivity, AppText.text(R.string.add_a_subscription_and_select_a_server), Toast.LENGTH_LONG).show()
+            startActivity(Intent(this@QuickConnectActivity, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
         finish()
-    }
+    } }
 }

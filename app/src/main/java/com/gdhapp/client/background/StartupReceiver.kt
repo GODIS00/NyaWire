@@ -7,6 +7,7 @@ import android.net.VpnService
 import com.gdhapp.client.GdhappApplication
 import com.gdhapp.client.domain.model.*
 import com.gdhapp.client.vpn.GdhappVpnService
+import kotlinx.coroutines.*
 
 class StartupReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -16,6 +17,13 @@ class StartupReceiver : BroadcastReceiver() {
         SubscriptionUpdater.schedule(app, settings.autoUpdateSubscriptions)
         if (intent.action != Intent.ACTION_BOOT_COMPLETED || !settings.connectOnBoot) return
         if (settings.connectionMode == ConnectionMode.VPN && VpnService.prepare(app) != null) return
-        app.subscriptions.groups.value.flatMap { it.servers }.firstOrNull { it.isSelected }?.let { GdhappVpnService.start(app, it.rawConfigJson, waitForNetwork = true) }
+        val pending = goAsync()
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                app.subscriptions.awaitLoaded()
+                app.subscriptions.groups.value.firstNotNullOfOrNull { it.servers.firstOrNull { node -> node.isSelected } }
+                    ?.let { GdhappVpnService.start(app, it.rawConfigJson, waitForNetwork = true) }
+            } finally { pending?.finish() }
+        }
     }
 }

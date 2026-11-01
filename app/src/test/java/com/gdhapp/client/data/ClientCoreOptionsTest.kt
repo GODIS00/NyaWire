@@ -7,6 +7,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ClientCoreOptionsTest {
+    @Test fun httpProbeSkipsImportedRulesAndTrafficCountersButKeepsRealProxy() {
+        val profile = JsonParser.parseString(raw).asJsonObject
+        profile.getAsJsonObject("routing").add("rules", JsonParser.parseString("""[{"type":"field","domain":["geosite:private"],"outboundTag":"direct"}]"""))
+        val xray = JsonParser.parseString(CoreConfigBuilder.build(profile.toString(), ClientSettings(), 10808, forProbe = true).json).asJsonObject
+        assertFalse(xray.has("stats"))
+        assertFalse(xray.getAsJsonObject("policy").getAsJsonObject("system").get("statsOutboundUplink").asBoolean)
+        val rule = xray.getAsJsonObject("routing").getAsJsonArray("rules").single().asJsonObject
+        assertEquals("proxy", rule.get("outboundTag").asString)
+        val box = JsonParser.parseString(CoreConfigBuilder.build(profile.toString(), ClientSettings(coreEngine = CoreEngine.SING_BOX), 10808, forProbe = true).json).asJsonObject
+        assertEquals("proxy", box.getAsJsonObject("route").get("final").asString)
+        assertEquals(0, box.getAsJsonObject("route").getAsJsonArray("rules").size())
+        assertEquals("192.0.2.1", box.getAsJsonArray("outbounds").first().asJsonObject.get("server").asString)
+    }
+
     private val raw = """{"outbounds":[{"protocol":"vless","tag":"proxy","settings":{"vnext":[{"address":"192.0.2.1","port":443,"users":[{"id":"11111111-1111-4111-8111-111111111111","flow":"xtls-rprx-vision"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"publicKey":"fixture","serverName":"example.com"}}}],"routing":{"rules":[{"type":"field","domain":["domain:existing.example"],"outboundTag":"proxy"}]}}"""
     @Test fun profileModePreservesRulesAndOutbound() {
         val before = JsonParser.parseString(raw).asJsonObject

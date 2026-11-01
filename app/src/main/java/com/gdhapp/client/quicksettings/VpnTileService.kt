@@ -65,20 +65,21 @@ class VpnTileService : TileService() {
         if (isLocked) unlockAndRun { toggle() } else toggle()
     }
 
-    private fun toggle() {
+    private fun toggle() { scope.launch {
+        app.subscriptions.awaitLoaded()
         when (app.vpnSession.state.value) {
-            VpnState.Connected, VpnState.Connecting -> GdhappVpnService.stop(this)
+            VpnState.Connected, VpnState.Connecting -> GdhappVpnService.stop(this@VpnTileService)
             else -> {
                 val selected = app.subscriptions.groups.value.firstNotNullOfOrNull { it.servers.firstOrNull { node -> node.isSelected } }
                 if (selected == null) {
-                    Toast.makeText(this, AppText.text(R.string.add_a_subscription_and_select_a_server), Toast.LENGTH_LONG).show()
-                    openAndCollapse(Intent(this, MainActivity::class.java))
-                } else if (app.settings.settings.value.connectionMode == ConnectionMode.VPN && VpnService.prepare(this) != null) {
-                    openAndCollapse(Intent(this, QuickConnectActivity::class.java))
-                } else GdhappVpnService.start(this, selected.rawConfigJson)
+                    Toast.makeText(this@VpnTileService, AppText.text(R.string.add_a_subscription_and_select_a_server), Toast.LENGTH_LONG).show()
+                    openAndCollapse(Intent(this@VpnTileService, MainActivity::class.java))
+                } else if (app.settings.settings.value.connectionMode == ConnectionMode.VPN && VpnService.prepare(this@VpnTileService) != null) {
+                    openAndCollapse(Intent(this@VpnTileService, QuickConnectActivity::class.java))
+                } else GdhappVpnService.start(this@VpnTileService, selected.rawConfigJson)
             }
         }
-    }
+    } }
 
     // The Intent overload is required only on API 29-33; API 34+ uses PendingIntent.
     @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")

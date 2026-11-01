@@ -7,6 +7,7 @@ import com.gdhapp.client.domain.model.RemovedServer
 
 interface SubscriptionRepository {
     val groups: StateFlow<List<SubscriptionGroup>>
+    suspend fun awaitLoaded() {}
     suspend fun importText(text: String)
     suspend fun refresh(id: String)
     suspend fun selectNode(id: String)
@@ -18,6 +19,9 @@ interface SubscriptionRepository {
     suspend fun restoreNode(removed: RemovedServer)
     suspend fun updatePings(id: String, pings: Map<String, Int>)
     suspend fun updateProbe(nodeId: String, result: ProbeResult)
+    suspend fun updateProbes(results: Map<String, ProbeResult>) {
+        results.forEach { (id, result) -> updateProbe(id, result) }
+    }
     suspend fun toggleFavorite(nodeId: String)
     suspend fun updateNode(nodeId: String, name: String, config: String)
     suspend fun renameGroup(id: String, title: String)

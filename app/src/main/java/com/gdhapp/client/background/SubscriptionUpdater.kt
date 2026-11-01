@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import com.gdhapp.client.GdhappApplication
 import com.gdhapp.client.domain.model.*
+import com.gdhapp.client.data.SubscriptionBatch
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -18,6 +19,7 @@ class SubscriptionUpdater(private val repository: com.gdhapp.client.domain.repos
     suspend fun refreshOnOpen(progress: (Set<String>) -> Unit): Int = mutex.withLock {
         if (openingHandled) return@withLock 0
         openingHandled = true
+        repository.awaitLoaded()
         val settings = preferences.settings.value
         if (!settings.refreshOnOpen || !networkAvailable()) return@withLock 0
         val now = System.currentTimeMillis()
@@ -25,26 +27,19 @@ class SubscriptionUpdater(private val repository: com.gdhapp.client.domain.repos
         var failures = 0
         try {
             progress(pending.toSet())
-            pending.toList().forEach { id ->
-                currentCoroutineContext().ensureActive()
-                try { repository.refresh(id) }
-                catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { failures++ }
+            failures = SubscriptionBatch.refresh(pending.toList(), repository::refresh) { id, _ ->
                 pending.remove(id); progress(pending.toSet())
             }
         } finally { progress(emptySet()) }
         failures
     }
     suspend fun refreshDue() = mutex.withLock {
+        repository.awaitLoaded()
         val settings = preferences.settings.value
         if (!settings.autoUpdateSubscriptions) return@withLock
         val groups = repository.groups.value
         val now = System.currentTimeMillis()
-        groups.filter { due(it, settings, now) }.forEach { group ->
-            try { repository.refresh(group.id) }
-            catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { /* Keep last working subscription; retry on the next scheduled run. */ }
-        }
+        SubscriptionBatch.refresh(groups.filter { due(it, settings, now) }.map { it.id }, repository::refresh)
     }
     companion object {
         const val JOB_ID = 21401

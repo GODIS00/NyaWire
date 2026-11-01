@@ -264,7 +264,9 @@ private fun ServersScreen(state: MainUiState, actions: MainActions,
     onConnect: () -> Unit, onAdd: () -> Unit, onErrorInfo: () -> Unit,
     onSelect: (String) -> Unit, onInfo: (String) -> Unit,
     onDeleteGroup: (String) -> Unit, onRenameGroup: (String) -> Unit) {
-    val shownNodes = remember(state) { state.groups.associate { it.id to state.visibleNodes(it) } }
+    val shownNodes = remember(state.groups, state.favoritesOnly, state.protocolFilter, state.settings.sort, state.settings.probeMethod) {
+        state.groups.associate { it.id to state.visibleNodes(it) }
+    }
     val pullState = rememberPullToRefreshState()
     val hasSubscriptions = state.groups.any { it.sourceUrl != null }
     val refreshDescription = AppText.text(R.string.refresh_all_subscriptions)
