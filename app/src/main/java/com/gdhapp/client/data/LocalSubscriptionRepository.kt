@@ -253,8 +253,7 @@ class LocalSubscriptionRepository(context: Context,
     private suspend fun download(value: String): SubscriptionGroup = withContext(Dispatchers.IO) {
         val url = value.toHttpUrlOrNull()
         require(url?.isHttps == true && url.username.isEmpty() && url.password.isEmpty()) { AppText.text(R.string.enter_a_valid_https_url) }
-        // Keep the provider's v2rayNG profile selection compatible with the bundled Xray core.
-        val request = Request.Builder().url(url).header("User-Agent", "v2rayNG/2.3.11 NyaWire/${com.gdhapp.client.BuildConfig.VERSION_NAME}")
+        val request = Request.Builder().url(url).header("User-Agent", "NyaWire/${com.gdhapp.client.BuildConfig.VERSION_NAME}")
             .header("Accept", "application/json, text/plain, */*")
             .apply { if (sendHwid()) identity.headers().forEach { (key, value) -> header(key, value) } }.build()
         client.newCall(request).readCancellable { response ->
