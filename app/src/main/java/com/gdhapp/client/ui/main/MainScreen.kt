@@ -379,17 +379,17 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
     val scheme = MaterialTheme.colorScheme
     val motion = state.settings.animations
     val chevron by animateFloatAsState(if (group.isExpanded) 90f else 0f, if (motion) IosMotion.value() else snap(), label = "groupChevron")
-    Surface(shape = MaterialTheme.shapes.medium, color = scheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = .3f))) {
+    Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp), color = scheme.surfaceContainer,
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = .22f))) {
         Column(Modifier.padding(start = 6.dp, end = 6.dp, top = 6.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { actions.toggleGroup(group.id) }, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Rounded.ChevronRight, if (group.isExpanded) AppText.text(R.string.collapse_subscription) else AppText.text(R.string.expand_subscription), tint = scheme.primary,
-                        modifier = Modifier.rotate(chevron))
+                        modifier = Modifier.background(scheme.primary.copy(alpha = .09f), androidx.compose.foundation.shape.CircleShape).padding(4.dp).rotate(chevron))
                 }
                 Column(Modifier.weight(1f).padding(end = 4.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Text(group.title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                        Text(group.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 20.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                         if (group.isPinned) Icon(Icons.Rounded.PushPin, AppText.text(R.string.pinned), tint = scheme.onSurfaceVariant, modifier = Modifier.size(12.dp))
                     }
                     Text(AppText.text(R.string.subscription_count, group.servers.size), color = scheme.onSurfaceVariant, fontSize = 11.sp, lineHeight = 14.sp, modifier = Modifier.padding(top = 2.dp))
@@ -418,6 +418,7 @@ private fun SubscriptionHeader(group: SubscriptionGroup, state: MainUiState, act
             }
             AnimatedVisibility(group.isExpanded, enter = if (motion) fadeIn(IosMotion.fade()) + expandVertically(IosMotion.size) else EnterTransition.None,
                 exit = if (motion) fadeOut(IosMotion.fade()) + shrinkVertically(IosMotion.size) else ExitTransition.None) { Column {
+                HorizontalDivider(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), color = scheme.outlineVariant.copy(alpha = .22f))
                 if (group.sourceUrl != null && group.lastUpdated.isNotBlank()) Text(AppText.text(R.string.subscription_updated_at, group.lastUpdated),
                     fontSize = 10.sp, lineHeight = 14.sp, color = scheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 2.dp))

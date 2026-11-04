@@ -62,19 +62,19 @@ private fun ServerCardContent(node: ServerNode, settings: ClientSettings, testin
     onInfo: () -> Unit, onFavorite: () -> Unit, grid: Boolean, onCopy: (() -> Unit)?, onDelete: (() -> Unit)?, onPing: (() -> Unit)?) = com.gdhapp.client.ui.theme.BlockColors {
     val scheme = MaterialTheme.colorScheme
     val motion = LocalMotionEnabled.current
-    val background by animateColorAsState(if (node.isSelected) androidx.compose.ui.graphics.lerp(scheme.surfaceContainerLow, scheme.primary, .08f) else scheme.surfaceContainerLow,
+    val background by animateColorAsState(if (node.isSelected) androidx.compose.ui.graphics.lerp(scheme.surfaceContainerLow, scheme.primary, .065f) else scheme.surfaceContainerLow,
         animationSpec = if (motion) tween(180) else snap(), label = "nodeColor")
-    val borderColor by animateColorAsState(if (node.isSelected) scheme.primary.copy(alpha = .5f) else scheme.outlineVariant.copy(alpha = .35f),
+    val borderColor by animateColorAsState(if (node.isSelected) scheme.primary.copy(alpha = .65f) else scheme.outlineVariant.copy(alpha = .18f),
         animationSpec = if (motion) tween(180) else snap(), label = "nodeBorder")
     val marker by animateFloatAsState(if (node.isSelected) 1f else 0f, if (motion) tween(220) else snap(), label = "nodeMarker")
     val compact = settings.layout == ServerLayout.COMPACT
     val displayName = remember(node.name) { cleanNodeName(node.name) }
     val protocol = remember(node.protocolSummary) { node.protocolSummary.substringBefore('|').trim().replace(" / ", " · ") }
-    Surface(color = background, shape = MaterialTheme.shapes.medium,
+    Surface(color = background, shape = RoundedCornerShape(if (compact) 14.dp else 18.dp),
         border = BorderStroke(1.dp, borderColor),
         modifier = Modifier.fillMaxWidth().semantics { selected = node.isSelected }.combinedClickable(role = Role.RadioButton, onClick = onSelect, onLongClick = onInfo)) {
         Box {
-            if (marker > 0f) Box(Modifier.align(Alignment.CenterStart).width(2.dp).height(22.dp)
+            if (marker > 0f) Box(Modifier.align(Alignment.CenterStart).width(3.dp).height(28.dp)
                 .graphicsLayer { alpha = marker; scaleY = marker }.background(scheme.primary, CircleShape))
             if (grid) Column(Modifier.padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 12.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -90,12 +90,12 @@ private fun ServerCardContent(node: ServerNode, settings: ClientSettings, testin
                         fontSize = 11.sp, lineHeight = 14.sp, color = scheme.onSurfaceVariant, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     LatencyChip(node.probeResults[settings.probeMethod], testing, compact = true, flat = true, modifier = Modifier.widthIn(max = 84.dp))
                 }
-            } else Row(Modifier.heightIn(min = if (compact) 56.dp else 64.dp).padding(start = 12.dp, end = 4.dp,
+            } else Row(Modifier.heightIn(min = if (compact) 58.dp else 72.dp).padding(start = 12.dp, end = 4.dp,
                 top = if (compact) 4.dp else 6.dp, bottom = if (compact) 4.dp else 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (settings.showFlags) { CountryBadge(node.flagResOrCode, Modifier.size(if (compact) 28.dp else 32.dp), small = true); Spacer(Modifier.width(10.dp)) }
+                if (settings.showFlags) { CountryBadge(node.flagResOrCode, Modifier.size(if (compact) 28.dp else 34.dp), small = true); Spacer(Modifier.width(10.dp)) }
                 Column(Modifier.weight(1f).padding(end = 6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(displayName, fontSize = if (compact) 13.sp else 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold,
+                        Text(displayName, fontSize = if (compact) 13.sp else 15.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold,
                             maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                         if (node.isFavorite) Icon(Icons.Rounded.Star, AppText.text(R.string.favorites), tint = scheme.primary, modifier = Modifier.size(11.dp))
                     }
@@ -106,7 +106,7 @@ private fun ServerCardContent(node: ServerNode, settings: ClientSettings, testin
                         color = scheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
                 }
                 Column(horizontalAlignment = Alignment.End, modifier = Modifier.width(72.dp)) {
-                    LatencyChip(node.probeResults[settings.probeMethod], testing, compact = true, flat = true)
+                    LatencyChip(node.probeResults[settings.probeMethod], testing, compact = true, flat = false)
                     Text(settings.probeMethod.label, fontSize = 9.sp, lineHeight = 12.sp, color = scheme.onSurfaceVariant, modifier = Modifier.padding(top = 3.dp), maxLines = 1)
                 }
                 ServerActionsMenu(node, onInfo, onFavorite, onCopy, onDelete, onPing)
@@ -149,7 +149,7 @@ fun LatencyChip(result: ProbeResult?, testing: Boolean, modifier: Modifier = Mod
         else -> scheme.tertiary
     }, animationSpec = if (motion) tween(220) else snap(), label = "latencyColor")
     Surface(color = if (flat) Color.Transparent else color.copy(alpha = .1f), shape = CircleShape, modifier = modifier) {
-        Row(Modifier.padding(horizontal = if (flat) 0.dp else if (compact) 8.dp else 10.dp, vertical = if (flat) 0.dp else 5.dp), verticalAlignment = Alignment.CenterVertically,
+        Row(Modifier.padding(horizontal = if (flat) 0.dp else if (compact) 8.dp else 10.dp, vertical = if (flat) 0.dp else if (compact) 4.dp else 5.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             if (testing) CircularProgressIndicator(Modifier.size(10.dp), strokeWidth = 1.5.dp, color = color)
             else if (!compact) Icon(when { result == null -> Icons.Rounded.Schedule; result.isSuccess -> Icons.Rounded.NetworkCheck; else -> Icons.Rounded.ErrorOutline },
